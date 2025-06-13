@@ -16,19 +16,24 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Qr {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long qrId;
 
-    private String qrStatus;
+    @Column(nullable = false)
+    private boolean isUsable;
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
     private int scanCount;
 
+    @Column(nullable = false)
     private String qrUrl;
+
 }
