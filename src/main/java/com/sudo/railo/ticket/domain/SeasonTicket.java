@@ -14,11 +14,12 @@ public class SeasonTicket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long seasonTicketId;
+    @Column(name = "season_ticket_id")
+    private Long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "qr_id", unique = true)
-    private Qr qrId;
+    private Qr qr;
 
     // TODO: 멤버 id
 

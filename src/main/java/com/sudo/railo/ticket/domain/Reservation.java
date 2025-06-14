@@ -16,7 +16,8 @@ public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reservationId;
+    @Column(name = "reservation_id")
+    private Long id;
 
     // TODO: 운행 일정 id
 
@@ -26,20 +27,24 @@ public class Reservation {
 
     // TODO: 도착역 id
 
+    @Column(nullable = false)
     private Long reservationNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TripType tripType;
 
+    @Column(nullable = false)
     private int totalPassengers;
 
+    @Column(nullable = false)
     private String passengerSummary;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus reservationStatus;
 
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
     private LocalDateTime reservedAt;

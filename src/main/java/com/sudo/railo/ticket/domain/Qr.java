@@ -18,7 +18,8 @@ public class Qr {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long qrId;
+    @Column(name = "qr_id")
+    private Long id;
 
     @Column(nullable = false)
     private boolean isUsable;
@@ -28,6 +29,7 @@ public class Qr {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
