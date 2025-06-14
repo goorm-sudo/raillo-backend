@@ -1,5 +1,6 @@
 package com.sudo.railo.ticket.domain;
 
+import com.sudo.railo.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,7 +22,9 @@ public class Reservation {
 
     // TODO: 운행 일정 id
 
-    // TODO: 멤버 id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     // TODO: 출발역 id
 

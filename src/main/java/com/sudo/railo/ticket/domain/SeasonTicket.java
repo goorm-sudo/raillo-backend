@@ -1,5 +1,6 @@
 package com.sudo.railo.ticket.domain;
 
+import com.sudo.railo.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,7 +22,9 @@ public class SeasonTicket {
     @JoinColumn(name = "qr_id", unique = true)
     private Qr qr;
 
-    // TODO: 멤버 id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
