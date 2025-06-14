@@ -50,4 +50,16 @@ public class Ticket {
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
+    @Column(nullable = false)
+    private String wctNumber;
+
+    @Column(nullable = false)
+    private String saleAt;
+
+    @Column(nullable = false)
+    private String saleSeqNumber;
+
+    @Column(nullable = false)
+    private String pwd;
+
 }
