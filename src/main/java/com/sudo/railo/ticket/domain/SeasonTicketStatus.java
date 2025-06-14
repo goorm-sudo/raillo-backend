@@ -1,5 +1,5 @@
 package com.sudo.railo.ticket.domain;
 
-public enum SeasonStatus {
+public enum SeasonTicketStatus {
     VALID, INVALID
 }
