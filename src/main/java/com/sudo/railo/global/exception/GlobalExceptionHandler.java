@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -17,12 +18,34 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.exception.error.GlobalError;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	/**
+	 * @RequestBody 누락 처리 : HttpMessageNotReadableException
+	 */
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+		HttpMessageNotReadableException e, HttpServletRequest request) {
+
+		log.warn("Request body missing or invalid: {}", e.getMessage());
+
+		return ResponseEntity.badRequest().body(
+			ErrorResponse.of(
+				"G_400",
+				"요청 본문이 필요합니다. JSON 형식의 데이터를 포함해주세요.",
+				Map.of(
+					"path", "uri=" + request.getRequestURI(),
+					"method", request.getMethod()
+				)
+			)
+		);
+	}
 
 	/**
 	 * @RequestBody 유효성 검사 실패 처리 : MethodArgumentNotValidException
