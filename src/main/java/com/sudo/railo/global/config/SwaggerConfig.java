@@ -37,11 +37,11 @@ public class SwaggerConfig {
 	 */
 	private Info createApiInfo() {
 		return new Info()
-			.title("Railo Backend API")
+			.title("Raillo Backend API")
 			.description("Raillo (코레일 클론코딩) REST API 문서 - 구름 백엔드 개발자 과정 3기 1차 팀프로젝트")
 			.version("v1.0.0")
 			.contact(new Contact()
-				.name("Sudo Railo Team")
+				.name("Sudo Raillo Team")
 				.email("kdasunb6@gmail.com")
 				.url("https://github.com/goorm-sudo")
 			)
@@ -72,10 +72,10 @@ public class SwaggerConfig {
 				.url("http://localhost:8080")
 				.description("로컬 개발 서버"),
 			new Server()
-				.url("https://dev-api.railo.com")
+				.url("https://dev-api.raillo.com")
 				.description("개발 서버"),
 			new Server()
-				.url("https://api.railo.com")
+				.url("https://api.raillo.com")
 				.description("운영 서버")
 		);
 	}
