@@ -2,6 +2,7 @@ package com.sudo.railo.global.exception;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.exception.error.GlobalError;
+import com.sudo.railo.global.success.SuccessCode;
+import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.exception.MemberError;
 
 import jakarta.validation.Valid;
@@ -161,23 +164,52 @@ public class ErrorTestController {
 	 * Body: {"name": "홍길동", "email": "hong@test.com", "age": 30}
 	 */
 	@GetMapping("/success")
-	public ResponseEntity<Map<String, Object>> testSuccess(
+	public SuccessResponse<Map<String, Object>> testSuccess(
 		@RequestParam String name,
 		@RequestParam @Min(1) Integer age) {
-		return ResponseEntity.ok(Map.of(
-			"message", "성공!",
+
+		Map<String, Object> data = Map.of(
 			"name", name,
 			"age", age,
 			"timestamp", System.currentTimeMillis()
-		));
+		);
+
+		SuccessCode successCode = new SuccessCode() {
+			@Override
+			public HttpStatus getStatus() {
+				return HttpStatus.OK;
+			}
+
+			@Override
+			public String getMessage() {
+				return "테스트 요청이 성공적으로 처리되었습니다";
+			}
+		};
+
+		return SuccessResponse.of(successCode, data);
 	}
 
 	@PostMapping("/success")
-	public ResponseEntity<Map<String, Object>> testSuccessPost(@Valid @RequestBody TestRequestDTO request) {
-		return ResponseEntity.ok(Map.of(
-			"message", "검증 성공!",
+	public SuccessResponse<Map<String, Object>> testSuccessPost(@Valid @RequestBody TestRequestDTO request) {
+
+		Map<String, Object> data = Map.of(
 			"data", request,
 			"timestamp", System.currentTimeMillis()
-		));
+		);
+
+		// 인라인으로 SuccessCode 구현
+		SuccessCode successCode = new SuccessCode() {
+			@Override
+			public HttpStatus getStatus() {
+				return HttpStatus.OK;
+			}
+
+			@Override
+			public String getMessage() {
+				return "테스트 검증이 성공적으로 완료되었습니다";
+			}
+		};
+
+		return SuccessResponse.of(successCode, data);
 	}
 }
