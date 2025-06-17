@@ -51,15 +51,15 @@ public class Ticket {
     private TicketStatus status;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 발행 주체 코드 (웹, 모바일, 역 등 - 5자리)'")
-    private String wctNumber;
+    private String vendorCode;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 일자 (MMdd)'")
-    private String saleAt;
+    private String purchaseDate;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 순번 (10000~)'")
-    private String saleSeqNumber;
+    private String purchaseSeq;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
-    private String pwd;
+    private String purchaseUid;
 
 }
