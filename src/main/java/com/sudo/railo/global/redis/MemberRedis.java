@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Redis {
+public class MemberRedis {
 
 	@Id
 	private String memberNo;

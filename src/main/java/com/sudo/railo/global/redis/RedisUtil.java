@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RedisUtil {
 
-	private final RedisTemplate<String, String> redisTemplate;
+	private final RedisTemplate<String, Object> redisTemplate;
 
 	public void save(String key, String value) {
 		redisTemplate.opsForValue().set(key, value);
