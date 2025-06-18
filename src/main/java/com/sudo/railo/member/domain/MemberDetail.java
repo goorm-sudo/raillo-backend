@@ -1,45 +1,48 @@
 package com.sudo.railo.member.domain;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Embeddable
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class MemberDetail {
 
-    private String memberNo;
+	@Column(unique = true)
+	private String memberNo;
 
-    @Enumerated(EnumType.STRING)
-    private Membership membership;
+	@Enumerated(EnumType.STRING)
+	private Membership membership;
 
-    private String email;
+	@Column(unique = true)
+	private String email;
 
-    private LocalDate birthDate;
+	private LocalDate birthDate;
 
-    @Column(length = 1)
-    private String gender;
+	@Column(length = 1)
+	private String gender;
 
-    private Long totalMileage;
+	@Column(columnDefinition = "BIGINT DEFAULT 0")
+	@Builder.Default
+	private Long totalMileage = 0L;
 
-    @Column(length = 1)
-    private String isLocked;
+	@Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+	@Builder.Default
+	private boolean isLocked = false;
 
-    private int lockCount;
-
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
+	@Column(columnDefinition = "INT DEFAULT 0")
+	@Builder.Default
+	private int lockCount = 0;
 
 }
