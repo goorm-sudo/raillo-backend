@@ -2,6 +2,8 @@ package com.sudo.railo.train.domain;
 
 import org.hibernate.annotations.Comment;
 
+import com.sudo.railo.train.domain.type.SeatType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
