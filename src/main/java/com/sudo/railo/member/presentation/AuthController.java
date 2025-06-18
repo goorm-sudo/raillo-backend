@@ -11,6 +11,7 @@ import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.success.AuthSuccess;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,7 +22,7 @@ public class AuthController {
 	private final MemberAuthService memberAuthService;
 
 	@PostMapping("/signup")
-	public SuccessResponse<SignUpResponse> signUp(@RequestBody SignUpRequest request) {
+	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
 
 		SignUpResponse response = memberAuthService.signUp(request);
 
