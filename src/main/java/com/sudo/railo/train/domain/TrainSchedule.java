@@ -1,8 +1,17 @@
 package com.sudo.railo.train.domain;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +22,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,6 +53,7 @@ public class TrainSchedule {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "train_schedule_id")
 	private Long id;
 
 	private String scheduleName;
@@ -57,11 +69,6 @@ public class TrainSchedule {
 
 	private int delayMinutes;
 
-	private int totalSeats;
-
-	private int availableSeats;
-
-	// TODO : Train은 unique가 있으면 안됨 (열차는 스케줄을 날마다 잡음)
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_id")
 	private Train train;
@@ -74,6 +81,15 @@ public class TrainSchedule {
 	@JoinColumn(name = "arrival_station_id")
 	private Station arrivalStation;
 
+	// 좌석 타입별 잔여 좌석 수 (Map 형태로 저장)
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "schedule_available_seats",
+		joinColumns = @JoinColumn(name = "train_schedule_id"))
+	@MapKeyColumn(name = "car_type")
+	@MapKeyEnumerated(EnumType.STRING)
+	@Column(name = "available_seats")
+	private Map<CarType, Integer> availableSeatsMap = new HashMap<>();
+
 	public static TrainSchedule create(
 		String scheduleName,
 		LocalDate operationDate,
@@ -81,26 +97,140 @@ public class TrainSchedule {
 		LocalTime arrivalTime,
 		Train train,
 		Station departureStation,
-		Station arrivalStation,
-		int totalSeats) {
+		Station arrivalStation) {
+
 		TrainSchedule schedule = new TrainSchedule();
 		schedule.scheduleName = scheduleName;
 		schedule.operationDate = operationDate;
 		schedule.departureTime = departureTime;
 		schedule.arrivalTime = arrivalTime;
-		schedule.train = train;
-		schedule.departureStation = departureStation;
-		schedule.arrivalStation = arrivalStation;
-		schedule.totalSeats = totalSeats;
-		schedule.availableSeats = totalSeats; // 초기화
 		schedule.operationStatus = OperationStatus.ACTIVE;
 		schedule.delayMinutes = 0;
 
+		// 연관관계 설정
+		schedule.setTrain(train);
+		schedule.setDepartureStation(departureStation);
+		schedule.setArrivalStation(arrivalStation);
+
+		// 초기 좌석 수를 Train의 각 CarType별 총 좌석 수로 설정
+		schedule.initializeAvailableSeats();
+
 		return schedule;
+	}
+
+	/** 초기 좌석 수 설정 */
+	private void initializeAvailableSeats() {
+		for (CarType carType : train.getSupportedCarTypes()) {
+			int totalSeats = train.getTotalSeatsByType(carType);
+			availableSeatsMap.put(carType, totalSeats);
+		}
+	}
+
+	/* 연관관계 편의 메서드 */
+	public void setTrain(Train train) {
+		this.train = train;
+	}
+
+	public void setDepartureStation(Station departureStation) {
+		this.departureStation = departureStation;
+	}
+
+	public void setArrivalStation(Station arrivalStation) {
+		this.arrivalStation = arrivalStation;
 	}
 
 	/* 비즈니스 메서드 */
 	public void updateOperationStatus(OperationStatus status) {
 		this.operationStatus = status;
+	}
+
+	/**
+	 * 열차 전체 지연 시간 추가 및 상태 업데이트
+	 *
+	 * 지연 상태 기준
+	 * - 5분 미만: ACTIVE
+	 * - 5분 이상: DELAYED
+	 * - 20분 이상: 예약 시 지연 안내
+	 */
+	public void addDelay(int minutes) {
+		this.delayMinutes += minutes;
+
+		if (this.delayMinutes >= 5) {
+			this.operationStatus = OperationStatus.DELAYED;
+		}
+	}
+
+	public void recoverDelay() {
+		this.delayMinutes = 0;
+		this.operationStatus = OperationStatus.ACTIVE;
+	}
+
+	/* 조회 로직 */
+
+	// 특정 타입 잔여 좌석 수 조회
+	public int getAvailableSeats(CarType carType) {
+		return availableSeatsMap.getOrDefault(carType, 0);
+	}
+
+	// 특정 타입 총 좌석 수 조회
+	public int getTotalSeats(CarType carType) {
+		return train.getTotalSeatsByType(carType);
+	}
+
+	// 예약 가능 여부 확인
+	public boolean canReserveSeats(CarType carType, int seatCount) {
+		if (!isOperational())
+			return false;
+		if (!train.getSupportedCarTypes().contains(carType))
+			return false;
+		return getAvailableSeats(carType) >= seatCount;
+	}
+
+	// 좌석 가용성 상태 확인
+	public SeatAvailabilityStatus getSeatAvailabilityStatus(CarType carType) {
+		int available = getAvailableSeats(carType);
+
+		if (available == 0) {
+			return SeatAvailabilityStatus.SOLD_OUT;
+		} else if (available <= 5) {
+			return SeatAvailabilityStatus.FEW_REMAINING;
+		} else if (available <= 10) {
+			return SeatAvailabilityStatus.LIMITED;
+		} else {
+			return SeatAvailabilityStatus.AVAILABLE;
+		}
+	}
+
+	// 운행 가능 여부
+	public boolean isOperational() {
+		return operationStatus == OperationStatus.ACTIVE ||
+			operationStatus == OperationStatus.DELAYED;
+	}
+
+	// 소요 시간 계산
+	public Duration getTravelDuration() {
+		return Duration.between(departureTime, arrivalTime);
+	}
+
+	/* 검증 로직 */
+
+	// 좌석 예약 검증
+	private void validateSeatReservation(CarType carType, int seatCount) {
+		if (seatCount <= 0) {
+			throw new IllegalArgumentException("좌석 수는 1 이상이어야 합니다");
+		}
+
+		if (!isOperational()) {
+			throw new IllegalStateException("운행이 중단된 열차입니다");
+		}
+
+		if (!train.getSupportedCarTypes().contains(carType)) {
+			throw new IllegalArgumentException("지원하지 않는 좌석 타입입니다: " + carType);
+		}
+
+		if (getAvailableSeats(carType) < seatCount) {
+			throw new IllegalStateException(
+				"좌석이 부족합니다. 요청: " + seatCount + "석, 잔여: " + getAvailableSeats(carType) + "석");
+		}
 	}
 }

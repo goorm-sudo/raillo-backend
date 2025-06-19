@@ -53,7 +53,7 @@ public class Train {
 
 	/**
 	 * TrainCar 추가
-	 * 읽기 전용(mappedBy 쪽)에서 편의 메서드(연관관계 편의 메서드)로 관계 설정 주도 (Train이 TrainCar를 소유)
+	 * 읽기 전용(mappedBy 쪽)에서 편의 메서드(연관관계 편의 메서드)로 관계 설정(Train이 TrainCar를 소유)
 	 */
 	public void addTrainCar(TrainCar trainCar) {
 		trainCars.add(trainCar);        // Train -> TrainCar 연결 (객체그래프)
