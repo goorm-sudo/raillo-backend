@@ -40,13 +40,22 @@ public class Train {
 	private List<TrainCar> trainCars;
 
 	/* 생성 메서드 */
+
+	/**
+	 * private 생성자
+	 */
+	private Train(int trainNumber, String trainType, String trainName, int totalCars) {
+		this.trainNumber = trainNumber;
+		this.trainType = trainType;
+		this.trainName = trainName;
+		this.totalCars = totalCars;
+	}
+
+	/**
+	 * 정적 팩토리 메서드
+	 */
 	public static Train create(int trainNumber, String trainType, String trainName, int totalCars) {
-		Train train = new Train();
-		train.trainNumber = trainNumber;
-		train.trainType = trainType;
-		train.trainName = trainName;
-		train.totalCars = totalCars;
-		return train;
+		return new Train(trainNumber, trainType, trainName, totalCars);
 	}
 
 	/* 연관 관계 편의 메서드 */

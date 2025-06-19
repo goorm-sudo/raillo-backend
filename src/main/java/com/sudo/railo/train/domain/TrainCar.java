@@ -41,13 +41,23 @@ public class TrainCar {
 	private Train train;
 
 	/* 생성 메서드 */
-	public static TrainCar create(int carNumber, CarType carType, int totalSeats, String seatArrangement, Train train) {
-		TrainCar trainCar = new TrainCar();
-		trainCar.carNumber = carNumber;
-		trainCar.carType = carType;
-		trainCar.totalSeats = totalSeats;
-		trainCar.seatArrangement = seatArrangement;
-		trainCar.train = train;
+
+	/**
+	 * private 생성자
+	 */
+	private TrainCar(int carNumber, CarType carType, int totalSeats, String seatArrangement) {
+		this.carNumber = carNumber;
+		this.carType = carType;
+		this.totalSeats = totalSeats;
+		this.seatArrangement = seatArrangement;
+		this.train = train;
+	}
+
+	/* 정적 팩토리 메서드 */
+	public static TrainCar createWithTrain(int carNumber, CarType carType, int totalSeats, String seatArrangement,
+		Train train) {
+		TrainCar trainCar = new TrainCar(carNumber, carType, totalSeats, seatArrangement);
+		trainCar.setTrain(train);
 		return trainCar;
 	}
 

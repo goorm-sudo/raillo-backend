@@ -90,6 +90,42 @@ public class TrainSchedule {
 	@Column(name = "available_seats")
 	private Map<CarType, Integer> availableSeatsMap = new HashMap<>();
 
+	/* 생성 메서드 */
+
+	/**
+	 * private 생성자
+	 */
+	private TrainSchedule(
+		String scheduleName,
+		LocalDate operationDate,
+		LocalTime departureTime,
+		LocalTime arrivalTime,
+		Train train,
+		Station departureStation,
+		Station arrivalStation) {
+
+		this.scheduleName = scheduleName;
+		this.operationDate = operationDate;
+		this.departureTime = departureTime;
+		this.arrivalTime = arrivalTime;
+		this.operationStatus = OperationStatus.ACTIVE;
+		this.delayMinutes = 0;
+
+		// 연관관계 설정
+		this.train = train;
+		this.departureStation = departureStation;
+		this.arrivalStation = arrivalStation;
+
+		// 유효성 검증
+		validateSchedule();
+
+		// 초기 좌석 수 설정
+		initializeAvailableSeats();
+	}
+
+	/**
+	 * 정적 팩토리 메서드
+	 */
 	public static TrainSchedule create(
 		String scheduleName,
 		LocalDate operationDate,
@@ -99,23 +135,15 @@ public class TrainSchedule {
 		Station departureStation,
 		Station arrivalStation) {
 
-		TrainSchedule schedule = new TrainSchedule();
-		schedule.scheduleName = scheduleName;
-		schedule.operationDate = operationDate;
-		schedule.departureTime = departureTime;
-		schedule.arrivalTime = arrivalTime;
-		schedule.operationStatus = OperationStatus.ACTIVE;
-		schedule.delayMinutes = 0;
-
-		// 연관관계 설정
-		schedule.setTrain(train);
-		schedule.setDepartureStation(departureStation);
-		schedule.setArrivalStation(arrivalStation);
-
-		// 초기 좌석 수를 Train의 각 CarType별 총 좌석 수로 설정
-		schedule.initializeAvailableSeats();
-
-		return schedule;
+		return new TrainSchedule(
+			scheduleName,
+			operationDate,
+			departureTime,
+			arrivalTime,
+			train,
+			departureStation,
+			arrivalStation
+		);
 	}
 
 	/** 초기 좌석 수 설정 */
