@@ -38,21 +38,10 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		String memberNo = memberNoGenerator.generateMemberNo();
 		LocalDate birthDate = LocalDate.parse(request.birthDate(), DateTimeFormatter.ISO_LOCAL_DATE);
 
-		MemberDetail memberDetail = MemberDetail.builder()
-			.memberNo(memberNo)
-			.membership(Membership.BUSINESS)
-			.email(request.email())
-			.birthDate(birthDate)
-			.gender(request.gender())
-			.build();
-
-		Member member = Member.builder()
-			.name(request.name())
-			.phoneNumber(request.phoneNumber())
-			.password(passwordEncoder.encode(request.password()))
-			.role(Role.MEMBER)
-			.memberDetail(memberDetail)
-			.build();
+		MemberDetail memberDetail = MemberDetail.create(memberNo, Membership.BUSINESS, request.email(), birthDate,
+			request.gender());
+		Member member = Member.create(request.name(), request.phoneNumber(), passwordEncoder.encode(request.password()),
+			Role.MEMBER, memberDetail);
 
 		memberRepository.save(member);
 

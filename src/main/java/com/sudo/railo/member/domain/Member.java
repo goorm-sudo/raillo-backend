@@ -11,13 +11,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AccessLevel;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Member extends BaseEntity {
 
 	@Id
@@ -39,12 +40,16 @@ public class Member extends BaseEntity {
 	@Embedded
 	private MemberDetail memberDetail;
 
-	@Builder
 	private Member(String name, String phoneNumber, String password, Role role, MemberDetail memberDetail) {
 		this.name = name;
 		this.phoneNumber = phoneNumber;
 		this.password = password;
 		this.role = role;
 		this.memberDetail = memberDetail;
+	}
+
+	public static Member create(String name, String phoneNumber, String password, Role role,
+		MemberDetail memberDetail) {
+		return new Member(name, phoneNumber, password, role, memberDetail);
 	}
 }

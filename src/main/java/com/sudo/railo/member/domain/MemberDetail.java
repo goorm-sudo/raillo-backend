@@ -8,7 +8,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +15,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 public class MemberDetail {
 
 	@Column(unique = true)
@@ -33,16 +31,15 @@ public class MemberDetail {
 	@Column(length = 1)
 	private String gender;
 
-	@Column(columnDefinition = "BIGINT DEFAULT 0")
-	@Builder.Default
-	private Long totalMileage = 0L;
+	private Long totalMileage;
 
-	@Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-	@Builder.Default
-	private boolean isLocked = false;
+	private boolean isLocked;
 
-	@Column(columnDefinition = "INT DEFAULT 0")
-	@Builder.Default
-	private int lockCount = 0;
+	private int lockCount;
+
+	public static MemberDetail create(String memberNo, Membership membership, String email, LocalDate birthDate,
+		String gender) {
+		return new MemberDetail(memberNo, membership, email, birthDate, gender, 0L, false, 0);
+	}
 
 }
