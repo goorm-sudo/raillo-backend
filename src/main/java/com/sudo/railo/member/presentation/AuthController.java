@@ -1,0 +1,32 @@
+package com.sudo.railo.member.presentation;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.sudo.railo.global.success.SuccessResponse;
+import com.sudo.railo.member.application.MemberAuthService;
+import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.response.SignUpResponse;
+import com.sudo.railo.member.success.AuthSuccess;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+	private final MemberAuthService memberAuthService;
+
+	@PostMapping("/signup")
+	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
+
+		SignUpResponse response = memberAuthService.signUp(request);
+
+		return SuccessResponse.of(AuthSuccess.SIGN_UP_SUCCESS, response);
+	}
+
+}
