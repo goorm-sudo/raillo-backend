@@ -116,9 +116,6 @@ public class TrainSchedule {
 		this.departureStation = departureStation;
 		this.arrivalStation = arrivalStation;
 
-		// 유효성 검증
-		validateSchedule();
-
 		// 초기 좌석 수 설정
 		initializeAvailableSeats();
 	}
