@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sudo.railo.train.domain.status.OperationStatus;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
 
@@ -40,13 +41,13 @@ import lombok.NoArgsConstructor;
 		@Index(name = "idx_schedule_booking",
 			columnList = "operation_date, departure_station_id, arrival_station_id, operation_status, departure_time"),
 
-		// 2. 열차별 날짜 검색 (관리자용, 특정 열차 스케줄 조회)
+		// 2. 캘린더 전용 인덱스 (날짜별 운행 여부 조회)
+		@Index(name = "idx_schedule_calendar",
+			columnList = "operation_date, operation_status"),
+
+		// 3. 열차별 날짜 검색 (관리자용, 특정 열차 스케줄 조회)
 		@Index(name = "idx_schedule_train_date",
 			columnList = "train_id, operation_date"),
-
-		// 3. 출발 시간 정렬 (같은 구간 내 시간순 조회)
-		@Index(name = "idx_schedule_departure_time",
-			columnList = "departure_time")
 	}
 )
 public class TrainSchedule {
