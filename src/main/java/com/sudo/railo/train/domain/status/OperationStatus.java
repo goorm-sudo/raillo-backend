@@ -1,4 +1,4 @@
-package com.sudo.railo.train.domain;
+package com.sudo.railo.train.domain.status;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
