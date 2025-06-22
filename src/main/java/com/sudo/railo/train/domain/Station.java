@@ -1,5 +1,6 @@
 package com.sudo.railo.train.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,8 +14,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Station {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "station_id")
+	private Long id;
 
-    private String stationName;
+	private String stationName;
+
+	private Station(String stationName) {
+		this.stationName = stationName;
+	}
+
+	public static Station create(String stationName) {
+		return new Station(stationName);
+	}
 }
