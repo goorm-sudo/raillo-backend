@@ -1,8 +1,11 @@
 package com.sudo.railo.train.application;
 
 import java.io.FileInputStream;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -14,6 +17,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.util.ExcelUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,7 @@ public class TrainScheduleService {
 	private static final String DIR = System.getProperty("user.dir") + "/files/";
 	private static final String EXCLUDE_SHEET = "총괄";
 	private static final String OPERATION_DATE_COLUMN = "비고";
+	private static final String OPERATION_DATE_EVERY_DAY = "매일";
 
 	private final StationService stationService;
 
@@ -35,11 +40,11 @@ public class TrainScheduleService {
 			workbook.forEach(sheet -> {
 				if (!sheet.getSheetName().contains(EXCLUDE_SHEET)) {
 					// 하행
-					CellAddress downTrainAddress = getActiveCell(sheet, 0);
+					CellAddress downTrainAddress = getFirstCellAddress(sheet, 0);
 					parseTrainSchedule(sheet, downTrainAddress);
 
 					// 상행
-					CellAddress upTrainAddress = getActiveCell(sheet, downTrainAddress.getColumn());
+					CellAddress upTrainAddress = getFirstCellAddress(sheet, downTrainAddress.getColumn() + 1);
 					parseTrainSchedule(sheet, upTrainAddress);
 				}
 			});
@@ -48,7 +53,7 @@ public class TrainScheduleService {
 		}
 	}
 
-	private CellAddress getActiveCell(Sheet sheet, int start) {
+	private CellAddress getFirstCellAddress(Sheet sheet, int start) {
 		for (int r = 0; r <= sheet.getLastRowNum(); r++) {
 			Row row = sheet.getRow(r);
 			if (ObjectUtils.isEmpty(row)) {
@@ -71,6 +76,26 @@ public class TrainScheduleService {
 		int trainTypeIdx = address.getColumn() + 1;
 		int stationIdx = address.getColumn() + 2;
 		List<Station> stations = parseStations(sheet.getRow(address.getRow()), stationIdx);
+
+		int operationDateIdx = stationIdx + stations.size();
+		LocalDate now = LocalDate.now();
+		String dayOfWeek = now.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+
+		int rowNum = address.getRow() + 2;
+		while (rowNum++ <= sheet.getLastRowNum()) {
+			Row row = sheet.getRow(rowNum);
+
+			// `row`가 `null`이거나, `cell`이 `null`이라면 파싱하지 않는다.
+			if (ExcelUtil.isEmpty(row, trainNumberIdx)) {
+				break;
+			}
+
+			// 운행일이 `매일`이 아니면서, `dayOfWeek`가 포함되지 않는다면 파싱하지 않는다.
+			String operationDate = row.getCell(operationDateIdx).getStringCellValue();
+			if (!operationDate.equals(OPERATION_DATE_EVERY_DAY) && !operationDate.contains(dayOfWeek)) {
+				continue;
+			}
+		}
 	}
 
 	private List<Station> parseStations(Row row, int stationIdx) {
