@@ -2,6 +2,7 @@ package com.sudo.railo.train.application;
 
 import java.io.FileInputStream;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.sudo.railo.train.application.dto.ScheduleStopDto;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.util.ExcelUtil;
 
@@ -31,6 +33,7 @@ public class TrainScheduleService {
 	private static final String EXCLUDE_SHEET = "총괄";
 	private static final String OPERATION_DATE_COLUMN = "비고";
 	private static final String OPERATION_DATE_EVERY_DAY = "매일";
+	private static final int DWELL_TIME = 2; // 정차역에 머무는 시간(분)
 
 	private final StationService stationService;
 
@@ -95,6 +98,10 @@ public class TrainScheduleService {
 			if (!operationDate.equals(OPERATION_DATE_EVERY_DAY) && !operationDate.contains(dayOfWeek)) {
 				continue;
 			}
+
+			int trainNumber = (int)row.getCell(trainNumberIdx).getNumericCellValue();
+			String trainType = row.getCell(trainTypeIdx).getStringCellValue();
+			List<ScheduleStopDto> scheduleStops = parseScheduleStop(row, stationIdx, stations);
 		}
 	}
 
@@ -117,5 +124,32 @@ public class TrainScheduleService {
 			stations.addAll(newStations);
 		}
 		return stations;
+	}
+
+	private List<ScheduleStopDto> parseScheduleStop(Row row, int start, List<Station> stations) {
+		List<ScheduleStopDto> scheduleStops = new ArrayList<>();
+
+		int stopOrder = 0;
+		for (int i = 0; i < stations.size(); i++) {
+			Cell cell = row.getCell(start + i);
+			LocalTime departureTime = LocalTime.from(cell.getLocalDateTimeCellValue());
+			if (departureTime.equals(LocalTime.MIDNIGHT)) {
+				continue;
+			}
+
+			LocalTime arrivalTime = departureTime.minusMinutes(DWELL_TIME);
+			Station station = stations.get(i);
+			scheduleStops.add(ScheduleStopDto.of(stopOrder, arrivalTime, departureTime, station));
+			stopOrder++;
+		}
+
+		// 첫 번째 정차역은 도착 시간이 `null`이다.
+		scheduleStops.set(0, ScheduleStopDto.first(scheduleStops.get(0)));
+
+		// 마지막 정차역은 출발 시간이 `null`이다.
+		int lastIndex = scheduleStops.size() - 1;
+		scheduleStops.set(lastIndex, ScheduleStopDto.last(scheduleStops.get(lastIndex)));
+
+		return scheduleStops;
 	}
 }
