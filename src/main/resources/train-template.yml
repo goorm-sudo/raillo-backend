@@ -1,0 +1,116 @@
+train-template:
+  templates:
+    KTX:
+      layouts:
+        FIRST_CLASS:
+          columns: [ A, B, C ]
+        STANDARD:
+          columns: [ A, B, C, D ]
+      cars:
+        - carType: STANDARD
+          row: 14
+        - carType: FIRST_CLASS
+          row: 9
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: FIRST_CLASS
+          row: 11
+        - carType: STANDARD
+          row: 14
+
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 15
+
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 14
+
+    KTX_SANCHEON:
+      layouts:
+        FIRST_CLASS:
+          columns: [ A, B, C ]
+        STANDARD:
+          columns: [ A, B, C, D ]
+      cars:
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 14
+        - carType: FIRST_CLASS
+          row: 11
+        - carType: STANDARD
+          row: 12
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 12
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+
+    KTX_CHEONGRYONG:
+      layouts:
+        FIRST_CLASS:
+          columns: [ A, B, C ]
+        STANDARD:
+          columns: [ A, B, C, D ]
+      cars:
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 17
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 17
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 13
+
+    KTX_EUM:
+      layouts:
+        FIRST_CLASS:
+          columns: [ A, B, C ]
+        STANDARD:
+          columns: [ A, B, C, D ]
+      cars:
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: STANDARD
+          row: 20
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 13
