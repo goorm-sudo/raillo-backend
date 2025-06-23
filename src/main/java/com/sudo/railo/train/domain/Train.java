@@ -1,5 +1,8 @@
 package com.sudo.railo.train.domain;
 
+import static com.sudo.railo.train.config.TrainTemplateProperties.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Comment;
@@ -12,7 +15,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,8 +43,8 @@ public class Train {
 
 	private int totalCars;
 
-	@OneToMany(mappedBy = "train", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<TrainCar> trainCars;
+	@OneToMany(mappedBy = "train", cascade = CascadeType.ALL)
+	private final List<TrainCar> trainCars = new ArrayList<>();
 
 	/* 생성 메서드 */
 
@@ -59,8 +61,18 @@ public class Train {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static Train create(int trainNumber, TrainType trainType, String trainName, int totalCars) {
-		return new Train(trainNumber, trainType, trainName, totalCars);
+	public static Train create(int trainNumber, TrainType trainType, String trainName, TrainTemplate template) {
+		Train train = new Train(trainNumber, trainType, trainName, template.cars().size());
+
+		for (int i = 0; i < template.cars().size(); i++) {
+			int carNumber = i + 1;
+			CarConfig config = template.cars().get(i);
+			SeatLayout layout = template.layouts().get(config.carType());
+
+			TrainCar trainCar = TrainCar.create(carNumber, layout, config);
+			train.addTrainCar(trainCar);
+		}
+		return train;
 	}
 
 	/* 연관 관계 편의 메서드 */

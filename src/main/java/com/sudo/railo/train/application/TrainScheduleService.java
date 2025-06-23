@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.TrainScheduleDto;
 import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.infrastructure.excel.TrainScheduleParser;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class TrainScheduleService {
 
 	private final TrainScheduleParser parser;
 	private final StationService stationService;
+	private final TrainService trainService;
 
 	@Transactional
 	public void createTrainSchedule(String path) {
@@ -39,8 +41,11 @@ public class TrainScheduleService {
 
 	private void parseAndPersistTrainSchedule(Sheet sheet, CellAddress address) {
 		List<String> stationNames = parser.getStationNames(sheet, address);
-		Map<String, Station> stationMap = stationService.getStations(stationNames);
+		Map<String, Station> stationMap = stationService.findOrCreateStation(stationNames);
 
-		List<TrainScheduleDto> trainSchedulesDto = parser.getTrainSchedules(sheet, address);
+		List<TrainScheduleDto> trainScheduleDtos = parser.getTrainScheduleDtos(sheet, address);
+		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainScheduleDtos.stream()
+			.map(TrainScheduleDto::getTrainDto)
+			.toList());
 	}
 }

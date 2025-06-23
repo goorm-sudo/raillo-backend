@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.infrastructure.persistence.StationRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -17,7 +18,8 @@ public class StationService {
 
 	private final StationRepository stationRepository;
 
-	public Map<String, Station> getStations(List<String> stationNames) {
+	@Transactional
+	public Map<String, Station> findOrCreateStation(List<String> stationNames) {
 		Map<String, Station> stationMap = stationRepository.findByStationNameIn(stationNames).stream()
 			.collect(Collectors.toMap(Station::getStationName, station -> station));
 
