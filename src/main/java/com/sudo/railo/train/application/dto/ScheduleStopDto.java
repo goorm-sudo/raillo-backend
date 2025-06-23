@@ -2,8 +2,6 @@ package com.sudo.railo.train.application.dto;
 
 import java.time.LocalTime;
 
-import com.sudo.railo.train.domain.Station;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,10 +15,11 @@ public class ScheduleStopDto {
 	private int stopOrder;
 	private LocalTime arrivalTime;
 	private LocalTime departureTime;
-	private Station station;
+	private String stationName;
 
-	public static ScheduleStopDto of(int stopOrder, LocalTime arrivalTime, LocalTime departureTime, Station station) {
-		return new ScheduleStopDto(stopOrder, arrivalTime, departureTime, station);
+	public static ScheduleStopDto of(int stopOrder, LocalTime arrivalTime, LocalTime departureTime,
+		String stationName) {
+		return new ScheduleStopDto(stopOrder, arrivalTime, departureTime, stationName);
 	}
 
 	public static ScheduleStopDto first(ScheduleStopDto scheduleStopDto) {
@@ -28,7 +27,7 @@ public class ScheduleStopDto {
 			scheduleStopDto.getStopOrder(),
 			null,
 			scheduleStopDto.getDepartureTime(),
-			scheduleStopDto.getStation()
+			scheduleStopDto.getStationName()
 		);
 	}
 
@@ -37,7 +36,7 @@ public class ScheduleStopDto {
 			scheduleStopDto.getStopOrder(),
 			scheduleStopDto.getDepartureTime(),
 			null,
-			scheduleStopDto.getStation()
+			scheduleStopDto.getStationName()
 		);
 	}
 }
