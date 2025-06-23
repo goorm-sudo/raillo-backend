@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -17,6 +18,7 @@ import org.springframework.web.context.request.WebRequest;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.exception.error.GlobalError;
+import com.sudo.railo.global.security.TokenError;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -63,7 +65,8 @@ public class GlobalExceptionHandler {
 	 * @RequestParam 누락 처리 : MissingServletRequestParameterException
 	 */
 	@ExceptionHandler(MissingServletRequestParameterException.class)
-	public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
+	public ResponseEntity<ErrorResponse> handleMissingServletRequestParameter(
+		MissingServletRequestParameterException ex) {
 		String detail = String.format("Required parameter '%s' is missing", ex.getParameterName());
 		ErrorResponse errorResponse = ErrorResponse.of(GlobalError.MISSING_REQUEST_PARAM, detail);
 
@@ -122,5 +125,15 @@ public class GlobalExceptionHandler {
 		} else {
 			log.warn("Business exception occurred: {}", ex.getMessage());
 		}
+	}
+
+	/*
+	 * 비밀번호 불일치 예외 처리
+	 * */
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(TokenError.INVALID_PASSWORD);
+		log.warn("Bad credentials: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 	}
 }
