@@ -1,9 +1,16 @@
 package com.sudo.railo.train.domain;
 
+import static com.sudo.railo.train.config.TrainTemplateProperties.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.Comment;
 
 import com.sudo.railo.train.domain.type.CarType;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +32,7 @@ public class TrainCar {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "train_car_id")
 	private Long id;
 
 	private int carNumber;
@@ -40,6 +49,9 @@ public class TrainCar {
 	@JoinColumn(name = "train_id")
 	private Train train;
 
+	@OneToMany(mappedBy = "trainCar", cascade = CascadeType.ALL)
+	private final List<Seat> seats = new ArrayList<>();
+
 	/* 생성 메서드 */
 
 	/**
@@ -50,14 +62,19 @@ public class TrainCar {
 		this.carType = carType;
 		this.totalSeats = totalSeats;
 		this.seatArrangement = seatArrangement;
-		this.train = train;
 	}
 
 	/* 정적 팩토리 메서드 */
-	public static TrainCar createWithTrain(int carNumber, CarType carType, int totalSeats, String seatArrangement,
-		Train train) {
-		TrainCar trainCar = new TrainCar(carNumber, carType, totalSeats, seatArrangement);
-		trainCar.setTrain(train);
+	public static TrainCar create(int carNumber, SeatLayout layout, CarConfig cars) {
+		int totalSeats = cars.row() * layout.columns().size();
+		TrainCar trainCar = new TrainCar(carNumber, cars.carType(), totalSeats, layout.seatArrangement());
+
+		for (int i = 1; i <= cars.row(); i++) {
+			for (SeatConfig config : layout.columns()) {
+				Seat seat = Seat.create(i, config.name(), config.seatType());
+				trainCar.addSeat(seat);
+			}
+		}
 		return trainCar;
 	}
 
@@ -65,5 +82,10 @@ public class TrainCar {
 	public void setTrain(Train train) {
 		this.train = train;
 		train.getTrainCars().add(this);
+	}
+
+	public void addSeat(Seat seat) {
+		seats.add(seat);
+		seat.setTrainCar(this);
 	}
 }
