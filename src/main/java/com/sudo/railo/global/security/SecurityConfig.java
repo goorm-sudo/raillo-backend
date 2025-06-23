@@ -11,6 +11,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.security.jwt.JwtAccessDeniedHandler;
+import com.sudo.railo.global.security.jwt.JwtAuthenticationEntryPoint;
+import com.sudo.railo.global.security.jwt.JwtFilter;
+import com.sudo.railo.global.security.jwt.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +26,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
+
+	private final RedisUtil redisUtil;
+	private final TokenProvider tokenProvider;
+	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
@@ -31,21 +44,23 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(HttpSecurity http,
+		CorsConfigurationSource corsConfigurationSource) throws Exception {
 		return http
 			.csrf(AbstractHttpConfigurer::disable)
+			.exceptionHandling(exception -> {
+				exception.authenticationEntryPoint(jwtAuthenticationEntryPoint); // 권한 확인
+				exception.accessDeniedHandler(jwtAccessDeniedHandler); // 인증된 접근 확인
+			})
 			.sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-			// 기본 CORS 설정 사용
-			.cors(cors -> {
-			})
+			.cors(cors -> cors.configurationSource(corsConfigurationSource))
 			// HTTP 요청에 대한 접근 권한 설정
-			// 로그인 구현 전까지 모두 허용 예정
 			.authorizeHttpRequests(auth -> {
-				auth.requestMatchers("/auth/**").permitAll()
-					//swagger API 문서 허용
+				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-					.anyRequest().permitAll();
+					.anyRequest().authenticated();
 			})
+			.addFilterBefore(new JwtFilter(tokenProvider, redisUtil), UsernamePasswordAuthenticationFilter.class)
 			.build();
 	}
 }
