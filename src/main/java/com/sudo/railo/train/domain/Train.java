@@ -5,9 +5,13 @@ import java.util.List;
 import org.hibernate.annotations.Comment;
 
 import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.train.domain.type.TrainType;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,14 +28,15 @@ public class Train {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "train_id")
 	private Long id;
 
 	private int trainNumber;
 
-	@Comment("KTX, KTX-산천, ITX-청춘 등")
-	private String trainType;
+	@Enumerated(EnumType.STRING)
+	private TrainType trainType;
 
-	@Comment("열차 이름")
+	@Comment("KTX, KTX-산천, ITX-청춘 등")
 	private String trainName;
 
 	private int totalCars;
@@ -44,7 +49,7 @@ public class Train {
 	/**
 	 * private 생성자
 	 */
-	private Train(int trainNumber, String trainType, String trainName, int totalCars) {
+	private Train(int trainNumber, TrainType trainType, String trainName, int totalCars) {
 		this.trainNumber = trainNumber;
 		this.trainType = trainType;
 		this.trainName = trainName;
@@ -54,7 +59,7 @@ public class Train {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static Train create(int trainNumber, String trainType, String trainName, int totalCars) {
+	public static Train create(int trainNumber, TrainType trainType, String trainName, int totalCars) {
 		return new Train(trainNumber, trainType, trainName, totalCars);
 	}
 
