@@ -16,7 +16,6 @@ import com.sudo.railo.global.redis.MemberRedis;
 import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
-import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.request.TokenRequest;
@@ -87,8 +86,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		if (!tokenProvider.validateToken(request.accessToken())) {
 			throw new BusinessException(TokenError.LOGOUT_ERROR);
 		}
-
-		System.out.println(SecurityUtil.getCurrentMemberNo());
 
 		// AccessToken 에서 memberNo 를 가져옴
 		Authentication authentication = tokenProvider.getAuthentication(request.accessToken());
