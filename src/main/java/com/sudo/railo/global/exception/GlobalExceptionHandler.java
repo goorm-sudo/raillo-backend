@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,8 +20,10 @@ import org.springframework.web.context.request.WebRequest;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.exception.error.GlobalError;
+import com.sudo.railo.global.redis.RedisError;
 import com.sudo.railo.global.security.TokenError;
 
+import io.jsonwebtoken.io.SerializationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -127,13 +131,54 @@ public class GlobalExceptionHandler {
 		}
 	}
 
-	/*
+	/**
 	 * 비밀번호 불일치 예외 처리
-	 * */
+	 */
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex) {
 		ErrorResponse errorResponse = ErrorResponse.of(TokenError.INVALID_PASSWORD);
 		log.warn("Bad credentials: {}", ex.getMessage());
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
 	}
+
+	/**
+	 * Redis: 연결 실패 예외 처리
+	 * */
+	@ExceptionHandler(RedisConnectionFailureException.class)
+	public ResponseEntity<ErrorResponse> handleRedisConnectionFailure(RedisConnectionFailureException ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(RedisError.REDIS_CONNECT_FAIL);
+		log.warn("Redis connection failure: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	}
+
+	/**
+	 * Redis: 직렬화 및 역직렬화 예외 처리
+	 * */
+	@ExceptionHandler(SerializationException.class)
+	public ResponseEntity<ErrorResponse> handleRedisSerializationException(Exception ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(RedisError.SERIALIZATION_FAIL);
+		log.warn("Redis serialization failure: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	}
+
+	/**
+	 * Redis: 잘못된 API 사용 예외 처리
+	 * */
+	@ExceptionHandler(InvalidDataAccessApiUsageException.class)
+	public ResponseEntity<ErrorResponse> handleRedisApiUsageException(InvalidDataAccessApiUsageException ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(RedisError.INVALID_DATA_ACCESS);
+		log.warn("Redis API usage failure: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
+
+	/**
+	 * 잘못된 인수 전달 시 예외 처리
+	 * */
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(GlobalError.INVALID_REQUEST_PARAM);
+		log.warn("Invalid argument: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	}
+
 }
