@@ -139,6 +139,7 @@ public class TokenProvider {
 			.getSubject();
 	}
 
+	// accessToken 유효 시간 추출
 	public Long getAccessTokenExpiration(String accessToken) {
 
 		Claims claims = parseClaims(accessToken);
@@ -155,7 +156,7 @@ public class TokenProvider {
 		Claims claims = parseClaims(accessToken);
 
 		if (claims.get(AUTHORITIES_KEY) == null) {
-			throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+			throw new BusinessException(TokenError.AUTHORITY_NOT_FOUND);
 		}
 
 		// 클레임에서 권한 정보 가져오기

@@ -15,7 +15,8 @@ public enum TokenError implements ErrorCode {
 	INVALID_REFRESH_TOKEN("유효하지 않은 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED, "T_002"),
 	LOGOUT_ERROR("로그아웃: 토큰이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED, "T_003"),
 	ALREADY_LOGOUT("이미 로그아웃된 토큰입니다.", HttpStatus.FORBIDDEN, "T_004"),
-	INVALID_PASSWORD("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED, "T_005");
+	INVALID_PASSWORD("비밀번호가 일치하지 않습니다.", HttpStatus.UNAUTHORIZED, "T_005"),
+	AUTHORITY_NOT_FOUND("권한 정보가 없는 토큰입니다.", HttpStatus.UNAUTHORIZED, "T_006");
 
 	private final String message;
 	private final HttpStatus status;
