@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ScheduleStopDto {
+
 	private int stopOrder;
 	private LocalTime arrivalTime;
 	private LocalTime departureTime;
