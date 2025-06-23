@@ -18,6 +18,8 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.sudo.railo.train.application.dto.ScheduleStopDto;
+import com.sudo.railo.train.application.dto.TrainDto;
+import com.sudo.railo.train.application.dto.TrainScheduleDto;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.util.ExcelUtil;
 
@@ -75,14 +77,17 @@ public class TrainScheduleService {
 	}
 
 	private void parseTrainSchedule(Sheet sheet, CellAddress address) {
+		String sheetName = sheet.getSheetName();
 		int trainNumberIdx = address.getColumn();
-		int trainTypeIdx = address.getColumn() + 1;
+		int trainNameIdx = address.getColumn() + 1;
 		int stationIdx = address.getColumn() + 2;
 		List<Station> stations = parseStations(sheet.getRow(address.getRow()), stationIdx);
 
 		int operationDateIdx = stationIdx + stations.size();
 		LocalDate now = LocalDate.now();
 		String dayOfWeek = now.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+
+		List<TrainScheduleDto> trainSchedulesDto = new ArrayList<>();
 
 		int rowNum = address.getRow() + 2;
 		while (rowNum++ <= sheet.getLastRowNum()) {
@@ -100,9 +105,16 @@ public class TrainScheduleService {
 			}
 
 			int trainNumber = (int)row.getCell(trainNumberIdx).getNumericCellValue();
-			String trainType = row.getCell(trainTypeIdx).getStringCellValue();
-			List<ScheduleStopDto> scheduleStops = parseScheduleStop(row, stationIdx, stations);
+			String trainName = row.getCell(trainNameIdx).getStringCellValue().replaceAll("_", "-");
+			TrainDto trainDto = TrainDto.of(trainNumber, trainName);
+
+			List<ScheduleStopDto> scheduleStopsDto = parseScheduleStop(row, stationIdx, stations);
+			String scheduleName = String.format("%s-%03d %s", trainName, trainNumber, sheetName);
+			trainSchedulesDto.add(TrainScheduleDto.of(scheduleName, now, scheduleStopsDto, trainDto));
 		}
+
+		// TODO: 열차 조회 및 데이터베이스에 저장
+		// TODO: 열차 스케줄 저장
 	}
 
 	private List<Station> parseStations(Row row, int stationIdx) {
@@ -127,7 +139,7 @@ public class TrainScheduleService {
 	}
 
 	private List<ScheduleStopDto> parseScheduleStop(Row row, int start, List<Station> stations) {
-		List<ScheduleStopDto> scheduleStops = new ArrayList<>();
+		List<ScheduleStopDto> scheduleStopsDto = new ArrayList<>();
 
 		int stopOrder = 0;
 		for (int i = 0; i < stations.size(); i++) {
@@ -139,17 +151,17 @@ public class TrainScheduleService {
 
 			LocalTime arrivalTime = departureTime.minusMinutes(DWELL_TIME);
 			Station station = stations.get(i);
-			scheduleStops.add(ScheduleStopDto.of(stopOrder, arrivalTime, departureTime, station));
+			scheduleStopsDto.add(ScheduleStopDto.of(stopOrder, arrivalTime, departureTime, station));
 			stopOrder++;
 		}
 
 		// 첫 번째 정차역은 도착 시간이 `null`이다.
-		scheduleStops.set(0, ScheduleStopDto.first(scheduleStops.get(0)));
+		scheduleStopsDto.set(0, ScheduleStopDto.first(scheduleStopsDto.get(0)));
 
 		// 마지막 정차역은 출발 시간이 `null`이다.
-		int lastIndex = scheduleStops.size() - 1;
-		scheduleStops.set(lastIndex, ScheduleStopDto.last(scheduleStops.get(lastIndex)));
+		int lastIndex = scheduleStopsDto.size() - 1;
+		scheduleStopsDto.set(lastIndex, ScheduleStopDto.last(scheduleStopsDto.get(lastIndex)));
 
-		return scheduleStops;
+		return scheduleStopsDto;
 	}
 }
