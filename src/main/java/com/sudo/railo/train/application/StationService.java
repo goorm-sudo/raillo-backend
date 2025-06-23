@@ -1,7 +1,7 @@
 package com.sudo.railo.train.application;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -17,19 +17,19 @@ public class StationService {
 
 	private final StationRepository stationRepository;
 
-	public List<Station> getStations(List<String> stationNames) {
-		return stationRepository.findByStationNameIn(stationNames);
-	}
+	public Map<String, Station> getStations(List<String> stationNames) {
+		Map<String, Station> stationMap = stationRepository.findByStationNameIn(stationNames).stream()
+			.collect(Collectors.toMap(Station::getStationName, station -> station));
 
-	public List<Station> saveStationsIfNotExists(List<String> stationNames) {
-		List<Station> stations = getStations(stationNames);
-		Set<String> savedStationNames = stations.stream()
-			.map(Station::getStationName)
-			.collect(Collectors.toSet());
-
-		return stationRepository.saveAll(stationNames.stream()
-			.filter(stationName -> !savedStationNames.contains(stationName))
+		List<Station> newStations = stationNames.stream()
+			.filter(name -> !stationMap.containsKey(name))
 			.map(Station::create)
-			.toList());
+			.toList();
+
+		if (!newStations.isEmpty()) {
+			stationRepository.saveAll(newStations);
+			newStations.forEach(station -> stationMap.put(station.getStationName(), station));
+		}
+		return stationMap;
 	}
 }

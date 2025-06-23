@@ -1,12 +1,18 @@
-package com.sudo.railo.train.util;
+package com.sudo.railo.train.infrastructure.excel;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.springframework.util.ObjectUtils;
 
-public class ExcelUtil {
+abstract class ExcelParser {
 
-	public static boolean isEmpty(Row row, int cellNum) {
+	private static final String DIR = System.getProperty("user.dir") + "/files/";
+
+	protected String getPath(String path) {
+		return DIR + path;
+	}
+
+	protected boolean isEmpty(Row row, int cellNum) {
 		if (ObjectUtils.isEmpty(row)) {
 			return true;
 		}
