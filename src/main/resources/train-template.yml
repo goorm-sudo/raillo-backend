@@ -3,9 +3,25 @@ train-template:
     KTX:
       layouts:
         FIRST_CLASS:
-          columns: [ A, B, C ]
+          seatArrangement: "2+1"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: WINDOW
         STANDARD:
-          columns: [ A, B, C, D ]
+          seatArrangement: "2+2"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: AISLE
+            - name: D
+              seatType: WINDOW
       cars:
         - carType: STANDARD
           row: 14
@@ -50,9 +66,25 @@ train-template:
     KTX_SANCHEON:
       layouts:
         FIRST_CLASS:
-          columns: [ A, B, C ]
+          seatArrangement: "2+1"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: WINDOW
         STANDARD:
-          columns: [ A, B, C, D ]
+          seatArrangement: "2+2"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: AISLE
+            - name: D
+              seatType: WINDOW
       cars:
         - carType: STANDARD
           row: 14
@@ -74,9 +106,25 @@ train-template:
     KTX_CHEONGRYONG:
       layouts:
         FIRST_CLASS:
-          columns: [ A, B, C ]
+          seatArrangement: "2+1"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: WINDOW
         STANDARD:
-          columns: [ A, B, C, D ]
+          seatArrangement: "2+2"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: AISLE
+            - name: D
+              seatType: WINDOW
       cars:
         - carType: FIRST_CLASS
           row: 12
@@ -98,9 +146,25 @@ train-template:
     KTX_EUM:
       layouts:
         FIRST_CLASS:
-          columns: [ A, B, C ]
+          seatArrangement: "2+1"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: WINDOW
         STANDARD:
-          columns: [ A, B, C, D ]
+          seatArrangement: "2+2"
+          columns:
+            - name: A
+              seatType: WINDOW
+            - name: B
+              seatType: AISLE
+            - name: C
+              seatType: AISLE
+            - name: D
+              seatType: WINDOW
       cars:
         - carType: FIRST_CLASS
           row: 12
