@@ -26,8 +26,8 @@ public enum BusinessDayType {
 	public static BusinessDayType fromCode(String code) {
 		return switch (code) {
 			case "1" -> WEEKDAY;
-			case "2" -> HOLIDAY;
-			case "3" -> WEEKEND;
+			case "2" -> WEEKEND;
+			case "3" -> HOLIDAY;
 			default -> WEEKDAY;  // null이나 알 수 없는 코드는 평일로 처리
 		};
 	}
