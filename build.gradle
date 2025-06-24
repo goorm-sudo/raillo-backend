@@ -54,6 +54,8 @@ dependencies {
     /* swagger */
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
 
+    /* Apache POI */
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
 }
 
 tasks.named('test') {

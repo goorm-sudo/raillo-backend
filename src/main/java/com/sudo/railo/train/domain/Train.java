@@ -1,14 +1,21 @@
 package com.sudo.railo.train.domain;
 
+import static com.sudo.railo.train.config.TrainTemplateProperties.*;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.annotations.Comment;
 
 import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.train.domain.type.TrainType;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,27 +31,28 @@ public class Train {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "train_id")
 	private Long id;
 
 	private int trainNumber;
 
-	@Comment("KTX, KTX-산천, ITX-청춘 등")
-	private String trainType;
+	@Enumerated(EnumType.STRING)
+	private TrainType trainType;
 
-	@Comment("열차 이름")
+	@Comment("KTX, KTX-산천, ITX-청춘 등")
 	private String trainName;
 
 	private int totalCars;
 
-	@OneToMany(mappedBy = "train", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-	private List<TrainCar> trainCars;
+	@OneToMany(mappedBy = "train", cascade = CascadeType.ALL)
+	private final List<TrainCar> trainCars = new ArrayList<>();
 
 	/* 생성 메서드 */
 
 	/**
 	 * private 생성자
 	 */
-	private Train(int trainNumber, String trainType, String trainName, int totalCars) {
+	private Train(int trainNumber, TrainType trainType, String trainName, int totalCars) {
 		this.trainNumber = trainNumber;
 		this.trainType = trainType;
 		this.trainName = trainName;
@@ -54,8 +62,19 @@ public class Train {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static Train create(int trainNumber, String trainType, String trainName, int totalCars) {
-		return new Train(trainNumber, trainType, trainName, totalCars);
+	public static Train create(int trainNumber, TrainType trainType, String trainName,
+		Map<CarType, SeatLayout> layouts, TrainTemplate template) {
+
+		Train train = new Train(trainNumber, trainType, trainName, template.cars().size());
+		for (int i = 0; i < template.cars().size(); i++) {
+			int carNumber = i + 1;
+			CarSpec spec = template.cars().get(i);
+			SeatLayout layout = layouts.get(spec.carType());
+
+			TrainCar trainCar = TrainCar.create(carNumber, layout, spec);
+			train.addTrainCar(trainCar);
+		}
+		return train;
 	}
 
 	/* 연관 관계 편의 메서드 */
