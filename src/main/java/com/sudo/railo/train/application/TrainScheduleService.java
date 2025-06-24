@@ -8,8 +8,8 @@ import org.apache.poi.ss.util.CellAddress;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sudo.railo.train.application.dto.ScheduleStopDto;
-import com.sudo.railo.train.application.dto.TrainScheduleDto;
+import com.sudo.railo.train.application.dto.ScheduleStopData;
+import com.sudo.railo.train.application.dto.TrainScheduleData;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
@@ -48,34 +48,34 @@ public class TrainScheduleService {
 		List<String> stationNames = parser.getStationNames(sheet, address);
 		Map<String, Station> stationMap = stationService.findOrCreateStation(stationNames);
 
-		List<TrainScheduleDto> trainScheduleDtos = parser.getTrainScheduleDtos(sheet, address);
-		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainScheduleDtos.stream()
-			.map(TrainScheduleDto::getTrainDto)
+		List<TrainScheduleData> trainScheduleData = parser.getTrainScheduleData(sheet, address);
+		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainScheduleData.stream()
+			.map(TrainScheduleData::getTrainData)
 			.toList());
 
-		List<TrainSchedule> trainSchedules = trainScheduleDtos.stream()
-			.map(dto -> createTrainSchedule(dto, trainMap, stationMap))
+		List<TrainSchedule> trainSchedules = trainScheduleData.stream()
+			.map(data -> createTrainSchedule(data, trainMap, stationMap))
 			.toList();
 		trainScheduleRepository.saveAll(trainSchedules);
 	}
 
-	private TrainSchedule createTrainSchedule(TrainScheduleDto dto, Map<Integer, Train> trainMap,
+	private TrainSchedule createTrainSchedule(TrainScheduleData data, Map<Integer, Train> trainMap,
 		Map<String, Station> stationMap) {
-		Train train = trainMap.get(dto.getTrainDto().getTrainNumber());
-		ScheduleStopDto firstStop = dto.getFirstStop();
-		ScheduleStopDto lastStop = dto.getLastStop();
+		Train train = trainMap.get(data.getTrainData().getTrainNumber());
+		ScheduleStopData firstStop = data.getFirstStop();
+		ScheduleStopData lastStop = data.getLastStop();
 
-		List<ScheduleStop> scheduleStops = dto.getScheduleStopDtos().stream()
-			.map(scheduleStopDto -> ScheduleStop.create(
-				scheduleStopDto.getStopOrder(),
-				scheduleStopDto.getArrivalTime(),
-				scheduleStopDto.getDepartureTime(),
-				stationMap.get(scheduleStopDto.getStationName())
+		List<ScheduleStop> scheduleStops = data.getScheduleStopData().stream()
+			.map(scheduleStopData -> ScheduleStop.create(
+				scheduleStopData.getStopOrder(),
+				scheduleStopData.getArrivalTime(),
+				scheduleStopData.getDepartureTime(),
+				stationMap.get(scheduleStopData.getStationName())
 			)).toList();
 
 		return TrainSchedule.create(
-			dto.getScheduleName(),
-			dto.getOperationDate(),
+			data.getScheduleName(),
+			data.getOperationDate(),
 			firstStop.getDepartureTime(),
 			lastStop.getArrivalTime(),
 			train,

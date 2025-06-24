@@ -17,9 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.sudo.railo.train.application.dto.ScheduleStopDto;
-import com.sudo.railo.train.application.dto.TrainDto;
-import com.sudo.railo.train.application.dto.TrainScheduleDto;
+import com.sudo.railo.train.application.dto.ScheduleStopData;
+import com.sudo.railo.train.application.dto.TrainData;
+import com.sudo.railo.train.application.dto.TrainScheduleData;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +65,7 @@ public class TrainScheduleParser extends ExcelParser {
 		throw new IllegalStateException("열차 시간표의 시작 지점을 찾을 수 없습니다.");
 	}
 
-	public List<TrainScheduleDto> getTrainScheduleDtos(Sheet sheet, CellAddress address) {
+	public List<TrainScheduleData> getTrainScheduleData(Sheet sheet, CellAddress address) {
 		String sheetName = sheet.getSheetName();
 		int trainNumberIdx = address.getColumn();
 		int trainNameIdx = address.getColumn() + 1;
@@ -76,7 +76,7 @@ public class TrainScheduleParser extends ExcelParser {
 		LocalDate now = LocalDate.now();
 		String dayOfWeek = now.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
 
-		List<TrainScheduleDto> trainScheduleDtos = new ArrayList<>();
+		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
 		int rowNum = address.getRow() + 2;
 		while (rowNum++ <= sheet.getLastRowNum()) {
 			Row row = sheet.getRow(rowNum);
@@ -94,13 +94,13 @@ public class TrainScheduleParser extends ExcelParser {
 
 			int trainNumber = (int)row.getCell(trainNumberIdx).getNumericCellValue();
 			String trainName = row.getCell(trainNameIdx).getStringCellValue().replaceAll("_", "-");
-			TrainDto trainDto = TrainDto.of(trainNumber, trainName);
+			TrainData trainData = TrainData.of(trainNumber, trainName);
 
-			List<ScheduleStopDto> scheduleStopDtos = getScheduleStopDtos(row, stationIdx, stationNames);
+			List<ScheduleStopData> scheduleStopData = getScheduleStopData(row, stationIdx, stationNames);
 			String scheduleName = String.format("%s-%03d %s", trainName, trainNumber, sheetName);
-			trainScheduleDtos.add(TrainScheduleDto.of(scheduleName, now, scheduleStopDtos, trainDto));
+			trainScheduleData.add(TrainScheduleData.of(scheduleName, now, scheduleStopData, trainData));
 		}
-		return trainScheduleDtos;
+		return trainScheduleData;
 	}
 
 	public List<String> getStationNames(Sheet sheet, CellAddress address) {
@@ -120,8 +120,8 @@ public class TrainScheduleParser extends ExcelParser {
 		return stationNames;
 	}
 
-	private List<ScheduleStopDto> getScheduleStopDtos(Row row, int start, List<String> stationNames) {
-		List<ScheduleStopDto> scheduleStopDtos = new ArrayList<>();
+	private List<ScheduleStopData> getScheduleStopData(Row row, int start, List<String> stationNames) {
+		List<ScheduleStopData> scheduleStopData = new ArrayList<>();
 
 		int stopOrder = 0;
 		for (int i = 0; i < stationNames.size(); i++) {
@@ -132,17 +132,17 @@ public class TrainScheduleParser extends ExcelParser {
 			}
 
 			LocalTime arrivalTime = departureTime.minusMinutes(DWELL_TIME);
-			scheduleStopDtos.add(ScheduleStopDto.of(stopOrder, arrivalTime, departureTime, stationNames.get(i)));
+			scheduleStopData.add(ScheduleStopData.of(stopOrder, arrivalTime, departureTime, stationNames.get(i)));
 			stopOrder++;
 		}
 
 		// 첫 번째 정차역은 도착 시간이 `null`이다.
-		scheduleStopDtos.set(0, ScheduleStopDto.first(scheduleStopDtos.get(0)));
+		scheduleStopData.set(0, ScheduleStopData.first(scheduleStopData.get(0)));
 
 		// 마지막 정차역은 출발 시간이 `null`이다.
-		int lastIndex = scheduleStopDtos.size() - 1;
-		scheduleStopDtos.set(lastIndex, ScheduleStopDto.last(scheduleStopDtos.get(lastIndex)));
+		int lastIndex = scheduleStopData.size() - 1;
+		scheduleStopData.set(lastIndex, ScheduleStopData.last(scheduleStopData.get(lastIndex)));
 
-		return scheduleStopDtos;
+		return scheduleStopData;
 	}
 }
