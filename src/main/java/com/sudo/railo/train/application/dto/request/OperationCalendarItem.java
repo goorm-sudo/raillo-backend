@@ -30,25 +30,9 @@ public record OperationCalendarItem(
 		return new OperationCalendarItem(
 			operationDate,
 			operationDate.getDayOfWeek(),
-			determineBusinessDayType(operationDate, isHoliday),
+			BusinessDayType.fromDate(operationDate, isHoliday),
 			YesNo.from(isHoliday).getValue(),
 			YesNo.from(hasSchedule).getValue()
 		);
-	}
-
-	/**
-	 * 영업일 구분
-	 */
-	private static BusinessDayType determineBusinessDayType(LocalDate date, boolean isHoliday) {
-		if (isHoliday) {
-			return BusinessDayType.HOLIDAY;
-		}
-
-		DayOfWeek dayOfWeek = date.getDayOfWeek();
-		if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-			return BusinessDayType.WEEKEND;
-		}
-
-		return BusinessDayType.WEEKDAY;
 	}
 }
