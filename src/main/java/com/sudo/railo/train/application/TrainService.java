@@ -48,6 +48,7 @@ public class TrainService {
 				dto.getTrainNumber(),
 				dto.getTrainType(),
 				dto.getTrainName(),
+				properties.getLayouts(),
 				properties.getTemplates().get(dto.getTrainType())
 			)).toList();
 	}

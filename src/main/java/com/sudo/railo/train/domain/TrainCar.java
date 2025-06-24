@@ -65,13 +65,13 @@ public class TrainCar {
 	}
 
 	/* 정적 팩토리 메서드 */
-	public static TrainCar create(int carNumber, SeatLayout layout, CarConfig cars) {
+	public static TrainCar create(int carNumber, SeatLayout layout, CarSpec cars) {
 		int totalSeats = cars.row() * layout.columns().size();
 		TrainCar trainCar = new TrainCar(carNumber, cars.carType(), totalSeats, layout.seatArrangement());
 
 		for (int i = 1; i <= cars.row(); i++) {
-			for (SeatConfig config : layout.columns()) {
-				Seat seat = Seat.create(i, config.name(), config.seatType());
+			for (SeatColumn column : layout.columns()) {
+				Seat seat = Seat.create(i, column.name(), column.seatType());
 				trainCar.addSeat(seat);
 			}
 		}

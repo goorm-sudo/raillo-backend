@@ -4,6 +4,7 @@ import static com.sudo.railo.train.config.TrainTemplateProperties.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.annotations.Comment;
 
@@ -61,15 +62,16 @@ public class Train {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static Train create(int trainNumber, TrainType trainType, String trainName, TrainTemplate template) {
-		Train train = new Train(trainNumber, trainType, trainName, template.cars().size());
+	public static Train create(int trainNumber, TrainType trainType, String trainName,
+		Map<CarType, SeatLayout> layouts, TrainTemplate template) {
 
+		Train train = new Train(trainNumber, trainType, trainName, template.cars().size());
 		for (int i = 0; i < template.cars().size(); i++) {
 			int carNumber = i + 1;
-			CarConfig config = template.cars().get(i);
-			SeatLayout layout = template.layouts().get(config.carType());
+			CarSpec spec = template.cars().get(i);
+			SeatLayout layout = layouts.get(spec.carType());
 
-			TrainCar trainCar = TrainCar.create(carNumber, layout, config);
+			TrainCar trainCar = TrainCar.create(carNumber, layout, spec);
 			train.addTrainCar(trainCar);
 		}
 		return train;
