@@ -7,8 +7,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
+import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.TokenRequest;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
+import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.success.AuthSuccess;
 
 import jakarta.validation.Valid;
@@ -27,6 +30,22 @@ public class AuthController {
 		SignUpResponse response = memberAuthService.signUp(request);
 
 		return SuccessResponse.of(AuthSuccess.SIGN_UP_SUCCESS, response);
+	}
+
+	@PostMapping("/login")
+	public SuccessResponse<TokenResponse> memberNoLogin(@RequestBody @Valid MemberNoLoginRequest request) {
+
+		TokenResponse tokenResponse = memberAuthService.memberNoLogin(request);
+
+		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, tokenResponse);
+	}
+
+	@PostMapping("/logout")
+	public SuccessResponse<?> logout(@RequestBody @Valid TokenRequest request) {
+
+		memberAuthService.logout(request);
+
+		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
 
 }
