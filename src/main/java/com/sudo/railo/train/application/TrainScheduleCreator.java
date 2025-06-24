@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +31,11 @@ public class TrainScheduleCreator {
 	private final TrainService trainService;
 	private final TrainScheduleRepository trainScheduleRepository;
 
-	@Value("${train.schedule.excel.path}")
-	private String trainSchedulePath;
-
 	@Transactional
 	public void createTrainSchedule(LocalDate localDate) {
-		List<Sheet> sheets = parser.getSheets(trainSchedulePath);
+		log.info("[{}] 운행 스케줄 생성 시작", localDate);
+
+		List<Sheet> sheets = parser.getSheets();
 		sheets.forEach(sheet -> {
 			// 하행
 			CellAddress downTrainAddress = parser.getFirstCellAddress(sheet, 0);
@@ -47,6 +45,8 @@ public class TrainScheduleCreator {
 			CellAddress upTrainAddress = parser.getFirstCellAddress(sheet, downTrainAddress.getColumn() + 1);
 			parseAndPersistTrainSchedule(sheet, upTrainAddress, localDate);
 		});
+
+		log.info("[{}] 운행 스케줄 생성 완료", localDate);
 	}
 
 	private void parseAndPersistTrainSchedule(Sheet sheet, CellAddress address, LocalDate localDate) {
@@ -61,7 +61,9 @@ public class TrainScheduleCreator {
 		List<TrainSchedule> trainSchedules = trainScheduleData.stream()
 			.map(data -> createTrainSchedule(data, trainMap, stationMap))
 			.toList();
+
 		trainScheduleRepository.saveAll(trainSchedules);
+		log.info("[{}] {}개의 운행 스케줄 저장 완료", sheet.getSheetName(), trainSchedules.size());
 	}
 
 	private TrainSchedule createTrainSchedule(TrainScheduleData data, Map<Integer, Train> trainMap,
