@@ -30,7 +30,7 @@ public class TrainScheduleController {
 	 */
 	@GetMapping("/calendar")
 	@Operation(summary = "운행 캘린더 조회", description = "금일로부터 한 달간의 운행 캘린더를 조회합니다.")
-	public SuccessResponse<List<OperationCalendarItem>> getOperationCalender() {
+	public SuccessResponse<List<OperationCalendarItem>> getOperationCalendar() {
 		log.info("운행 캘린더 조회");
 		List<OperationCalendarItem> calendar = trainScheduleService.getOperationCalendar();
 		log.info("운행 캘린더 조회: {} 건", calendar.size());
