@@ -6,10 +6,10 @@ import org.springframework.util.ObjectUtils;
 
 abstract class ExcelParser {
 
-	private static final String DIR = System.getProperty("user.dir") + "/files/";
+	private static final String FILES_DIR = System.getProperty("user.dir") + "/files/";
 
-	protected String getPath(String path) {
-		return DIR + path;
+	protected String getFilePath(String fileName) {
+		return FILES_DIR + fileName;
 	}
 
 	protected boolean isEmpty(Row row, int cellNum) {

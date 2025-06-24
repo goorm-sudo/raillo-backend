@@ -1,6 +1,8 @@
 package com.sudo.railo.train.infrastructure.excel;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.TextStyle;
@@ -13,6 +15,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -21,9 +24,6 @@ import com.sudo.railo.train.application.dto.ScheduleStopData;
 import com.sudo.railo.train.application.dto.TrainData;
 import com.sudo.railo.train.application.dto.TrainScheduleData;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Component
 public class TrainScheduleParser extends ExcelParser {
 
@@ -32,17 +32,22 @@ public class TrainScheduleParser extends ExcelParser {
 	private static final String OPERATION_DATE_EVERY_DAY = "매일";
 	private static final int DWELL_TIME = 2; // 정차역에 머무는 시간(분)
 
-	public List<Sheet> getSheets(String path) {
+	@Value("${train.schedule.excel.filename}")
+	private String fileName;
+
+	public List<Sheet> getSheets() {
 		List<Sheet> sheets = new ArrayList<>();
-		try (FileInputStream stream = new FileInputStream(getPath(path))) {
+		try (FileInputStream stream = new FileInputStream(getFilePath(fileName))) {
 			XSSFWorkbook workbook = new XSSFWorkbook(stream);
 			for (Sheet sheet : workbook) {
 				if (!sheet.getSheetName().contains(EXCLUDE_SHEET)) {
 					sheets.add(sheet);
 				}
 			}
-		} catch (Exception ex) {
-			log.error("유효하지 않은 열차 시간표입니다.", ex);
+		} catch (FileNotFoundException ex) {
+			throw new IllegalStateException("열차 시간표 파일을 찾을 수 없습니다.", ex);
+		} catch (IOException ex) {
+			throw new IllegalStateException("열차 시간표 파일을 읽을 수 없습니다.", ex);
 		}
 		return sheets;
 	}
