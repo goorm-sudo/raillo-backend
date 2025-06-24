@@ -3,12 +3,15 @@ package com.sudo.railo.train.domain;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -24,6 +27,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -90,6 +94,9 @@ public class TrainSchedule {
 	@Column(name = "available_seats")
 	private Map<CarType, Integer> availableSeatsMap = new HashMap<>();
 
+	@OneToMany(mappedBy = "trainSchedule", cascade = CascadeType.ALL)
+	private final List<ScheduleStop> scheduleStops = new ArrayList<>();
+
 	/* 생성 메서드 */
 
 	/**
@@ -130,9 +137,10 @@ public class TrainSchedule {
 		LocalTime arrivalTime,
 		Train train,
 		Station departureStation,
-		Station arrivalStation) {
+		Station arrivalStation,
+		List<ScheduleStop> scheduleStops) {
 
-		return new TrainSchedule(
+		TrainSchedule trainSchedule = new TrainSchedule(
 			scheduleName,
 			operationDate,
 			departureTime,
@@ -141,6 +149,8 @@ public class TrainSchedule {
 			departureStation,
 			arrivalStation
 		);
+		scheduleStops.forEach(trainSchedule::addScheduleStop);
+		return trainSchedule;
 	}
 
 	/** 초기 좌석 수 설정 */
@@ -162,6 +172,11 @@ public class TrainSchedule {
 
 	public void setArrivalStation(Station arrivalStation) {
 		this.arrivalStation = arrivalStation;
+	}
+
+	public void addScheduleStop(ScheduleStop scheduleStop) {
+		scheduleStops.add(scheduleStop);
+		scheduleStop.setTrainSchedule(this);
 	}
 
 	/* 비즈니스 메서드 */
