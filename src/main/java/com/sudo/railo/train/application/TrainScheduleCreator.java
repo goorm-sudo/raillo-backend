@@ -1,10 +1,12 @@
 package com.sudo.railo.train.application;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,32 +25,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TrainScheduleService {
+public class TrainScheduleCreator {
 
 	private final TrainScheduleParser parser;
 	private final StationService stationService;
 	private final TrainService trainService;
 	private final TrainScheduleRepository trainScheduleRepository;
 
+	@Value("${train.schedule.excel.path}")
+	private String trainSchedulePath;
+
 	@Transactional
-	public void createTrainSchedule(String path) {
-		List<Sheet> sheets = parser.getSheets(path);
+	public void createTrainSchedule(LocalDate localDate) {
+		List<Sheet> sheets = parser.getSheets(trainSchedulePath);
 		sheets.forEach(sheet -> {
 			// 하행
 			CellAddress downTrainAddress = parser.getFirstCellAddress(sheet, 0);
-			parseAndPersistTrainSchedule(sheet, downTrainAddress);
+			parseAndPersistTrainSchedule(sheet, downTrainAddress, localDate);
 
 			// 상행
 			CellAddress upTrainAddress = parser.getFirstCellAddress(sheet, downTrainAddress.getColumn() + 1);
-			parseAndPersistTrainSchedule(sheet, upTrainAddress);
+			parseAndPersistTrainSchedule(sheet, upTrainAddress, localDate);
 		});
 	}
 
-	private void parseAndPersistTrainSchedule(Sheet sheet, CellAddress address) {
+	private void parseAndPersistTrainSchedule(Sheet sheet, CellAddress address, LocalDate localDate) {
 		List<String> stationNames = parser.getStationNames(sheet, address);
 		Map<String, Station> stationMap = stationService.findOrCreateStation(stationNames);
 
-		List<TrainScheduleData> trainScheduleData = parser.getTrainScheduleData(sheet, address);
+		List<TrainScheduleData> trainScheduleData = parser.getTrainScheduleData(sheet, address, localDate);
 		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainScheduleData.stream()
 			.map(TrainScheduleData::getTrainData)
 			.toList());

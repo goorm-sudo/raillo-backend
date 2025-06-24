@@ -65,7 +65,7 @@ public class TrainScheduleParser extends ExcelParser {
 		throw new IllegalStateException("열차 시간표의 시작 지점을 찾을 수 없습니다.");
 	}
 
-	public List<TrainScheduleData> getTrainScheduleData(Sheet sheet, CellAddress address) {
+	public List<TrainScheduleData> getTrainScheduleData(Sheet sheet, CellAddress address, LocalDate localDate) {
 		String sheetName = sheet.getSheetName();
 		int trainNumberIdx = address.getColumn();
 		int trainNameIdx = address.getColumn() + 1;
@@ -73,8 +73,8 @@ public class TrainScheduleParser extends ExcelParser {
 		List<String> stationNames = getStationNames(sheet, address);
 		int operationDateIdx = stationIdx + stationNames.size();
 
-		LocalDate now = LocalDate.now();
-		String dayOfWeek = now.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+		String dayOfWeek = localDate.getDayOfWeek()
+			.getDisplayName(TextStyle.SHORT, Locale.KOREAN);
 
 		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
 		int rowNum = address.getRow() + 2;
@@ -98,7 +98,7 @@ public class TrainScheduleParser extends ExcelParser {
 
 			List<ScheduleStopData> scheduleStopData = getScheduleStopData(row, stationIdx, stationNames);
 			String scheduleName = String.format("%s-%03d %s", trainName, trainNumber, sheetName);
-			trainScheduleData.add(TrainScheduleData.of(scheduleName, now, scheduleStopData, trainData));
+			trainScheduleData.add(TrainScheduleData.of(scheduleName, localDate, scheduleStopData, trainData));
 		}
 		return trainScheduleData;
 	}
