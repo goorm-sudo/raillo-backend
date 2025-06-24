@@ -17,17 +17,18 @@ import lombok.RequiredArgsConstructor;
 @ConfigurationProperties(prefix = "train-template")
 public class TrainTemplateProperties {
 
+	private final Map<CarType, SeatLayout> layouts;
 	private final Map<TrainType, TrainTemplate> templates;
 
-	public record TrainTemplate(Map<CarType, SeatLayout> layouts, List<CarConfig> cars) {
+	public record SeatLayout(String seatArrangement, List<SeatColumn> columns) {
 	}
 
-	public record SeatLayout(String seatArrangement, List<SeatConfig> columns) {
+	public record SeatColumn(String name, SeatType seatType) {
 	}
 
-	public record SeatConfig(String name, SeatType seatType) {
+	public record TrainTemplate(List<CarSpec> cars) {
 	}
 
-	public record CarConfig(CarType carType, int row) {
+	public record CarSpec(CarType carType, int row) {
 	}
 }
