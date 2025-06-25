@@ -14,6 +14,7 @@ import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.success.MemberSuccess;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,9 +34,9 @@ public class MemberController {
 	}
 
 	@DeleteMapping("member/delete")
-	public SuccessResponse<?> memberDelete() {
+	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
 
-		memberService.memberDelete();
+		memberService.memberDelete(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_DELETE_SUCCESS);
 	}

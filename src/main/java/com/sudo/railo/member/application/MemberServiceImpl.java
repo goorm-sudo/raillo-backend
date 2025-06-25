@@ -17,6 +17,7 @@ import com.sudo.railo.member.domain.Role;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -25,6 +26,7 @@ public class MemberServiceImpl implements MemberService {
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final MemberAuthService memberAuthService;
 
 	@Override
 	@Transactional
@@ -51,7 +53,7 @@ public class MemberServiceImpl implements MemberService {
 	// 회원 삭제 로직
 	@Override
 	@Transactional
-	public void memberDelete() {
+	public void memberDelete(HttpServletRequest request) {
 
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 
@@ -59,6 +61,9 @@ public class MemberServiceImpl implements MemberService {
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		memberRepository.delete(currentMember);
+
+		// 로그아웃 수행
+		memberAuthService.logout(request);
 	}
 
 	// 회원 조회 로직
