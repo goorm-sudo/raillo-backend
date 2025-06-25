@@ -1,6 +1,7 @@
 package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -64,27 +66,31 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	 */
 	@Override
 	public Page<TrainBasicInfo> findTrainBasicInfo(
-		Long departureStationId, Long arrivalStationId, LocalDate operationDate, Pageable pageable) {
+		Long departureStationId, Long arrivalStationId, LocalDate operationDate,
+		LocalTime departureTimeFrom, Pageable pageable) {
 
 		QTrainSchedule ts = QTrainSchedule.trainSchedule;
 		QTrain t = QTrain.train;
+
+		// WHERE 조건 - 인덱스 순서에 맞춤
+		BooleanBuilder whereCondition = new BooleanBuilder()
+			.and(ts.operationDate.eq(operationDate))                // 1번째: 운행날짜
+			.and(ts.operationStatus.eq(OperationStatus.ACTIVE))     // 2번째: 운행 상태
+			.and(ts.departureStation.id.eq(departureStationId))     // 3번째: 출발역
+			.and(ts.arrivalStation.id.eq(arrivalStationId))         // 4번째: 도착역
+			.and(ts.departureTime.goe(departureTimeFrom));          // 5번째: 출발 시간 이후 (Greater than Or Equal)
 
 		// 열차 기본 정보 조회 쿼리
 		List<TrainBasicInfo> content = queryFactory
 			.select(Projections.constructor(TrainBasicInfo.class,
 				ts.id,                              // 열차 스케줄 ID
-				t.trainNumber,                    // 열차 번호
+				t.trainNumber,                      // 열차 번호
 				t.trainName,                        // 열차명 (KTX, SRT 등)
 				ts.departureTime,                   // 출발 시간
 				ts.arrivalTime))                    // 도착 시간
 			.from(ts)
 			.join(ts.train, t)                      // 열차 정보 조인
-			.where(
-				ts.departureStation.id.eq(departureStationId),     // 출발역 조건
-				ts.arrivalStation.id.eq(arrivalStationId),         // 도착역 조건
-				ts.operationDate.eq(operationDate),                // 운행날짜 조건
-				ts.operationStatus.eq(OperationStatus.ACTIVE)      // 운행 중인 열차만
-			)
+			.where(whereCondition)
 			.orderBy(ts.departureTime.asc())        // 출발시간 오름차순 정렬
 			.offset(pageable.getOffset())           // 페이징 시작점
 			.limit(pageable.getPageSize())          // 페이징 크기
@@ -94,12 +100,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 		Long total = queryFactory
 			.select(ts.count())
 			.from(ts)
-			.where(
-				ts.departureStation.id.eq(departureStationId),
-				ts.arrivalStation.id.eq(arrivalStationId),
-				ts.operationDate.eq(operationDate),
-				ts.operationStatus.eq(OperationStatus.ACTIVE)
-			)
+			.where(whereCondition)
 			.fetchOne();
 
 		return new PageImpl<>(content, pageable, total != null ? total : 0);

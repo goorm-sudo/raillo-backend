@@ -32,10 +32,11 @@ public enum TrainErrorCode implements ErrorCode {
 	INVALID_PASSENGER_COUNT("승객 수는 1명 이상 9명 이하여야 합니다.", HttpStatus.BAD_REQUEST, "T4301"),
 	PASSENGER_COUNT_EXCEEDS_LIMIT("한 번에 예약 가능한 최대 승객 수를 초과했습니다.", HttpStatus.BAD_REQUEST, "T4302"),
 
-	// 날짜 관련
+	// 날짜, 시간 관련
 	INVALID_OPERATION_DATE("운행 날짜는 오늘 이후여야 합니다.", HttpStatus.BAD_REQUEST, "T4401"),
 	OPERATION_DATE_TOO_FAR("예약 가능한 기간을 초과했습니다. (최대 1개월)", HttpStatus.BAD_REQUEST, "T4402"),
 	NO_OPERATION_ON_DATE("해당 날짜와 운행하는 열차가 없습니다.", HttpStatus.NOT_FOUND, "T4403"),
+	DEPARTURE_TIME_PASSED("선택하신 출발 시간이 이미 지났습니다.", HttpStatus.BAD_REQUEST, "T4404"),
 
 	// 검색 관련
 	NO_SEARCH_RESULTS("검색 조건에 맞는 열차가 없습니다.", HttpStatus.NOT_FOUND, "T4501"),
