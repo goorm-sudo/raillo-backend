@@ -22,8 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-	public static final String AUTHORIZATION_HEADER = "Authorization";
-	public static final String BEARER_PREFIX = "Bearer";
+	private final TokenExtractor tokenExtractor;
 	private final TokenProvider tokenProvider;
 	private final RedisUtil redisUtil;
 
@@ -34,8 +33,8 @@ public class JwtFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain
 	) throws ServletException, IOException {
-
-		String jwt = resolveToken(request);
+		
+		String jwt = tokenExtractor.resolveToken(request);
 
 		if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
 
@@ -54,13 +53,4 @@ public class JwtFilter extends OncePerRequestFilter {
 		filterChain.doFilter(request, response);
 	}
 
-	private String resolveToken(HttpServletRequest request) {
-		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
-		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-			return bearerToken.substring(7);
-		}
-
-		return null;
-	}
 }
