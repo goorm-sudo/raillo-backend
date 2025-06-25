@@ -32,11 +32,11 @@ import lombok.AccessLevel;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
-public class SeatInventory extends BaseEntity {
+public class SeatReservation extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "seat_inventory_id")
+	@Column(name = "seat_reservation_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -70,8 +70,8 @@ public class SeatInventory extends BaseEntity {
 	private Long version;
 
 	// 빈 좌석을 생성하는 메서드
-	public static SeatInventory createAvailable(TrainSchedule trainSchedule, Seat seat) {
-		return SeatInventory.builder()
+	public static SeatReservation createAvailable(TrainSchedule trainSchedule, Seat seat) {
+		return SeatReservation.builder()
 			.trainSchedule(trainSchedule)
 			.seat(seat)
 			.seatStatus(SeatStatus.AVAILABLE)
