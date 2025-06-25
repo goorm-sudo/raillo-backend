@@ -52,4 +52,9 @@ public class Member extends BaseEntity {
 		MemberDetail memberDetail) {
 		return new Member(name, phoneNumber, password, role, memberDetail);
 	}
+
+	// 비회원 등록 정적 팩토리 메서드
+	public static Member guestCreate(String name, String phoneNumber, String password) {
+		return new Member(name, phoneNumber, password, Role.GUEST, null);
+	}
 }
