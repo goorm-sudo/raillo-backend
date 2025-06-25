@@ -9,11 +9,11 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
-import com.sudo.railo.member.application.dto.request.TokenRequest;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.success.AuthSuccess;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -41,7 +41,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public SuccessResponse<?> logout(@RequestBody @Valid TokenRequest request) {
+	public SuccessResponse<?> logout(HttpServletRequest request) {
 
 		memberAuthService.logout(request);
 

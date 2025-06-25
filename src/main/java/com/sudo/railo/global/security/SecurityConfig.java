@@ -18,6 +18,7 @@ import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.jwt.JwtAccessDeniedHandler;
 import com.sudo.railo.global.security.jwt.JwtAuthenticationEntryPoint;
 import com.sudo.railo.global.security.jwt.JwtFilter;
+import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class SecurityConfig {
 
 	private final RedisUtil redisUtil;
 	private final TokenProvider tokenProvider;
+	private final TokenExtractor tokenExtractor;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
@@ -61,7 +63,8 @@ public class SecurityConfig {
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.anyRequest().authenticated();
 			})
-			.addFilterBefore(new JwtFilter(tokenProvider, redisUtil), UsernamePasswordAuthenticationFilter.class)
+			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, redisUtil),
+				UsernamePasswordAuthenticationFilter.class)
 			.build();
 	}
 }
