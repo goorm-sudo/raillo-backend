@@ -72,33 +72,34 @@ public record TrainSearchResponse(
 	}
 
 	/* 정적 팩토리 메서드 */
-	public static TrainSearchResponse seatsOnly(String trainNumber, String trainName,
+
+	/**
+	 * 생성 메서드
+	 */
+	public static TrainSearchResponse of(String trainNumber, String trainName,
 		LocalTime departureTime, LocalTime arrivalTime,
 		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat,
+		StandingTypeInfo standing, // null 가능
 		SeatAvailabilityStatus overallStatus) {
 		return new TrainSearchResponse(
 			trainNumber, trainName, departureTime, arrivalTime,
-			null, // travelTime을 null로 전달하면 Compact Constructor에서 자동 계산
-			standardSeat, firstClassSeat, null, overallStatus
-		);
-	}
-
-	public static TrainSearchResponse withStanding(String trainNumber, String trainName,
-		LocalTime departureTime, LocalTime arrivalTime,
-		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat,
-		StandingTypeInfo standing, SeatAvailabilityStatus overallStatus) {
-		return new TrainSearchResponse(
-			trainNumber, trainName, departureTime, arrivalTime,
-			null, // travelTime을 null로 전달하면 Compact Constructor에서 자동 계산
+			null, // travelTime은 자동 계산
 			standardSeat, firstClassSeat, standing, overallStatus
 		);
 	}
 
 	/* 편의 메서드 */
+
+	/**
+	 * 입석 정보 존재 여부
+	 */
 	public boolean hasStanding() {
 		return standing != null;
 	}
 
+	/**
+	 * 고속 열차(KTX/SRT) 여부
+	 */
 	public boolean isExpressTrain() {
 		return trainName.contains("KTX");
 	}
