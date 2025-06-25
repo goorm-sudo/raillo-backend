@@ -7,9 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
+import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.domain.Member;
+import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Role;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
@@ -44,4 +47,33 @@ public class MemberServiceImpl implements MemberService {
 
 		return new GuestRegisterResponse(request.name(), Role.GUEST);
 	}
+
+	// 회원 삭제 로직
+	@Override
+	@Transactional
+	public void memberDelete() {
+
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+
+		Member currentMember = memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		memberRepository.delete(currentMember);
+	}
+
+	// 회원 조회 로직
+	@Override
+	@Transactional(readOnly = true)
+	public MemberInfoResponse getMemberInfo() {
+
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+
+		Member member = memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		MemberDetail memberDetail = member.getMemberDetail();
+
+		return MemberInfoResponse.of(member.getName(), member.getPhoneNumber(), member.getRole(), memberDetail);
+	}
+
 }
