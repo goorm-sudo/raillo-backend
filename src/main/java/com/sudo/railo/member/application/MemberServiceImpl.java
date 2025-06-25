@@ -1,5 +1,7 @@
 package com.sudo.railo.member.application;
 
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,17 +28,18 @@ public class MemberServiceImpl implements MemberService {
 	public GuestRegisterResponse guestRegister(GuestRegisterRequest request) {
 
 		// 중복 체크
-		if (memberRepository.existsByNameAndPhoneNumber(request.name(), request.phoneNumber())) {
-			Member member = memberRepository.findByNameAndPhoneNumber(request.name(), request.phoneNumber());
+		List<Member> foundMembers = memberRepository.findByNameAndPhoneNumber(request.name(), request.phoneNumber());
 
-			if (passwordEncoder.matches(request.password(), member.getPassword())) {
+		foundMembers.stream()
+			.filter(member -> passwordEncoder.matches(request.password(), member.getPassword()))
+			.findFirst()
+			.ifPresent(member -> {
 				throw new BusinessException(MemberError.DUPLICATE_GUEST_INFO);
-			}
-		}
+			});
 
 		String encodedPassword = passwordEncoder.encode(request.password());
 
-		Member member = Member.create(request.name(), request.phoneNumber(), encodedPassword, Role.GUEST, null);
+		Member member = Member.guestCreate(request.name(), request.phoneNumber(), encodedPassword);
 		memberRepository.save(member);
 
 		return new GuestRegisterResponse(request.name(), Role.GUEST);
