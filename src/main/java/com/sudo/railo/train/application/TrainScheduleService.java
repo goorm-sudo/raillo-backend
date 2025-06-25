@@ -101,6 +101,10 @@ public class TrainScheduleService {
 
 	/**
 	 * 통합 열차 검색 (메인 검색)
+	 * 1. 검색 조건으로 기본 열차 정보 조회 (페이징)
+	 * 2. 구간별 요금 정보 조회
+	 * 3. 각 열차별 좌석 상태 계산 및 응답 생성
+	 * 4. 최종 검색 결과 반환
 	 */
 	public TrainSearchPageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
 		log.info("열차 검색 시작: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후",
@@ -108,12 +112,14 @@ public class TrainScheduleService {
 			request.operationDate(), request.passengerCount(), request.departureHour());
 
 		try {
+			// 1.  검색 조건에 맞는 기본 열차 정보 조회
 			LocalTime departureTimeFrom = request.getDepartureTimeFilter();
 
 			Page<TrainBasicInfo> trainPage = trainScheduleRepositoryCustom.findTrainBasicInfo(
 				request.departureStationId(), request.arrivalStationId(), request.operationDate(), departureTimeFrom,
 				pageable);
 
+			// 검색 결과 없음 예외 처리
 			if (trainPage.isEmpty()) {
 				log.warn("열차 조회 결과 없음: {}역 -> {}역, {}, {}시 이후",
 					request.departureStationId(), request.arrivalStationId(), request.operationDate(),
@@ -122,7 +128,10 @@ public class TrainScheduleService {
 					String.format("%s %시 이후 운행하는 열차가 없습니다.", request.operationDate(), request.departureHour()));
 			}
 
+			// 2. 구간별 요금 정보 조회 (일반실/특실 요금)
 			StationFare fare = findStationFare(request.departureStationId(), request.arrivalStationId());
+
+			// 3. 각 열차별 좌석 상태 계산 및 응답 생성
 			List<TrainSearchResponse> trainSearchResults = processTrainSearchResults(trainPage.getContent(), fare,
 				request);
 
@@ -131,6 +140,7 @@ public class TrainScheduleService {
 				throw new BusinessException(TrainErrorCode.NO_SEARCH_RESULTS);
 			}
 
+			// 4. 최종 응답 생성 및 반환
 			log.info("열차 조회 완료: 전체 {}건 중 {}건 처리 성공",
 				trainPage.getContent().size(), trainSearchResults.size());
 
@@ -161,67 +171,78 @@ public class TrainScheduleService {
 	}
 
 	/**
-	 * 열차 검색 결과 일괄 처리
+	 * 열차 검색 결과 일괄 처리 (각 열차별로 좌석 상태 계산)
+	 * @param trainInfos 기본 열차 정보 리스트
+	 * @param fare 구간 요금 정보
+	 * @param request 검색 요청 정보
+	 * @return 좌석 상태가 포함된 열차 검색 결과
 	 */
 	private List<TrainSearchResponse> processTrainSearchResults(List<TrainBasicInfo> trainInfos, StationFare fare,
 		TrainSearchRequest request) {
 		return trainInfos.stream()
-			.map(trainInfo -> processIndividualTrain(trainInfo, fare, request))
-			.filter(Objects::nonNull)
+			.map(trainInfo -> processIndividualTrain(trainInfo, fare, request)) // 각 개별 열차 처리
+			.filter(Objects::nonNull) // 처리 실패한 열차 제외
 			.collect(Collectors.toList());
 	}
 
 	/**
-	 * 개별 열차 처리
+	 * 개별 열차 처리 (좌석 상태 계산 + 응답 생성)
+	 * @param trainInfo 기본 열차 정보
+	 * @param fare 구간 요금 정보
+	 * @param request 검색 요청 정보
+	 * @return 처리된 열차 검색 응답 (실패시 null)
 	 */
 	private TrainSearchResponse processIndividualTrain(TrainBasicInfo trainInfo, StationFare fare,
 		TrainSearchRequest request) {
 		try {
+			// 이 열차의 구간별 좌석 상태 계산
 			SectionSeatStatus sectionStatus = calculateSectionSeatStatus(
-				trainInfo.trainScheduleId(), request.departureStationId(), request.arrivalStationId(),
+				trainInfo.trainScheduleId(),
+				request.departureStationId(),
+				request.arrivalStationId(),
 				request.passengerCount());
+
 			return createTrainSearchResponse(trainInfo, sectionStatus, fare, request.passengerCount());
 		} catch (Exception e) {
 			log.warn("열차 {} 처리 실패: {}", trainInfo.trainNumber(), e.getMessage());
-			return null;
+			return null; // 실패한 열차는 null 반환
 		}
 	}
 
 	/**
 	 * 열차 검색 응답 생성
+	 * @param trainInfo 기본 열차 정보
+	 * @param sectionStatus 계산된 좌석 상태
+	 * @param fare 구간 요금 정보
+	 * @param passengerCount 승객 수
+	 * @return 완성된 열차 검색 응답
 	 */
 	private TrainSearchResponse createTrainSearchResponse(TrainBasicInfo trainInfo, SectionSeatStatus sectionStatus,
 		StationFare fare, int passengerCount) {
 		try {
+			// 1. 좌석 타입별 정보 생성 (일반실 / 특실)
 			SeatTypeInfo standardSeatInfo = SeatTypeInfo.create(sectionStatus.standardAvailable(),
 				sectionStatus.standardTotal(), fare.getStandardFare(), passengerCount, "일반실");
 			SeatTypeInfo firstClassSeatInfo = SeatTypeInfo.create(sectionStatus.firstClassAvailable(),
 				sectionStatus.firstClassTotal(), fare.getFirstClassFare(), passengerCount, "특실");
+
+			// 2. 입석 정보 생성
 			StandingTypeInfo standingInfo = createStandingInfoIfNeeded(sectionStatus, fare);
+
+			// 3. 전체 예약 가능 상태 결정 (여유, 좌석 부족, 입석+좌석, 매진 임박, 매진 등)
 			SeatAvailabilityStatus overallStatus = determineOverallStatus(sectionStatus);
 
-			if (standingInfo != null) {
-				return TrainSearchResponse.withStanding(
-					String.format("%03d", trainInfo.trainNumber()),
-					trainInfo.trainName(),
-					trainInfo.departureTime(),
-					trainInfo.arrivalTime(),
-					standardSeatInfo,
-					firstClassSeatInfo,
-					standingInfo,
-					overallStatus
-				);
-			} else {
-				return TrainSearchResponse.seatsOnly(
-					String.format("%03d", trainInfo.trainNumber()),
-					trainInfo.trainName(),
-					trainInfo.departureTime(),
-					trainInfo.arrivalTime(),
-					standardSeatInfo,
-					firstClassSeatInfo,
-					overallStatus
-				);
-			}
+			// 4. 응답 객체 생성
+			return TrainSearchResponse.of(
+				String.format("%03d", trainInfo.trainNumber()),  // 열차번호 3자리 포맷
+				trainInfo.trainName(),                           // 열차명
+				trainInfo.departureTime(),                       // 출발시간
+				trainInfo.arrivalTime(),                         // 도착시간
+				standardSeatInfo,                               // 일반실 정보
+				firstClassSeatInfo,                             // 특실 정보
+				standingInfo,                                   // 입석 정보 (있으면 포함, 없으면 null)
+				overallStatus                                   // 전체 상태
+			);
 		} catch (Exception e) {
 			log.error("열차 응답 생성 중 오류: 열차번호={}", trainInfo.trainNumber(), e);
 			throw new BusinessException(TrainErrorCode.TRAIN_SYSTEM_ERROR,
