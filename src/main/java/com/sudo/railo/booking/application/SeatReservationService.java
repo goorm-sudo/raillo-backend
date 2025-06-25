@@ -6,9 +6,9 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.sudo.railo.booking.domain.SeatInventory;
+import com.sudo.railo.booking.domain.SeatReservation;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.SeatInventoryRepository;
+import com.sudo.railo.booking.infra.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 
 import jakarta.persistence.OptimisticLockException;
@@ -17,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class SeatInventoryService {
+public class SeatReservationService {
 
-    private final SeatInventoryRepository seatInventoryRepository;
+    private final SeatReservationRepository seatReservationRepository;
 
     /***
      * 좌석을 예약하는 메서드
@@ -29,13 +29,13 @@ public class SeatInventoryService {
     @Transactional
     public void reserveSeat(Long trainScheduleId, Long seatId) {
         try {
-            Optional<SeatInventory> result = seatInventoryRepository.findByTrainScheduleIdAndSeatId(trainScheduleId, seatId);
+            Optional<SeatReservation> result = seatReservationRepository.findByTrainScheduleIdAndSeatId(trainScheduleId, seatId);
             if (!result.isPresent()) {
                 throw new BusinessException(BookingError.SEAT_NOT_FOUND);
             }
-            SeatInventory seatInventory = result.get();
-            seatInventory.reserveSeat();
-            seatInventoryRepository.save(seatInventory);
+            SeatReservation seatReservation = result.get();
+            seatReservation.reserveSeat();
+            seatReservationRepository.save(seatReservation);
         } catch (OptimisticLockException e) {
             // 동시성 문제 발생
             throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
@@ -52,13 +52,13 @@ public class SeatInventoryService {
     @Transactional
     public void cancelReservation(Long trainScheduleId, Long seatId) {
         try {
-            Optional<SeatInventory> result = seatInventoryRepository.findByTrainScheduleIdAndSeatId(trainScheduleId, seatId);
+            Optional<SeatReservation> result = seatReservationRepository.findByTrainScheduleIdAndSeatId(trainScheduleId, seatId);
             if (!result.isPresent()) {
                 throw new BusinessException(BookingError.SEAT_NOT_FOUND);
             }
-            SeatInventory seatInventory = result.get();
-            seatInventory.cancelReservation();
-            seatInventoryRepository.save(seatInventory);
+            SeatReservation seatReservation = result.get();
+            seatReservation.cancelReservation();
+            seatReservationRepository.save(seatReservation);
         } catch (OptimisticLockException e) {
             // 동시성 문제 발생
             throw new BusinessException(BookingError.SEAT_ALREADY_CANCELLED);
@@ -73,10 +73,10 @@ public class SeatInventoryService {
     @Transactional
     public void cancelExpiredReservation() {
         LocalDateTime expiredAt = LocalDateTime.now().minusMinutes(10);
-        List<SeatInventory> expiredSeats = seatInventoryRepository.findExpiredSeats(expiredAt);
-        for (SeatInventory seatInventory : expiredSeats) {
-            seatInventory.cancelReservation();
-            seatInventoryRepository.save(seatInventory);
+        List<SeatReservation> expiredSeats = seatReservationRepository.findExpiredSeats(expiredAt);
+        for (SeatReservation seatReservation : expiredSeats) {
+            seatReservation.cancelReservation();
+            seatReservationRepository.save(seatReservation);
         }
     }
 }
