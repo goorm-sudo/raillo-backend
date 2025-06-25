@@ -59,9 +59,10 @@ public class TrainScheduleController {
 		@PageableDefault(size = 20, sort = "departureTime")
 		@Parameter(description = "페이징 정보", hidden = true) Pageable pageable) {
 
-		log.info("열차 검색 요청: {} -> {}, {}, 승객: {}명, page: {}",
+		log.info("열차 검색 요청: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후, page: {}",
 			request.departureStationId(), request.arrivalStationId(),
-			request.operationDate(), request.passengerCount(), pageable.getPageNumber());
+			request.operationDate(), request.passengerCount(), request.departureHour(),
+			pageable.getPageNumber());
 
 		TrainSearchPageResponse response = trainScheduleService.searchTrains(request, pageable);
 

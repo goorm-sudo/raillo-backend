@@ -1,6 +1,7 @@
 package com.sudo.railo.train.application;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,19 +103,23 @@ public class TrainScheduleService {
 	 * 통합 열차 검색 (메인 검색)
 	 */
 	public TrainSearchPageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
-		log.info("열차 검색 시작: {} -> {}, {}, 승객: {}명",
+		log.info("열차 검색 시작: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후",
 			request.departureStationId(), request.arrivalStationId(),
-			request.operationDate(), request.passengerCount());
+			request.operationDate(), request.passengerCount(), request.departureHour());
 
 		try {
+			LocalTime departureTimeFrom = request.getDepartureTimeFilter();
+
 			Page<TrainBasicInfo> trainPage = trainScheduleRepositoryCustom.findTrainBasicInfo(
-				request.departureStationId(), request.arrivalStationId(), request.operationDate(), pageable);
+				request.departureStationId(), request.arrivalStationId(), request.operationDate(), departureTimeFrom,
+				pageable);
 
 			if (trainPage.isEmpty()) {
-				log.warn("검색 결과 없음: {} -> {}, {}",
-					request.departureStationId(), request.arrivalStationId(), request.operationDate());
+				log.warn("열차 조회 결과 없음: {}역 -> {}역, {}, {}시 이후",
+					request.departureStationId(), request.arrivalStationId(), request.operationDate(),
+					request.departureHour());
 				throw new BusinessException(TrainErrorCode.NO_OPERATION_ON_DATE,
-					String.format("%s에는 운행하지 않습니다", request.operationDate()));
+					String.format("%s %시 이후 운행하는 열차가 없습니다.", request.operationDate(), request.departureHour()));
 			}
 
 			StationFare fare = findStationFare(request.departureStationId(), request.arrivalStationId());
@@ -126,7 +131,7 @@ public class TrainScheduleService {
 				throw new BusinessException(TrainErrorCode.NO_SEARCH_RESULTS);
 			}
 
-			log.info("열차 검색 완료: 전체 {}건 중 {}건 처리 성공",
+			log.info("열차 조회 완료: 전체 {}건 중 {}건 처리 성공",
 				trainPage.getContent().size(), trainSearchResults.size());
 
 			return TrainSearchPageResponse.of(trainSearchResults, trainPage.getNumber(), trainPage.getSize(),

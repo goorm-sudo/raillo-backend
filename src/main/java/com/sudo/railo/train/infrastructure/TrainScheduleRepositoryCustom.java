@@ -1,6 +1,7 @@
 package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,11 +22,18 @@ public interface TrainScheduleRepositoryCustom {
 	/**
 	 * 열차 기본 정보 조회 (페이징) - 메인 검색 기능
 	 * 출발역, 도착역, 운행날짜로 열차 목록 조회
+	 * @param departureStationId 출발역 ID
+	 * @param arrivalStationId 도착역 ID
+	 * @param operationDate 운행 날짜
+	 * @param departureTimeFrom 출발 희망 시간 이후
+	 * @param pageable 페이징 정보
+	 * @return 열차 기본 정보 페이지
 	 */
 	Page<TrainBasicInfo> findTrainBasicInfo(
 		Long departureStationId,
 		Long arrivalStationId,
 		LocalDate operationDate,
+		LocalTime departureTimeFrom,
 		Pageable pageable
 	);
 
