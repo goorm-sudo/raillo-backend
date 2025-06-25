@@ -14,7 +14,7 @@ public record MemberInfoResponse(
 ) {
 
 	// memberDetail -> memberDetailInfo 변환 후 MemberInfoResponse 생성
-	public static MemberInfoResponse of(String name, String phoneNumber, Role role, MemberDetail memberDetail) {
+	public static MemberInfoResponse of(String name, String phoneNumber, MemberDetail memberDetail) {
 
 		MemberDetailInfo memberDetailInfo = new MemberDetailInfo(
 			memberDetail.getMemberNo(),
@@ -25,7 +25,7 @@ public record MemberInfoResponse(
 			memberDetail.getTotalMileage()
 		);
 
-		return new MemberInfoResponse(name, phoneNumber, role, memberDetailInfo);
+		return new MemberInfoResponse(name, phoneNumber, Role.MEMBER, memberDetailInfo);
 	}
 
 	public record MemberDetailInfo(

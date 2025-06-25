@@ -73,7 +73,7 @@ public class MemberServiceImpl implements MemberService {
 
 		MemberDetail memberDetail = member.getMemberDetail();
 
-		return MemberInfoResponse.of(member.getName(), member.getPhoneNumber(), member.getRole(), memberDetail);
+		return MemberInfoResponse.of(member.getName(), member.getPhoneNumber(), memberDetail);
 	}
 
 }
