@@ -9,7 +9,6 @@ import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.TrainSchedule;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,7 +46,7 @@ public class SeatReservation extends BaseEntity {
 	@JoinColumn(name = "seat_id", nullable = false)
 	private Seat seat;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "reservation_id", nullable = false)
 	private Reservation reservation;
 
@@ -57,11 +56,11 @@ public class SeatReservation extends BaseEntity {
 
 	private LocalDateTime reservedAt;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "departure_station_id", nullable = false)
 	private Station departureStation;
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "arrival_station_id", nullable = false)
 	private Station arrivalStation;
 
@@ -89,18 +88,21 @@ public class SeatReservation extends BaseEntity {
 
 	// 좌석 예약을 취소하는 메서드
 	public void cancelReservation() {
-		if (this.seatStatus == SeatStatus.RESERVED) {
-			this.seatStatus = SeatStatus.AVAILABLE;
-			this.reservedAt = null;
+		if (this.seatStatus != SeatStatus.RESERVED) {
+			throw new BusinessException(BookingError.SEAT_NOT_RESERVED);
 		}
+		this.seatStatus = SeatStatus.AVAILABLE;
+		this.reservedAt = null;
 	}
 
 	// 좌석 예약이 만료되었는지 확인하는 메서드
-	public boolean isExpired() {
+	// 도메인 엔티티에서는 직접적으로 Spring의 설정을 주입받는것이 권장되지 않습니다.
+	// 추후 서비스 레이어에서 이 메서드를 사용할때, 설정값을 가져와 매개변수로 사용합니다.
+	public boolean isExpired(Integer expirationMinutes) {
 		if (this.seatStatus != SeatStatus.RESERVED) {
 			return false;
 		}
-		return this.reservedAt.isBefore(LocalDateTime.now().minusMinutes(10));
+		return this.reservedAt.isBefore(LocalDateTime.now().minusMinutes(expirationMinutes));
 	}
 
 }
