@@ -11,6 +11,7 @@ import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
+import com.sudo.railo.member.docs.AuthControllerDocs;
 import com.sudo.railo.member.success.AuthSuccess;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
 	private final MemberAuthService memberAuthService;
 
