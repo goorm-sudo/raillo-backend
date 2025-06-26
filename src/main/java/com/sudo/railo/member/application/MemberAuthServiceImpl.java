@@ -14,7 +14,6 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.LogoutRedis;
 import com.sudo.railo.global.redis.MemberRedis;
 import com.sudo.railo.global.redis.RedisUtil;
-import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
@@ -88,11 +87,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
 		// 요청 헤더에서 AccessToken 추출
 		String accessToken = tokenExtractor.resolveToken(request);
-
-		// 로그아웃 하고 싶은 토큰이 유효한지 먼저 검증
-		if (!tokenProvider.validateToken(accessToken)) {
-			throw new BusinessException(TokenError.LOGOUT_ERROR);
-		}
 
 		// 현재 로그인된 사용자의 회원번호를 가져옴
 		String memberNo = SecurityUtil.getCurrentMemberNo();

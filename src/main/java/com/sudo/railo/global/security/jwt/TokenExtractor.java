@@ -9,13 +9,14 @@ import jakarta.servlet.http.HttpServletRequest;
 public class TokenExtractor {
 
 	public static final String AUTHORIZATION_HEADER = "Authorization";
-	public static final String BEARER_PREFIX = "Bearer";
+	public static final String BEARER_PREFIX = "Bearer ";
 
 	public String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
 		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-			return bearerToken.substring(7);
+
+			return bearerToken.substring(BEARER_PREFIX.length());
 		}
 
 		return null;
