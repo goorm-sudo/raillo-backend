@@ -47,5 +47,5 @@ public interface TrainScheduleRepositoryCustom {
 	 * 열차 최대 수용 인원 조회 (입석 포함)
 	 * 입석 가능 여부 판단용
 	 */
-	int findMaxCapacityByTrainScheduleId(Long trainScheduleId);
+	int findTotalSeatsByTrainScheduleId(Long trainScheduleId);
 }
