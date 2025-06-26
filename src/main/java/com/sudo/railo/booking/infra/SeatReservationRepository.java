@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.sudo.railo.booking.domain.SeatReservation;
@@ -20,4 +21,9 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
 	// 예약 만료 시간을 기준으로 만료된 좌석 목록을 조회하는 메서드
 	@Query("SELECT sr FROM SeatReservation sr WHERE sr.seatStatus = 'RESERVED' AND sr.reservedAt < :expiredAt")
 	List<SeatReservation> findExpiredSeats(LocalDateTime expiredAt);
+
+	// 예약 만료 시간을 기준으로 만료된 좌석을 취소하는 메서드
+	@Modifying
+	@Query("UPDATE SeatReservation sr SET sr.seatStatus = 'AVAILABLE', sr.reservedAt = null WHERE sr.seatStatus = 'RESERVED' AND sr.reservedAt < :expiredAt")
+	void cancelExpiredSeats(LocalDateTime expiredAt);
 }
