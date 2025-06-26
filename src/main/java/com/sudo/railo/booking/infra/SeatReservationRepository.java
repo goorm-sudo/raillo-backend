@@ -23,7 +23,7 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
 	List<SeatReservation> findExpiredSeats(LocalDateTime expiredAt);
 
 	// 예약 만료 시간을 기준으로 만료된 좌석을 취소하는 메서드
-	@Modifying
+	@Modifying(clearAutomatically = true)
 	@Query("UPDATE SeatReservation sr SET sr.seatStatus = 'AVAILABLE', sr.reservedAt = null WHERE sr.seatStatus = 'RESERVED' AND sr.reservedAt < :expiredAt")
 	void cancelExpiredSeats(LocalDateTime expiredAt);
 }
