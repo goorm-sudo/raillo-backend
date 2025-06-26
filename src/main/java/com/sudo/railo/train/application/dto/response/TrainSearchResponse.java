@@ -3,8 +3,6 @@ package com.sudo.railo.train.application.dto.response;
 import java.time.Duration;
 import java.time.LocalTime;
 
-import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "열차 검색 응답")
@@ -31,43 +29,11 @@ public record TrainSearchResponse(
 	SeatTypeInfo firstClassSeat,
 
 	@Schema(description = "입석 정보 (있는 경우)")
-	StandingTypeInfo standing,
-
-	@Schema(description = "전체 상태", example = "AVAILABLE")
-	SeatAvailabilityStatus overallStatus
+	StandingTypeInfo standing
 ) {
 	public TrainSearchResponse {
-		// 1. Validation
-		if (trainNumber == null || trainNumber.isBlank()) {
-			throw new IllegalArgumentException("열차번호는 필수입니다");
-		}
-		if (trainName == null || trainName.isBlank()) {
-			throw new IllegalArgumentException("열차명은 필수입니다");
-		}
-		if (departureTime == null) {
-			throw new IllegalArgumentException("출발시간은 필수입니다");
-		}
-		if (arrivalTime == null) {
-			throw new IllegalArgumentException("도착시간은 필수입니다");
-		}
-		if (standardSeat == null) {
-			throw new IllegalArgumentException("일반실 정보는 필수입니다");
-		}
-		if (firstClassSeat == null) {
-			throw new IllegalArgumentException("특실 정보는 필수입니다");
-		}
-		if (overallStatus == null) {
-			throw new IllegalArgumentException("전체 상태는 필수입니다");
-		}
-
-		// 2. 자동 계산 - travelTime이 null이면 자동으로 계산
 		if (travelTime == null) {
 			travelTime = Duration.between(departureTime, arrivalTime);
-		}
-
-		// 3. 도착시간 validation
-		if (arrivalTime.isBefore(departureTime)) {
-			throw new IllegalArgumentException("도착시간은 출발시간보다 늦어야 합니다");
 		}
 	}
 
@@ -79,13 +45,32 @@ public record TrainSearchResponse(
 	public static TrainSearchResponse of(String trainNumber, String trainName,
 		LocalTime departureTime, LocalTime arrivalTime,
 		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat,
-		StandingTypeInfo standing, // null 가능
-		SeatAvailabilityStatus overallStatus) {
+		StandingTypeInfo standing) { // null 가능
+
+		validateTrainSearchData(trainNumber, trainName, departureTime, arrivalTime, standardSeat, firstClassSeat);
+
 		return new TrainSearchResponse(
 			trainNumber, trainName, departureTime, arrivalTime,
 			null, // travelTime은 자동 계산
-			standardSeat, firstClassSeat, standing, overallStatus
+			standardSeat, firstClassSeat, standing
 		);
+	}
+
+	private static void validateTrainSearchData(String trainNumber, String trainName,
+		LocalTime departureTime, LocalTime arrivalTime,
+		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat) {
+		if (trainNumber == null || trainNumber.isBlank()) {
+			throw new IllegalArgumentException("열차번호는 필수입니다");
+		}
+		if (departureTime == null || arrivalTime == null) {
+			throw new IllegalArgumentException("출발/도착시간은 필수입니다");
+		}
+		if (standardSeat == null || firstClassSeat == null) {
+			throw new IllegalArgumentException("좌석 정보는 필수입니다");
+		}
+		if (arrivalTime.isBefore(departureTime)) {
+			throw new IllegalArgumentException("도착시간은 출발시간보다 늦어야 합니다");
+		}
 	}
 
 	/* 편의 메서드 */
@@ -104,6 +89,9 @@ public record TrainSearchResponse(
 		return trainName.contains("KTX");
 	}
 
+	/**
+	 * 소요 시간 포맷팅
+	 */
 	public String getFormattedTravelTime() {
 		long minutes = travelTime.toMinutes();
 		long hours = minutes / 60;

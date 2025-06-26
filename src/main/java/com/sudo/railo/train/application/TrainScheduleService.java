@@ -25,7 +25,6 @@ import com.sudo.railo.train.application.dto.response.TrainSearchPageResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchResponse;
 import com.sudo.railo.train.domain.StationFare;
 import com.sudo.railo.train.domain.type.CarType;
-import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
 import com.sudo.railo.train.infrastructure.SeatReservationRepository;
@@ -241,27 +240,28 @@ public class TrainScheduleService {
 	private TrainSearchResponse createTrainSearchResponse(TrainBasicInfo trainInfo, SectionSeatStatus sectionStatus,
 		StationFare fare, int passengerCount) {
 
+		boolean hasStanding = sectionStatus.standingAvailable();
+
 		// 1. 좌석 타입별 정보 생성 (일반실 / 특실)
 		SeatTypeInfo standardSeatInfo = SeatTypeInfo.create(
 			sectionStatus.standardAvailable(),
 			sectionStatus.standardTotal(),
 			fare.getStandardFare(),
 			passengerCount,
-			"일반실"
+			"일반실",
+			hasStanding
 		);
 		SeatTypeInfo firstClassSeatInfo = SeatTypeInfo.create(
 			sectionStatus.firstClassAvailable(),
 			sectionStatus.firstClassTotal(),
 			fare.getFirstClassFare(),
 			passengerCount,
-			"특실"
+			"특실",
+			false
 		);
 
 		// 2. 입석 정보 생성
 		StandingTypeInfo standingInfo = createStandingInfoIfNeeded(sectionStatus, fare);
-
-		// 3. 전체 예약 가능 상태 결정 (여유, 좌석 부족, 입석+좌석, 매진 임박, 매진 등)
-		SeatAvailabilityStatus overallStatus = determineOverallStatus(sectionStatus);
 
 		return TrainSearchResponse.of(
 			String.format("%03d", trainInfo.trainNumber()),  // 열차번호 3자리 포맷
@@ -270,8 +270,7 @@ public class TrainScheduleService {
 			trainInfo.arrivalTime(),                         // 도착시간
 			standardSeatInfo,                               // 일반실 정보
 			firstClassSeatInfo,                             // 특실 정보
-			standingInfo,                                   // 입석 정보 (있으면 포함, 없으면 null)
-			overallStatus                                   // 전체 상태
+			standingInfo                                    // 입석 정보 (있으면 포함, 없으면 null)
 		);
 	}
 
@@ -367,31 +366,6 @@ public class TrainScheduleService {
 			log.warn("입석 계산 중 오류: trainScheduleId={}", trainScheduleId, e);
 			return new StandingCalculationResult(false, 0, false, 0);
 		}
-	}
-
-	/**
-	 * 전체 열차 상태 결정
-	 */
-	private SeatAvailabilityStatus determineOverallStatus(SectionSeatStatus sectionStatus) {
-		if (!sectionStatus.canReserveStandard() && !sectionStatus.canReserveFirstClass()
-			&& !sectionStatus.canReserveStanding()) {
-			return SeatAvailabilityStatus.SOLD_OUT;
-		}
-		if ((!sectionStatus.canReserveStandard() && !sectionStatus.canReserveFirstClass())
-			&& sectionStatus.canReserveStanding()) {
-			return SeatAvailabilityStatus.STANDING_AVAILABLE;
-		}
-		if (!sectionStatus.canReserveStandard() && sectionStatus.canReserveFirstClass()) {
-			return SeatAvailabilityStatus.FIRST_CLASS_ONLY;
-		}
-		if (sectionStatus.standardAvailable() >= 11)
-			return SeatAvailabilityStatus.AVAILABLE;
-		else if (sectionStatus.standardAvailable() >= 6)
-			return SeatAvailabilityStatus.LIMITED;
-		else if (sectionStatus.standardAvailable() >= 1)
-			return SeatAvailabilityStatus.FEW_REMAINING;
-		else
-			return SeatAvailabilityStatus.SOLD_OUT;
 	}
 
 	// ============================================
