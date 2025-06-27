@@ -1,0 +1,117 @@
+train-template:
+  layouts:
+    FIRST_CLASS:
+      seatArrangement: "2+1"
+      columns:
+        - name: A
+          seatType: WINDOW
+        - name: B
+          seatType: AISLE
+        - name: C
+          seatType: WINDOW
+    STANDARD:
+      seatArrangement: "2+2"
+      columns:
+        - name: A
+          seatType: WINDOW
+        - name: B
+          seatType: AISLE
+        - name: C
+          seatType: AISLE
+        - name: D
+          seatType: WINDOW
+  templates:
+    KTX:
+      cars:
+        - carType: STANDARD
+          row: 14
+        - carType: FIRST_CLASS
+          row: 9
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: FIRST_CLASS
+          row: 11
+        - carType: STANDARD
+          row: 14
+
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 15
+
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 14
+
+    KTX_SANCHEON:
+      cars:
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 14
+        - carType: FIRST_CLASS
+          row: 11
+        - carType: STANDARD
+          row: 12
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 12
+        - carType: STANDARD
+          row: 14
+        - carType: STANDARD
+          row: 15
+
+    KTX_CHEONGRYONG:
+      cars:
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 17
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 17
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 13
+
+    KTX_EUM:
+      cars:
+        - carType: FIRST_CLASS
+          row: 12
+        - carType: STANDARD
+          row: 20
+        - carType: STANDARD
+          row: 15
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 19
+        - carType: STANDARD
+          row: 13
