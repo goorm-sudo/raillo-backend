@@ -135,9 +135,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	}
 
 	/**
-	 *  열차 최대 수용 인원 조회 (입석 포함)
-	 * - 전체 좌석 수 + 입석 15% 추가 수용
-	 * - 입석 가능 여부 판단에 사용
+	 *  열차 최대 수용 인원 조회
 	 */
 	@Override
 	public int findTotalSeatsByTrainScheduleId(Long trainScheduleId) {
