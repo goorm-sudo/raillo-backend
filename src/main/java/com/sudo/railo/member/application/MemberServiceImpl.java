@@ -19,7 +19,9 @@ import com.sudo.railo.member.infra.MemberRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
@@ -60,7 +62,12 @@ public class MemberServiceImpl implements MemberService {
 		Member currentMember = memberRepository.findByMemberNo(currentMemberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
-		memberRepository.delete(currentMember);
+		try {
+			memberRepository.delete(currentMember);
+		} catch (Exception e) {
+			log.error("회원 삭제 실패 : {}", e.getMessage());
+			throw new BusinessException(MemberError.MEMBER_DELETE_FAIL);
+		}
 
 		// 로그아웃 수행
 		memberAuthService.logout(request);
