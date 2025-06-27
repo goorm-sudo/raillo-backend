@@ -37,7 +37,7 @@ public class SeatReservation {
 	@Column(name = "train_schedule_id", nullable = false)
 	private Long trainScheduleId;
 
-	@Column(name = "seat_id", nullable = false)
+	@Column(name = "seat_id", nullable = true)
 	private Long seatId;
 
 	@Column(name = "reservation_id", nullable = false)
@@ -56,16 +56,40 @@ public class SeatReservation {
 	@Column(name = "reserved_at", nullable = false)
 	private LocalDateTime reservedAt;
 
-	public static SeatReservation create(Long trainScheduleId, Long seatId, Long reservationId,
+	@Column(name = "is_standing", nullable = false)
+	private boolean isStanding = false;
+
+	/**
+	 * 좌석 예약 생성
+	 */
+	public static SeatReservation createSeatReservation(Long trainScheduleId, Long seatId, Long reservationId,
 		Long departureStationId, Long arrivalStationId) {
+		return createReservation(trainScheduleId, seatId, reservationId, departureStationId, arrivalStationId, false);
+	}
+
+	/**
+	 * 입석 예약 생성
+	 */
+	public static SeatReservation createStandingReservation(Long trainScheduleId, Long reservationId,
+		Long departureStationId, Long arrivalStationId) {
+		return createReservation(trainScheduleId, null, reservationId, departureStationId, arrivalStationId, true);
+	}
+
+	/**
+	 * 공통 예약 생성 로직
+	 */
+	private static SeatReservation createReservation(Long trainScheduleId, Long seatId, Long reservationId,
+		Long departureStationId, Long arrivalStationId,
+		boolean isStanding) {
 		SeatReservation seatReservation = new SeatReservation();
 		seatReservation.trainScheduleId = trainScheduleId;
-		seatReservation.seatId = seatId;
+		seatReservation.seatId = seatId; // 입석은 null, 좌석은 seatId
 		seatReservation.reservationId = reservationId;
 		seatReservation.departureStationId = departureStationId;
 		seatReservation.arrivalStationId = arrivalStationId;
 		seatReservation.status = ReservationStatus.RESERVED;
 		seatReservation.reservedAt = LocalDateTime.now();
+		seatReservation.isStanding = isStanding;
 		return seatReservation;
 	}
 
