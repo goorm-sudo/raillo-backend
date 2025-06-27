@@ -1,4 +1,4 @@
-package com.sudo.railo.train.infrastructure.persistence;
+package com.sudo.railo.train.infrastructure;
 
 import java.util.Collection;
 import java.util.List;

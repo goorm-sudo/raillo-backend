@@ -15,8 +15,8 @@ import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.TrainSchedule;
+import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 import com.sudo.railo.train.infrastructure.excel.TrainScheduleParser;
-import com.sudo.railo.train.infrastructure.persistence.TrainScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

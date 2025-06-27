@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.train.application.dto.TrainData;
 import com.sudo.railo.train.config.TrainTemplateProperties;
 import com.sudo.railo.train.domain.Train;
-import com.sudo.railo.train.infrastructure.persistence.TrainRepository;
+import com.sudo.railo.train.infrastructure.TrainRepository;
 
 import lombok.RequiredArgsConstructor;
 

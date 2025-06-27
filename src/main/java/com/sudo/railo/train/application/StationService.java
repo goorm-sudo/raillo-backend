@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.train.domain.Station;
-import com.sudo.railo.train.infrastructure.persistence.StationRepository;
+import com.sudo.railo.train.infrastructure.StationRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

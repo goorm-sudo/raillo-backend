@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ConfigurationPropertiesScan
 @EnableScheduling
 @EnableJpaAuditing
-@ConfigurationPropertiesScan
 public class RailoApplication {
 
 	public static void main(String[] args) {
