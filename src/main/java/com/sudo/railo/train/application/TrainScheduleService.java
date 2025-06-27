@@ -28,6 +28,7 @@ import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
 import com.sudo.railo.train.infrastructure.SeatReservationRepository;
+import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 import com.sudo.railo.train.infrastructure.StationFareRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
@@ -50,6 +51,7 @@ public class TrainScheduleService {
 	private final StationFareRepository stationFareRepository;
 	private final ScheduleStopRepository scheduleStopRepository;
 	private final StationRepository stationRepository;
+	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 
 	public List<OperationCalendarItem> getOperationCalendar() {
 		LocalDate startDate = LocalDate.now();
@@ -307,7 +309,8 @@ public class TrainScheduleService {
 
 		// 좌석 계산 (일반 좌석, 입석)
 		SeatCalculationResult seatResult = calculateAvailableSeats(totalSeats, overlappingReservations);
-		StandingCalculationResult standingResult = calculateStandingAvailability(trainScheduleId, passengerCount);
+		StandingCalculationResult standingResult = calculateStandingAvailability(trainScheduleId, departureStationId,
+			arrivalStationId, passengerCount);
 
 		boolean canReserveStandard = seatResult.standardAvailable() >= passengerCount;
 		boolean canReserveFirstClass = seatResult.firstClassAvailable() >= passengerCount;
@@ -347,18 +350,23 @@ public class TrainScheduleService {
 	/**
 	 * 입석 가능 여부 및 수량 계산
 	 */
-	private StandingCalculationResult calculateStandingAvailability(Long trainScheduleId, int passengerCount) {
+	private StandingCalculationResult calculateStandingAvailability(Long trainScheduleId, Long departureStationId,
+		Long arrivalStationId, int passengerCount) {
 		try {
 			int totalSeats = trainScheduleRepositoryCustom.findTotalSeatsByTrainScheduleId(trainScheduleId);
 
-			int maxStandingCapacity = (int)(totalSeats * STANDING_RATIO);
+			int maxAllowedStandingCount = (int)(totalSeats * STANDING_RATIO);
 
-			// 현재 구간에서 예약된 입석 수 조회, 추가 입석 가능 인원 수 계산 TODO: 실제 구현 필요
-			int currentStandingReservations = 0; // 임시값
-			int maxAdditionalStanding = Math.max(0, maxStandingCapacity - currentStandingReservations);
+			// 현재 구간에서 예약된 입석 수 조회, 추가 입석 가능 인원 수 계산
+			int currentStandingReservations = seatReservationRepositoryCustom.countOverlappingStandingReservations(
+				trainScheduleId, departureStationId, arrivalStationId);
+			int maxAdditionalStanding = Math.max(0, maxAllowedStandingCount - currentStandingReservations);
 
 			boolean standingAvailable = maxAdditionalStanding > 0;
 			boolean canReserveStanding = maxAdditionalStanding >= passengerCount;
+
+			log.debug("입석 계산 완료: 총허용={}, 현재예약={}, 추가가능={}, 예약가능={}",
+				maxAllowedStandingCount, currentStandingReservations, maxAdditionalStanding, canReserveStanding);
 
 			return new StandingCalculationResult(standingAvailable, maxAdditionalStanding, canReserveStanding,
 				currentStandingReservations);
