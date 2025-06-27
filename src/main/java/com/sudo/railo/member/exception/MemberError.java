@@ -14,7 +14,8 @@ public enum MemberError implements ErrorCode {
 	USER_NOT_FOUND("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND, "M_001"),
 	DUPLICATE_EMAIL("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT, "M_002"),
 	INVALID_PASSWORD("비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED, "M_003"),
-	DUPLICATE_GUEST_INFO("이미 동일한 비회원 정보가 존재합니다.", HttpStatus.CONFLICT, "M_004");
+	DUPLICATE_GUEST_INFO("이미 동일한 비회원 정보가 존재합니다.", HttpStatus.CONFLICT, "M_004"),
+	MEMBER_DELETE_FAIL("회원 삭제에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "M_005");
 
 	private final String message;
 	private final HttpStatus status;
