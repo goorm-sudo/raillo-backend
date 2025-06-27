@@ -33,7 +33,7 @@ public class MemberController {
 		return SuccessResponse.of(MemberSuccess.GUEST_REGISTER_SUCCESS, response);
 	}
 
-	@DeleteMapping("/member/delete")
+	@DeleteMapping("/members")
 	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
 
 		memberService.memberDelete(request);
@@ -41,7 +41,7 @@ public class MemberController {
 		return SuccessResponse.of(MemberSuccess.MEMBER_DELETE_SUCCESS);
 	}
 
-	@GetMapping("/member/info")
+	@GetMapping("/members/me")
 	public SuccessResponse<MemberInfoResponse> getMemberInfo() {
 
 		MemberInfoResponse response = memberService.getMemberInfo();
