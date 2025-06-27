@@ -33,7 +33,7 @@ public class MemberController {
 		return SuccessResponse.of(MemberSuccess.GUEST_REGISTER_SUCCESS, response);
 	}
 
-	@DeleteMapping("member/delete")
+	@DeleteMapping("/member/delete")
 	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
 
 		memberService.memberDelete(request);
