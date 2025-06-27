@@ -5,10 +5,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.docs.AuthControllerDocs;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthController implements AuthControllerDocs {
 
 	private final MemberAuthService memberAuthService;
+	private final TokenExtractor tokenExtractor;
 
 	@PostMapping("/signup")
 	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
@@ -44,9 +47,21 @@ public class AuthController implements AuthControllerDocs {
 	@PostMapping("/logout")
 	public SuccessResponse<?> logout(HttpServletRequest request) {
 
-		memberAuthService.logout(request);
+		String accessToken = tokenExtractor.resolveToken(request);
+
+		memberAuthService.logout(accessToken);
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
+	}
+	
+	@PostMapping("/reissue")
+	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request) {
+
+		String refreshToken = tokenExtractor.resolveToken(request);
+
+		ReissueTokenResponse tokenResponse = memberAuthService.reissueAccessToken(refreshToken);
+
+		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}
 
 }
