@@ -9,7 +9,8 @@ import java.util.List;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.util.ObjectUtils;
 
 abstract class ExcelParser {
@@ -25,7 +26,7 @@ abstract class ExcelParser {
 	public List<Sheet> getSheets() {
 		List<Sheet> sheets = new ArrayList<>();
 		try (FileInputStream stream = new FileInputStream(FILES_DIR + getFileName())) {
-			XSSFWorkbook workbook = new XSSFWorkbook(stream);
+			Workbook workbook = WorkbookFactory.create(stream);
 			for (Sheet sheet : workbook) {
 				boolean isExcluded = getExcludeSheetNames().stream()
 					.anyMatch(excludeName -> sheet.getSheetName().contains(excludeName));
