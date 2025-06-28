@@ -18,6 +18,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
+import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrain;
 import com.sudo.railo.train.domain.QTrainCar;
 import com.sudo.railo.train.domain.QTrainSchedule;
@@ -71,6 +72,8 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 
 		QTrainSchedule ts = QTrainSchedule.trainSchedule;
 		QTrain t = QTrain.train;
+		QStation departureStation = new QStation("departureStation");
+		QStation arrivalStation = new QStation("arrivalStation");
 
 		// WHERE 조건 - 인덱스 순서에 맞춤
 		BooleanBuilder whereCondition = new BooleanBuilder()
@@ -86,6 +89,8 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 				ts.id,                              // 열차 스케줄 ID
 				t.trainNumber,                      // 열차 번호
 				t.trainName,                        // 열차명 (KTX, SRT 등)
+				departureStation.stationName,       // 출발역명
+				arrivalStation.stationName,         // 도착역명
 				ts.departureTime,                   // 출발 시간
 				ts.arrivalTime))                    // 도착 시간
 			.from(ts)

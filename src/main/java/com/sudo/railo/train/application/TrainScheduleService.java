@@ -266,6 +266,8 @@ public class TrainScheduleService {
 		return TrainSearchResponse.of(
 			String.format("%03d", trainInfo.trainNumber()),  // 열차번호 3자리 포맷
 			trainInfo.trainName(),                           // 열차명
+			trainInfo.departureStationName(),                // 출발역명
+			trainInfo.arrivalStationName(),                  // 도착역명
 			trainInfo.departureTime(),                       // 출발시간
 			trainInfo.arrivalTime(),                         // 도착시간
 			standardSeatInfo,                               // 일반실 정보

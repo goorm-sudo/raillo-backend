@@ -13,6 +13,12 @@ public record TrainSearchResponse(
 	@Schema(description = "열차명", example = "KTX")
 	String trainName,
 
+	@Schema(description = "출발역명", example = "서울")
+	String departureStationName,
+
+	@Schema(description = "도착역명", example = "천안아산")
+	String arrivalStationName,
+
 	@Schema(description = "출발 시간", example = "11:58")
 	LocalTime departureTime,
 
@@ -43,14 +49,17 @@ public record TrainSearchResponse(
 	 * 생성 메서드
 	 */
 	public static TrainSearchResponse of(String trainNumber, String trainName,
+		String departureStationName, String arrivalStationName,
 		LocalTime departureTime, LocalTime arrivalTime,
 		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat,
-		StandingTypeInfo standing) { // null 가능
+		StandingTypeInfo standing) {
 
 		validateTrainSearchData(trainNumber, trainName, departureTime, arrivalTime, standardSeat, firstClassSeat);
 
 		return new TrainSearchResponse(
-			trainNumber, trainName, departureTime, arrivalTime,
+			trainNumber, trainName,
+			departureStationName, arrivalStationName,
+			departureTime, arrivalTime,
 			null, // travelTime은 자동 계산
 			standardSeat, firstClassSeat, standing
 		);
