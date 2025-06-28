@@ -6,11 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sudo.railo.booking.domain.ReservationStatus;
+import com.sudo.railo.booking.domain.QSeatReservation;
+import com.sudo.railo.booking.domain.SeatStatus;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QSeat;
-import com.sudo.railo.train.domain.QSeatReservation;
 import com.sudo.railo.train.domain.QTrainCar;
 
 import lombok.RequiredArgsConstructor;
@@ -28,28 +28,29 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	@Override
 	public List<SeatReservationInfo> findOverlappingReservations(Long trainScheduleId, Long departureStationId,
 		Long arrivalStationId) {
-		QSeatReservation sr = QSeatReservation.seatReservation;
+		QSeatReservation reservation = QSeatReservation.seatReservation;
 		QSeat s = QSeat.seat;
 		QTrainCar tc = QTrainCar.trainCar;
 
 		return queryFactory
 			.select(Projections.constructor(
 				SeatReservationInfo.class,
-				sr.seatId,
+				reservation.seat.id,
 				tc.carType,
-				sr.departureStationId,
-				sr.arrivalStationId
+				reservation.departureStation.id,
+				reservation.arrivalStation.id
 			))
-			.from(sr)
-			.join(s).on(s.id.eq(sr.seatId))
+			.from(reservation)
+			.join(s).on(s.id.eq(reservation.seat.id))
 			.join(tc).on(tc.id.eq(s.trainCar.id))
 			.where(
-				sr.trainScheduleId.eq(trainScheduleId),
-				sr.status.in(ReservationStatus.RESERVED, ReservationStatus.PAID),
+				reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
+				reservation.isStanding.isFalse(),
 
 				// 기존출발 < 검색도착 AND 기존도착 > 검색출발
-				sr.departureStationId.lt(arrivalStationId)               // 예약출발 < 검색도착 (less than)
-					.and(sr.arrivalStationId.gt(departureStationId))   // 예약도착 > 검색출발 (greater than)
+				reservation.departureStation.id.lt(arrivalStationId)               // 예약출발 < 검색도착 (less than)
+					.and(reservation.arrivalStation.id.gt(departureStationId))   // 예약도착 > 검색출발 (greater than)
 			)
 			.fetch();
 	}
@@ -71,12 +72,12 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.from(reservation)
 			// 기존 예약의 출발역 정보 조회
 			.join(reservedDepartureStop)
-			.on(reservedDepartureStop.trainSchedule.id.eq(reservation.trainScheduleId)
-				.and(reservedDepartureStop.station.id.eq(reservation.departureStationId)))
+			.on(reservedDepartureStop.trainSchedule.id.eq(reservation.trainSchedule.id)
+				.and(reservedDepartureStop.station.id.eq(reservation.departureStation.id)))
 			// 기존 예약의 도착역 정보 조회
 			.join(reservedArrivalStop)
-			.on(reservedArrivalStop.trainSchedule.id.eq(reservation.trainScheduleId)
-				.and(reservedArrivalStop.station.id.eq(reservation.arrivalStationId)))
+			.on(reservedArrivalStop.trainSchedule.id.eq(reservation.trainSchedule.id)
+				.and(reservedArrivalStop.station.id.eq(reservation.arrivalStation.id)))
 			// 검색 구간의 출발역 정보
 			.join(searchDepartureStop)
 			.on(searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
@@ -86,8 +87,8 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.on(searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
 			.where(
-				reservation.trainScheduleId.eq(trainScheduleId),
-				reservation.status.in(ReservationStatus.RESERVED, ReservationStatus.PAID),
+				reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
 				reservation.isStanding.isTrue(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
