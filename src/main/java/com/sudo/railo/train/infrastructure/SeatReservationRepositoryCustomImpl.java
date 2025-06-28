@@ -32,21 +32,15 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 		QSeat s = QSeat.seat;
 		QTrainCar tc = QTrainCar.trainCar;
 
-		return queryFactory
-			.select(Projections.constructor(
-				SeatReservationInfo.class,
-				reservation.seat.id,
-				tc.carType,
-				reservation.departureStation.id,
-				reservation.arrivalStation.id
-			))
+		return queryFactory.select(Projections.constructor(SeatReservationInfo.class, reservation.seat.id, tc.carType,
+				reservation.departureStation.id, reservation.arrivalStation.id))
 			.from(reservation)
-			.join(s).on(s.id.eq(reservation.seat.id))
-			.join(tc).on(tc.id.eq(s.trainCar.id))
-			.where(
-				reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
-				reservation.isStanding.isFalse(),
+			.join(s)
+			.on(s.id.eq(reservation.seat.id))
+			.join(tc)
+			.on(tc.id.eq(s.trainCar.id))
+			.where(reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), reservation.isStanding.isFalse(),
 
 				// 기존출발 < 검색도착 AND 기존도착 > 검색출발
 				reservation.departureStation.id.lt(arrivalStationId)               // 예약출발 < 검색도착 (less than)
@@ -67,8 +61,7 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
 		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
 
-		Long count = queryFactory
-			.select(reservation.count())
+		Long count = queryFactory.select(reservation.count())
 			.from(reservation)
 			// 기존 예약의 출발역 정보 조회
 			.join(reservedDepartureStop)
@@ -86,10 +79,8 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.join(searchArrivalStop)
 			.on(searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
-			.where(
-				reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
-				reservation.isStanding.isTrue(),
+			.where(reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), reservation.isStanding.isTrue(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
 				// NOT(end1 <= start2 OR start1 >= end2) = NOT(안겹침)

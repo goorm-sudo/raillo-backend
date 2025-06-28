@@ -144,7 +144,7 @@ public class TrainScheduleService {
 				request.departureStationId(), request.arrivalStationId(), request.operationDate(),
 				request.departureHour());
 			throw new BusinessException(TrainErrorCode.NO_OPERATION_ON_DATE,
-				String.format("%s %시 이후 운행하는 열차가 없습니다.", request.operationDate(), request.departureHour()));
+				String.format("%s %%시 이후 운행하는 열차가 없습니다.", request.operationDate(), request.departureHour()));
 		}
 
 		return trainPage;
