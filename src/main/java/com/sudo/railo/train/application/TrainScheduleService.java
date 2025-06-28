@@ -27,7 +27,6 @@ import com.sudo.railo.train.domain.StationFare;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
-import com.sudo.railo.train.infrastructure.SeatReservationRepository;
 import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 import com.sudo.railo.train.infrastructure.StationFareRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
@@ -47,7 +46,6 @@ public class TrainScheduleService {
 
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final TrainScheduleRepositoryCustom trainScheduleRepositoryCustom;
-	private final SeatReservationRepository seatReservationRepository;
 	private final StationFareRepository stationFareRepository;
 	private final ScheduleStopRepository scheduleStopRepository;
 	private final StationRepository stationRepository;
@@ -301,7 +299,7 @@ public class TrainScheduleService {
 		Long arrivalStationId, int passengerCount) {
 
 		// 겹치는 예약 정보 조회
-		List<SeatReservationInfo> overlappingReservations = seatReservationRepository.findOverlappingReservations(
+		List<SeatReservationInfo> overlappingReservations = seatReservationRepositoryCustom.findOverlappingReservations(
 			trainScheduleId, departureStationId, arrivalStationId);
 
 		// 열차 별 좌석 수 조회

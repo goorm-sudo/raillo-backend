@@ -1,11 +1,17 @@
 package com.sudo.railo.train.infrastructure;
 
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.ReservationStatus;
+import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
+import com.sudo.railo.train.domain.QSeat;
 import com.sudo.railo.train.domain.QSeatReservation;
+import com.sudo.railo.train.domain.QTrainCar;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,6 +20,39 @@ import lombok.RequiredArgsConstructor;
 public class SeatReservationRepositoryCustomImpl implements SeatReservationRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
+
+	/**
+	 * 특정 구간과 겹치는 좌석 예약 조회
+	 * - 요청한 출발역~도착역 구간과 겹치는 예약 찾기
+	 */
+	@Override
+	public List<SeatReservationInfo> findOverlappingReservations(Long trainScheduleId, Long departureStationId,
+		Long arrivalStationId) {
+		QSeatReservation sr = QSeatReservation.seatReservation;
+		QSeat s = QSeat.seat;
+		QTrainCar tc = QTrainCar.trainCar;
+
+		return queryFactory
+			.select(Projections.constructor(
+				SeatReservationInfo.class,
+				sr.seatId,
+				tc.carType,
+				sr.departureStationId,
+				sr.arrivalStationId
+			))
+			.from(sr)
+			.join(s).on(s.id.eq(sr.seatId))
+			.join(tc).on(tc.id.eq(s.trainCar.id))
+			.where(
+				sr.trainScheduleId.eq(trainScheduleId),
+				sr.status.in(ReservationStatus.RESERVED, ReservationStatus.PAID),
+
+				// 기존출발 < 검색도착 AND 기존도착 > 검색출발
+				sr.departureStationId.lt(arrivalStationId)               // 예약출발 < 검색도착 (less than)
+					.and(sr.arrivalStationId.gt(departureStationId))   // 예약도착 > 검색출발 (greater than)
+			)
+			.fetch();
+	}
 
 	/**
 	 * 특정 구간에서 겹치는 입석(Standing) 예약 수 조회
@@ -48,7 +87,7 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
 			.where(
 				reservation.trainScheduleId.eq(trainScheduleId),
-				reservation.status.eq(ReservationStatus.RESERVED),
+				reservation.status.in(ReservationStatus.RESERVED, ReservationStatus.PAID),
 				reservation.isStanding.isTrue(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
