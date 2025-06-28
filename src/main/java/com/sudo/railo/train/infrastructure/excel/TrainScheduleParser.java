@@ -1,8 +1,5 @@
 package com.sudo.railo.train.infrastructure.excel;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.TextStyle;
@@ -14,7 +11,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
@@ -35,21 +31,14 @@ public class TrainScheduleParser extends ExcelParser {
 	@Value("${train.schedule.excel.filename}")
 	private String fileName;
 
-	public List<Sheet> getSheets() {
-		List<Sheet> sheets = new ArrayList<>();
-		try (FileInputStream stream = new FileInputStream(getFilePath(fileName))) {
-			XSSFWorkbook workbook = new XSSFWorkbook(stream);
-			for (Sheet sheet : workbook) {
-				if (!sheet.getSheetName().contains(EXCLUDE_SHEET)) {
-					sheets.add(sheet);
-				}
-			}
-		} catch (FileNotFoundException ex) {
-			throw new IllegalStateException("열차 시간표 파일을 찾을 수 없습니다.", ex);
-		} catch (IOException ex) {
-			throw new IllegalStateException("열차 시간표 파일을 읽을 수 없습니다.", ex);
-		}
-		return sheets;
+	@Override
+	protected String getFileName() {
+		return fileName;
+	}
+
+	@Override
+	protected List<String> getExcludeSheetNames() {
+		return List.of(EXCLUDE_SHEET);
 	}
 
 	public CellAddress getFirstCellAddress(Sheet sheet, int start) {
