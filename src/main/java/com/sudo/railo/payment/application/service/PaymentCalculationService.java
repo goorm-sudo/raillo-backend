@@ -47,10 +47,8 @@ public class PaymentCalculationService {
                 request.getExternalOrderId(), request.getUserId(), 
                 request.getOriginalAmount(), request.getMileageToUse());
         
-        // 1. 기본 검증
         validationService.validateCalculationRequest(request);
         
-        // 2. 마일리지 사용 검증
         boolean mileageValid = mileageService.validateMileageUsage(
             request.getMileageToUse(), 
             request.getAvailableMileage(), 
@@ -63,29 +61,32 @@ public class PaymentCalculationService {
             throw new PaymentValidationException("마일리지 사용 조건을 만족하지 않습니다");
         }
         
-        // 3. 계산 ID 생성
+        // 계산 ID 생성
         String calculationId = UUID.randomUUID().toString();
         
-        // 4. 마일리지 할인 적용한 최종 금액 계산
+        // 마일리지 할인 적용한 최종 금액 계산
         BigDecimal finalAmount = mileageService.calculateFinalAmount(
             request.getOriginalAmount(), 
             request.getMileageToUse()
         );
         
-        // 5. 마일리지 정보 생성
+        // 마일리지 정보 생성
         PaymentCalculationResponse.MileageInfo mileageInfo = buildMileageInfo(request);
         
-        // 6. 프로모션 적용 (기존 로직 + 마일리지 통합)
+        // 프로모션 적용 (기존 로직 + 마일리지 통합)
         List<PaymentCalculationResponse.AppliedPromotion> appliedPromotions = 
             applyPromotions(request, finalAmount);
         
-        // 7. 계산 결과 저장
+        // 계산 결과 저장 (마일리지 정보 포함)
         PaymentCalculation calculation = PaymentCalculation.builder()
             .calculationId(calculationId)
             .externalOrderId(request.getExternalOrderId())
             .userIdExternal(request.getUserId())
             .originalAmount(request.getOriginalAmount())
             .finalAmount(finalAmount)
+            .mileageToUse(request.getMileageToUse())
+            .availableMileage(request.getAvailableMileage())
+            .mileageDiscount(mileageService.convertMileageToWon(request.getMileageToUse()))
             .promotionSnapshot(serializePromotions(appliedPromotions))
             .status(CalculationStatus.CALCULATED)
             .expiresAt(LocalDateTime.now().plusMinutes(30)) // 30분 후 만료
@@ -93,13 +94,13 @@ public class PaymentCalculationService {
         
         calculationRepository.save(calculation);
         
-        // 8. 이벤트 발행
+        // 이벤트 발행
         eventPublisher.publishCalculationEvent(calculationId, request.getExternalOrderId(), request.getUserId());
         
         log.info("결제 계산 완료 - 계산ID: {}, 원본금액: {}, 최종금액: {}, 마일리지할인: {}", 
                 calculationId, request.getOriginalAmount(), finalAmount, mileageInfo.getMileageDiscount());
         
-        // 9. 응답 생성
+        // 응답 생성
         return PaymentCalculationResponse.builder()
             .calculationId(calculationId)
             .externalOrderId(request.getExternalOrderId())
@@ -126,12 +127,25 @@ public class PaymentCalculationService {
         List<PaymentCalculationResponse.AppliedPromotion> promotions = 
             deserializePromotions(calculation.getPromotionSnapshot());
         
+        // 저장된 마일리지 정보로 MileageInfo 재구성
+        PaymentCalculationResponse.MileageInfo mileageInfo = PaymentCalculationResponse.MileageInfo.builder()
+            .usedMileage(calculation.getMileageToUse())
+            .mileageDiscount(calculation.getMileageDiscount())
+            .availableMileage(calculation.getAvailableMileage())
+            .maxUsableMileage(mileageService.calculateMaxUsableAmount(calculation.getOriginalAmount()))
+            .recommendedMileage(mileageService.calculateRecommendedUsage(calculation.getAvailableMileage(), calculation.getOriginalAmount()))
+            .expectedEarning(mileageService.calculateEarningAmount(calculation.getFinalAmount()))
+            .usageRate(mileageService.calculateUsageRate(calculation.getMileageToUse(), calculation.getOriginalAmount()))
+            .usageRateDisplay(String.format("%.1f%%", mileageService.calculateUsageRate(calculation.getMileageToUse(), calculation.getOriginalAmount()).multiply(new BigDecimal("100"))))
+            .build();
+        
         return PaymentCalculationResponse.builder()
             .calculationId(calculation.getCalculationId())
             .externalOrderId(calculation.getExternalOrderId())
             .originalAmount(calculation.getOriginalAmount())
             .finalPayableAmount(calculation.getFinalAmount())
             .expiresAt(calculation.getExpiresAt())
+            .mileageInfo(mileageInfo)
             .appliedPromotions(promotions)
             .validationErrors(Collections.emptyList())
             .build();
@@ -145,25 +159,13 @@ public class PaymentCalculationService {
         BigDecimal availableMileage = request.getAvailableMileage();
         BigDecimal originalAmount = request.getOriginalAmount();
         
-        // 마일리지 할인 금액 계산
         BigDecimal mileageDiscount = mileageService.convertMileageToWon(usedMileage);
-        
-        // 최대 사용 가능 마일리지 계산
         BigDecimal maxUsableMileage = mileageService.calculateMaxUsableAmount(originalAmount);
-        
-        // 권장 사용 마일리지 계산
         BigDecimal recommendedMileage = mileageService.calculateRecommendedUsage(availableMileage, originalAmount);
-        
-        // 예상 적립 마일리지 계산 (최종 결제 금액 기준)
         BigDecimal finalAmount = mileageService.calculateFinalAmount(originalAmount, usedMileage);
         BigDecimal expectedEarning = mileageService.calculateEarningAmount(finalAmount);
-        
-        // 마일리지 사용률 계산
         BigDecimal usageRate = mileageService.calculateUsageRate(usedMileage, originalAmount);
         String usageRateDisplay = String.format("%.1f%%", usageRate.multiply(new BigDecimal("100")));
-        
-        log.debug("마일리지 정보 생성 - 사용: {}, 할인: {}, 최대사용가능: {}, 권장: {}, 예상적립: {}", 
-                usedMileage, mileageDiscount, maxUsableMileage, recommendedMileage, expectedEarning);
         
         return PaymentCalculationResponse.MileageInfo.builder()
             .usedMileage(usedMileage)

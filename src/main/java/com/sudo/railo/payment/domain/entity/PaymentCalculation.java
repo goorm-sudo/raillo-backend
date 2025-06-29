@@ -28,6 +28,18 @@ public class PaymentCalculation {
     @Column(name = "final_amount", precision = 12, scale = 0)
     private BigDecimal finalAmount;
     
+    @Builder.Default
+    @Column(name = "mileage_to_use", precision = 12, scale = 0)
+    private BigDecimal mileageToUse = BigDecimal.ZERO;
+    
+    @Builder.Default
+    @Column(name = "available_mileage", precision = 12, scale = 0)
+    private BigDecimal availableMileage = BigDecimal.ZERO;
+    
+    @Builder.Default
+    @Column(name = "mileage_discount", precision = 12, scale = 0)
+    private BigDecimal mileageDiscount = BigDecimal.ZERO;
+    
     @Column(name = "promotion_snapshot", columnDefinition = "JSON")
     private String promotionSnapshot;
     

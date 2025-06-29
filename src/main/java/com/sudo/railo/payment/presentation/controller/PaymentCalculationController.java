@@ -50,4 +50,4 @@ public class PaymentCalculationController {
         PaymentCalculationResponse response = paymentCalculationService.getCalculation(calculationId);
         return ResponseEntity.ok(response);
     }
-} 
+}
