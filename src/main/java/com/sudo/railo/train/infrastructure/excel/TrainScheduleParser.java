@@ -16,9 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
-import com.sudo.railo.train.application.dto.ScheduleStopData;
-import com.sudo.railo.train.application.dto.TrainData;
-import com.sudo.railo.train.application.dto.TrainScheduleData;
+import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
+import com.sudo.railo.train.application.dto.excel.TrainData;
+import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
 
 @Component
 public class TrainScheduleParser extends ExcelParser {

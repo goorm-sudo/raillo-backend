@@ -9,8 +9,8 @@ import org.apache.poi.ss.util.CellAddress;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sudo.railo.train.application.dto.ScheduleStopData;
-import com.sudo.railo.train.application.dto.TrainScheduleData;
+import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
+import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
