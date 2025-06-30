@@ -121,7 +121,7 @@ public class ReservationService {
 	@Transactional
 	public void expireReservations() {
 		int reservationExpirationTime = bookingConfig.getExpiration().getReservation();
-		LocalDateTime expireAt = LocalDateTime.now().minusMinutes(reservationExpirationTime);
-		reservationRepository.deleteAllByReservedAtBefore(expireAt);
+		LocalDateTime now = LocalDateTime.now();
+		reservationRepository.deleteAllByExpiresAtBefore(now);
 	}
 }
