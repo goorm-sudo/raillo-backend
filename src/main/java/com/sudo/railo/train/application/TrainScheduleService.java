@@ -115,10 +115,18 @@ public class TrainScheduleService {
 		// 1.  조회 조건에 맞는 기본 열차 정보 조회
 		Slice<TrainBasicInfo> trainSlice = findTrainBasicInfo(request, pageable);
 
-		// 2. 구간별 요금 정보 조회 (일반실/특실 요금)
+		// 2. 빈 결과 처리 - 정상 응답으로 반환
+		if (trainSlice.isEmpty()) {
+			log.info("열차 조회 결과 없음: {}역 -> {}역, {}, {}시 이후 - 빈 결과 반환",
+				request.departureStationId(), request.arrivalStationId(),
+				request.operationDate(), request.departureHour());
+			return TrainSearchSlicePageResponse.empty(pageable);
+		}
+
+		// 3. 구간별 요금 정보 조회 (일반실/특실 요금)
 		StationFare fare = findStationFare(request.departureStationId(), request.arrivalStationId());
 
-		// 3. 각 열차별 좌석 상태 계산 및 응답 생성
+		// 4. 각 열차별 좌석 상태 계산 및 응답 생성
 		List<TrainSearchResponse> trainSearchResults = processTrainSearchResults(trainSlice.getContent(), fare,
 			request);
 
@@ -143,14 +151,6 @@ public class TrainScheduleService {
 			request.operationDate(),
 			departureTimeFrom,
 			pageable);
-
-		if (trainPage.isEmpty()) {
-			log.warn("열차 조회 결과 없음: {}역 -> {}역, {}, {}시 이후",
-				request.departureStationId(), request.arrivalStationId(), request.operationDate(),
-				request.departureHour());
-			throw new BusinessException(TrainErrorCode.NO_OPERATION_ON_DATE,
-				String.format("%s %%시 이후 운행하는 열차가 없습니다.", request.operationDate(), request.departureHour()));
-		}
 
 		return trainPage;
 	}
