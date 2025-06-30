@@ -48,7 +48,12 @@ public record TrainSearchRequest(
 		if (departureStationId.equals(arrivalStationId)) {
 			throw new BusinessException(TrainErrorCode.INVALID_ROUTE);
 		}
+	}
 
+	/**
+	 * 비즈니스 검증 메서드
+	 */
+	public void validateBusinessRules() {
 		if (operationDate.isAfter(LocalDate.now().plusMonths(1))) {
 			throw new BusinessException(TrainErrorCode.OPERATION_DATE_TOO_FAR);
 		}
