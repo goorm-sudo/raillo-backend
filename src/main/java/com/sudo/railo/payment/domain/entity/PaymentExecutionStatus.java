@@ -9,5 +9,6 @@ public enum PaymentExecutionStatus {
     PROCESSING,     // 결제 처리 중
     SUCCESS,        // 결제 성공
     FAILED,         // 결제 실패
-    CANCELLED       // 결제 취소
+    CANCELLED,      // 결제 취소 (결제 전 취소)
+    REFUNDED        // 환불 완료 (결제 후 전체 환불)
 } 

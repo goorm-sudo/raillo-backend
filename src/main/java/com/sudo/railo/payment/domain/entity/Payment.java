@@ -93,6 +93,29 @@ public class Payment {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
     
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+    
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+    
+    @Builder.Default
+    @Column(name = "refund_amount", precision = 12, scale = 0)
+    private BigDecimal refundAmount = BigDecimal.ZERO;
+    
+    @Builder.Default
+    @Column(name = "refund_fee", precision = 12, scale = 0)
+    private BigDecimal refundFee = BigDecimal.ZERO;
+    
+    @Column(name = "refund_reason")
+    private String refundReason;
+    
+    @Column(name = "pg_refund_transaction_id")
+    private String pgRefundTransactionId;
+    
+    @Column(name = "pg_refund_approval_no")
+    private String pgRefundApprovalNo;
+    
     @Builder.Default
     @Column(name = "mileage_to_earn", precision = 12, scale = 0)
     private BigDecimal mileageToEarn = BigDecimal.ZERO;
@@ -116,5 +139,43 @@ public class Payment {
         if (newStatus == PaymentExecutionStatus.SUCCESS) {
             this.paidAt = LocalDateTime.now();
         }
+    }
+    
+    /**
+     * 결제 취소 처리
+     */
+    public void cancel(String reason) {
+        this.paymentStatus = PaymentExecutionStatus.CANCELLED;
+        this.cancelledAt = LocalDateTime.now();
+        this.refundReason = reason;
+    }
+    
+    /**
+     * 환불 처리 (전체 환불)
+     */
+    public void refund(BigDecimal refundAmount, BigDecimal refundFee, String reason, 
+                      String pgRefundTransactionId, String pgRefundApprovalNo) {
+        this.paymentStatus = PaymentExecutionStatus.REFUNDED;
+        this.refundedAt = LocalDateTime.now();
+        this.refundAmount = refundAmount;
+        this.refundFee = refundFee;
+        this.refundReason = reason;
+        this.pgRefundTransactionId = pgRefundTransactionId;
+        this.pgRefundApprovalNo = pgRefundApprovalNo;
+    }
+    
+    /**
+     * 환불 가능 여부 확인
+     */
+    public boolean isRefundable() {
+        return this.paymentStatus == PaymentExecutionStatus.SUCCESS;
+    }
+    
+    /**
+     * 취소 가능 여부 확인
+     */
+    public boolean isCancellable() {
+        return this.paymentStatus == PaymentExecutionStatus.PENDING 
+            || this.paymentStatus == PaymentExecutionStatus.PROCESSING;
     }
 } 
