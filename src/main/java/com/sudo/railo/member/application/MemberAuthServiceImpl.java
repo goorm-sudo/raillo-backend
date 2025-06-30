@@ -14,11 +14,12 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.LogoutRedis;
 import com.sudo.railo.global.redis.MemberRedis;
 import com.sudo.railo.global.redis.RedisUtil;
-import com.sudo.railo.global.security.jwt.TokenExtractor;
+import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.domain.Member;
@@ -28,7 +29,6 @@ import com.sudo.railo.member.domain.Role;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -39,7 +39,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final MemberNoGenerator memberNoGenerator;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
-	private final TokenExtractor tokenExtractor;
 	private final TokenProvider tokenProvider;
 	private final RedisUtil redisUtil;
 
@@ -83,10 +82,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
 	@Override
 	@Transactional
-	public void logout(HttpServletRequest request) {
-
-		// 요청 헤더에서 AccessToken 추출
-		String accessToken = tokenExtractor.resolveToken(request);
+	public void logout(String accessToken) {
 
 		// 현재 로그인된 사용자의 회원번호를 가져옴
 		String memberNo = SecurityUtil.getCurrentMemberNo();
@@ -100,6 +96,20 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		Long expiration = tokenProvider.getAccessTokenExpiration(accessToken);
 		LogoutRedis logoutRedis = new LogoutRedis("logout", expiration);
 		redisUtil.saveLogoutToken(accessToken, logoutRedis, expiration);
+	}
+
+	@Override
+	@Transactional
+	public ReissueTokenResponse reissueAccessToken(String refreshToken) {
+
+		String memberNo = SecurityUtil.getCurrentMemberNo();
+		String restoredRefreshToken = redisUtil.getRefreshToken(memberNo);
+
+		if (!refreshToken.equals(restoredRefreshToken)) {
+			throw new BusinessException(TokenError.NOT_EQUALS_REFRESH_TOKEN);
+		}
+
+		return tokenProvider.reissueAccessToken(refreshToken);
 	}
 
 }

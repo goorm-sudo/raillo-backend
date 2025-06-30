@@ -4,6 +4,7 @@ import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 
@@ -38,7 +39,15 @@ public interface AuthControllerDocs {
 		security = {@SecurityRequirement(name = "bearerAuth")})
 	@ApiResponses(value = {
 		@ApiResponse(responseCode = "200", description = "로그아웃에 성공하였습니다."),
-		@ApiResponse(responseCode = "403", description = "이미 로그아웃된 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+		@ApiResponse(responseCode = "401", description = "이미 로그아웃된 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
 	SuccessResponse<?> logout(HttpServletRequest request);
+
+	@Operation(method = "POST", summary = "accessToken 재발급", description = "accessToken 이 만료되었을 때, 토큰을 재발급 받을 수 있도록 합니다.",
+		security = {@SecurityRequirement(name = "bearerAuth")})
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "accessToken 이 성공적으로 재발급되었습니다."),
+		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request);
 }
