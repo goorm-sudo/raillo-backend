@@ -21,6 +21,7 @@ public class ReservationApplicationService {
 
 	@Transactional
 	public ReservationCreateResponse createReservation(ReservationCreateRequest request, UserDetails userDetails) {
+		// TODO: stationId 검증 필요
 		Reservation reservation = reservationService.createReservation(request, userDetails);
 		SeatReservation seatReservation = seatReservationService.reserveNewSeat(reservation, request);
 		return new ReservationCreateResponse(reservation.getId(), seatReservation.getId());
