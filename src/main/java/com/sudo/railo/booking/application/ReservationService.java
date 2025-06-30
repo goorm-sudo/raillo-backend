@@ -2,6 +2,7 @@ package com.sudo.railo.booking.application;
 
 import java.time.LocalDateTime;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +53,7 @@ public class ReservationService {
 	 * @return 예약 레코드
 	 */
 	@Transactional
-	public Reservation createReservation(ReservationCreateRequest request) {
+	public Reservation createReservation(ReservationCreateRequest request, UserDetails userDetails) {
 		try {
 			// TODO: 조회된 운행 스케줄이 없을때 적절한 오류를 반환해야 합니다.
 			TrainSchedule trainSchedule = trainScheduleRepository.findById(request.getTrainScheduleId())
@@ -64,7 +65,7 @@ public class ReservationService {
 			}
 
 			// 멤버
-			Member member = memberRepository.findById(request.getMemberId())
+			Member member = memberRepository.findByMemberNo(userDetails.getUsername())
 				.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 			// TODO: 조회된 출발역이 없을 때 적절한 오류를 반환해야 합니다.
