@@ -65,21 +65,4 @@ public record TrainSearchSlicePageResponse(
 			true    // last
 		);
 	}
-
-	/**
-	 * 첫 페이지 응답 생성 (hasNext만 확인)
-	 */
-	public static TrainSearchSlicePageResponse firstPage(List<TrainSearchResponse> trains,
-		int pageSize, boolean hasNext) {
-		return new TrainSearchSlicePageResponse(
-			trains,
-			0,              // currentPage
-			pageSize,       // pageSize
-			trains.size(),  // numberOfElements
-			hasNext,        // hasNext
-			false,          // hasPrevious (첫 페이지이므로 false)
-			true,           // first
-			!hasNext        // last (hasNext가 false면 마지막 페이지)
-		);
-	}
 }
