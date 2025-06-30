@@ -53,7 +53,7 @@ public class PaymentHistoryController {
             
             @PageableDefault(size = 20) Pageable pageable) {
         
-        log.info("회원 결제 내역 조회 요청 - 회원ID: {}, 기간: {} ~ {}, 결제방법: {}", memberId, startDate, endDate, paymentMethod);
+        log.debug("회원 결제 내역 조회 요청 - 회원ID: {}, 기간: {} ~ {}, 결제방법: {}", memberId, startDate, endDate, paymentMethod);
         
         PaymentHistoryResponse response = paymentHistoryService.getPaymentHistory(
                 memberId, startDate, endDate, paymentMethod, pageable);
@@ -79,7 +79,7 @@ public class PaymentHistoryController {
             @Parameter(description = "비밀번호", required = true)
             @RequestParam @NotBlank String password) {
         
-        log.info("비회원 결제 내역 조회 요청 - 예약번호: {}, 이름: {}", reservationId, name);
+        log.debug("비회원 결제 내역 조회 요청 - 예약번호: {}, 이름: {}", reservationId, name);
         
         PaymentInfoResponse response = paymentHistoryService.getNonMemberPayment(
                 Long.valueOf(reservationId), name, phoneNumber, password);
@@ -99,7 +99,7 @@ public class PaymentHistoryController {
             @Parameter(description = "회원 ID", required = true)
             @RequestParam @NotNull Long memberId) {
         
-        log.info("결제 상세 정보 조회 요청 - 결제ID: {}, 회원ID: {}", paymentId, memberId);
+        log.debug("결제 상세 정보 조회 요청 - 결제ID: {}, 회원ID: {}", paymentId, memberId);
         
         PaymentInfoResponse response = paymentHistoryService.getPaymentDetail(paymentId, memberId);
         
@@ -115,7 +115,7 @@ public class PaymentHistoryController {
             @Parameter(description = "회원 ID", required = true)
             @RequestParam @NotNull Long memberId) {
         
-        log.info("마일리지 잔액 조회 요청 - 회원ID: {}", memberId);
+        log.debug("마일리지 잔액 조회 요청 - 회원ID: {}", memberId);
         
         // MileageBalanceService를 통한 실제 잔액 조회
         MileageBalanceInfo balanceInfo = 

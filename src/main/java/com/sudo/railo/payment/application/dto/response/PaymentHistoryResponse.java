@@ -22,6 +22,8 @@ public class PaymentHistoryResponse {
     private Integer totalPages;
     private Integer currentPage;
     private Integer pageSize;
+    private Boolean hasNext;
+    private Boolean hasPrevious;
     
     /**
      * 결제 내역 아이템

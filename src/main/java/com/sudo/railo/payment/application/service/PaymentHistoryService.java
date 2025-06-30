@@ -11,6 +11,7 @@ import com.sudo.railo.payment.domain.service.NonMemberService;
 import com.sudo.railo.payment.exception.PaymentValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,27 +43,29 @@ public class PaymentHistoryService {
             String paymentMethod,
             Pageable pageable) {
         
-        log.info("회원 결제 내역 조회 - 회원ID: {}, 기간: {} ~ {}, 결제방법: {}", memberId, startDate, endDate, paymentMethod);
+        log.debug("회원 결제 내역 조회 - 회원ID: {}, 기간: {} ~ {}, 결제방법: {}", memberId, startDate, endDate, paymentMethod);
         
-        // 1. 결제 내역 조회
-        List<Payment> payments = paymentRepository.findByMemberId(memberId);
+        // 1. DB에서 페이징된 결제 내역 조회
+        Page<Payment> pagedPayments;
+        if (startDate != null && endDate != null) {
+            // 기간 지정된 경우 - DB 레벨에서 필터링 + 페이징
+            pagedPayments = paymentRepository.findByMemberIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+                memberId, startDate, endDate, pageable);
+        } else {
+            // 전체 기간 - DB 레벨에서 페이징만
+            pagedPayments = paymentRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+        }
         
-        // 2. 날짜 및 결제방법 필터링
-        List<Payment> filteredPayments = payments.stream()
-                .filter(payment -> {
-                    LocalDateTime createdAt = payment.getCreatedAt();
-                    boolean dateMatch = createdAt.isAfter(startDate) && createdAt.isBefore(endDate);
-                    
-                    // 결제방법 필터링 (paymentMethod가 null이거나 빈 문자열이면 모든 결제방법 포함)
-                    boolean paymentMethodMatch = paymentMethod == null || paymentMethod.isEmpty() 
-                            || payment.getPaymentMethod().name().equals(paymentMethod);
-                    
-                    return dateMatch && paymentMethodMatch;
-                })
-                .collect(Collectors.toList());
+        // 2. 결제방법 필터링 (필요한 경우)
+        List<Payment> payments = pagedPayments.getContent();
+        if (paymentMethod != null && !paymentMethod.isEmpty()) {
+            payments = payments.stream()
+                    .filter(payment -> payment.getPaymentMethod().name().equals(paymentMethod))
+                    .collect(Collectors.toList());
+        }
         
         // 3. 마일리지 거래 내역 조회
-        List<String> paymentIds = filteredPayments.stream()
+        List<String> paymentIds = payments.stream()
                 .map(payment -> payment.getPaymentId().toString())
                 .collect(Collectors.toList());
         
@@ -71,7 +74,7 @@ public class PaymentHistoryService {
         
         // 4. 응답 DTO 생성
         List<PaymentHistoryResponse.PaymentHistoryItem> historyItems = 
-                filteredPayments.stream()
+                payments.stream()
                         .map(payment -> {
                             List<MileageTransaction> relatedMileageTransactions = 
                                     mileageTransactions.stream()
@@ -82,12 +85,15 @@ public class PaymentHistoryService {
                         })
                         .collect(Collectors.toList());
         
+        // 5. 실제 페이징 정보로 응답 생성
         return PaymentHistoryResponse.builder()
                 .payments(historyItems)
-                .totalElements((long) historyItems.size())
-                .totalPages(1)
-                .currentPage(0)
-                .pageSize(historyItems.size())
+                .totalElements(pagedPayments.getTotalElements())
+                .totalPages(pagedPayments.getTotalPages())
+                .currentPage(pagedPayments.getNumber())
+                .pageSize(pagedPayments.getSize())
+                .hasNext(pagedPayments.hasNext())
+                .hasPrevious(pagedPayments.hasPrevious())
                 .build();
     }
     
@@ -100,7 +106,7 @@ public class PaymentHistoryService {
             String phoneNumber,
             String password) {
         
-        log.info("비회원 결제 내역 조회 - 예약번호: {}, 이름: {}", reservationId, name);
+        log.debug("비회원 결제 내역 조회 - 예약번호: {}, 이름: {}", reservationId, name);
         
         // 1. 예약번호로 결제 정보 조회
         Payment payment = paymentRepository.findByReservationId(reservationId)
@@ -146,7 +152,7 @@ public class PaymentHistoryService {
      */
     public PaymentInfoResponse getPaymentDetail(Long paymentId, Long memberId) {
         
-        log.info("결제 상세 정보 조회 - 결제ID: {}, 회원ID: {}", paymentId, memberId);
+        log.debug("결제 상세 정보 조회 - 결제ID: {}, 회원ID: {}", paymentId, memberId);
         
         // 1. 결제 정보 조회
         Payment payment = paymentRepository.findById(paymentId)

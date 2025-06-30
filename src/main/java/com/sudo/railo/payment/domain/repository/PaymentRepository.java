@@ -1,6 +1,9 @@
 package com.sudo.railo.payment.domain.repository;
 
 import com.sudo.railo.payment.domain.entity.Payment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +37,21 @@ public interface PaymentRepository {
      * 회원 ID로 결제 목록 조회
      */
     List<Payment> findByMemberId(Long memberId);
+    
+    /**
+     * 회원 ID로 결제 내역 페이징 조회 (최신순)
+     */
+    Page<Payment> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+    
+    /**
+     * 회원 ID + 기간별 결제 내역 페이징 조회
+     */
+    Page<Payment> findByMemberIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+        Long memberId, 
+        LocalDateTime startDate, 
+        LocalDateTime endDate, 
+        Pageable pageable
+    );
     
     /**
      * 비회원 정보로 결제 조회
