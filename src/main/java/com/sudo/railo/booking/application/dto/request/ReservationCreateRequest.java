@@ -16,8 +16,8 @@ public class ReservationCreateRequest {
 
 	private Long seatId;
 
-	@NotNull(message = "회원 ID는 필수입니다")
-	private Long memberId;
+	// @NotNull(message = "회원 ID는 필수입니다")
+	// private Long memberId;
 
 	@NotNull(message = "출발역 ID는 필수입니다")
 	private Long departureStationId;
