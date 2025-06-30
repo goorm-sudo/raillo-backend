@@ -51,28 +51,35 @@ public interface MileageTransactionRepository extends JpaRepository<MileageTrans
     /**
      * 회원의 현재 마일리지 잔액 계산
      */
-    @Query("SELECT COALESCE(SUM(mt.pointsAmount), 0) FROM MileageTransaction mt " +
+    @Query("SELECT COALESCE(SUM(mt.pointsAmount), 0) " +
+           "FROM MileageTransaction mt " +
            "WHERE mt.memberId = :memberId " +
            "AND mt.status = 'COMPLETED'")
     BigDecimal calculateCurrentBalance(@Param("memberId") Long memberId);
     
     /**
-     * 회원의 활성 마일리지 잔액 조회 (만료되지 않은 적립분만)
+     * 회원의 활성 마일리지 잔액 계산 (만료되지 않은 것만)
      */
-    @Query("SELECT COALESCE(SUM(mt.pointsAmount), 0) FROM MileageTransaction mt " +
+    @Query("SELECT COALESCE(SUM(mt.pointsAmount), 0) " +
+           "FROM MileageTransaction mt " +
            "WHERE mt.memberId = :memberId " +
            "AND mt.status = 'COMPLETED' " +
            "AND (mt.expiresAt IS NULL OR mt.expiresAt > :currentTime)")
-    BigDecimal calculateActiveBalance(
-            @Param("memberId") Long memberId, 
-            @Param("currentTime") LocalDateTime currentTime);
+    BigDecimal calculateActiveBalance(@Param("memberId") Long memberId, 
+                                    @Param("currentTime") LocalDateTime currentTime);
     
     /**
-     * 회원의 최근 거래 내역 조회 (잔액 확인용)
+     * 회원의 최근 거래 내역 조회
      */
-    Optional<MileageTransaction> findTopByMemberIdAndStatusOrderByCreatedAtDesc(
-            Long memberId, 
-            MileageTransaction.TransactionStatus status);
+    @Query("SELECT mt FROM MileageTransaction mt " +
+           "WHERE mt.memberId = :memberId " +
+           "AND mt.status = 'COMPLETED' " +
+           "ORDER BY mt.createdAt DESC " +
+           "LIMIT :limit")
+    List<MileageTransaction> findRecentTransactionsByMemberId(@Param("memberId") Long memberId, 
+                                                            @Param("limit") Integer limit);
+    
+
     
     /**
      * 만료 예정 마일리지 조회
@@ -80,22 +87,60 @@ public interface MileageTransactionRepository extends JpaRepository<MileageTrans
     @Query("SELECT mt FROM MileageTransaction mt " +
            "WHERE mt.type = 'EARN' " +
            "AND mt.status = 'COMPLETED' " +
-           "AND mt.expiresAt BETWEEN :startDate AND :endDate " +
-           "ORDER BY mt.expiresAt ASC")
-    List<MileageTransaction> findExpiringMileage(
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate);
+           "AND mt.expiresAt BETWEEN :startTime AND :endTime")
+    List<MileageTransaction> findExpiringMileage(@Param("startTime") LocalDateTime startTime,
+                                               @Param("endTime") LocalDateTime endTime);
     
     /**
-     * 회원의 거래 유형별 통계
+     * 회원의 전체 거래 내역 조회 (페이징)
      */
-    @Query("SELECT mt.type, COUNT(mt), SUM(mt.pointsAmount) FROM MileageTransaction mt " +
+    @Query("SELECT mt FROM MileageTransaction mt " +
+           "WHERE mt.memberId = :memberId " +
+           "ORDER BY mt.createdAt DESC")
+    List<MileageTransaction> findByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId);
+    
+    /**
+     * 기간별 마일리지 거래 통계
+     */
+    @Query("SELECT new map(" +
+           "SUM(CASE WHEN mt.type = 'EARN' THEN mt.pointsAmount ELSE 0 END) as totalEarned, " +
+           "SUM(CASE WHEN mt.type = 'USE' THEN ABS(mt.pointsAmount) ELSE 0 END) as totalUsed, " +
+           "COUNT(*) as transactionCount) " +
+           "FROM MileageTransaction mt " +
            "WHERE mt.memberId = :memberId " +
            "AND mt.status = 'COMPLETED' " +
-           "AND mt.createdAt BETWEEN :startDate AND :endDate " +
-           "GROUP BY mt.type")
-    List<Object[]> getMileageStatistics(
-            @Param("memberId") Long memberId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate);
+           "AND mt.createdAt BETWEEN :startDate AND :endDate")
+    Object getMileageStatistics(@Param("memberId") Long memberId,
+                               @Param("startDate") LocalDateTime startDate,
+                               @Param("endDate") LocalDateTime endDate);
+    
+    /**
+     * 사용 가능한 마일리지 조회 (FIFO 순서, 만료일 순)
+     */
+    @Query("SELECT mt FROM MileageTransaction mt " +
+           "WHERE mt.memberId = :memberId " +
+           "AND mt.type = 'EARN' " +
+           "AND mt.status = 'COMPLETED' " +
+           "AND (mt.expiresAt IS NULL OR mt.expiresAt > :currentTime) " +
+           "ORDER BY mt.expiresAt ASC, mt.createdAt ASC")
+    List<MileageTransaction> findAvailableMileageForUsage(@Param("memberId") Long memberId,
+                                                        @Param("currentTime") LocalDateTime currentTime);
+    
+    /**
+     * 특정 결제에 대한 마일리지 사용 내역 조회
+     */
+    @Query("SELECT mt FROM MileageTransaction mt " +
+           "WHERE mt.paymentId = :paymentId " +
+           "AND mt.type = 'USE' " +
+           "AND mt.status = 'COMPLETED'")
+    List<MileageTransaction> findMileageUsageByPaymentId(@Param("paymentId") String paymentId);
+    
+    /**
+     * 특정 결제에 대한 마일리지 적립 내역 조회
+     */
+    @Query("SELECT mt FROM MileageTransaction mt " +
+           "WHERE mt.paymentId = :paymentId " +
+           "AND mt.type = 'EARN' " +
+           "AND mt.status = 'COMPLETED'")
+    List<MileageTransaction> findMileageEarningByPaymentId(@Param("paymentId") String paymentId);
 } 

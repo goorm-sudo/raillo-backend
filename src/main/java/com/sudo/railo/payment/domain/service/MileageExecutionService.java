@@ -176,6 +176,40 @@ public class MileageExecutionService {
     }
     
     /**
+     * 마일리지 사용 복구 (결제 취소 시)
+     * 
+     * @param paymentId 결제 ID
+     * @param memberId 회원 ID
+     * @param pointsToRestore 복구할 포인트
+     * @return 복구 거래 내역
+     */
+    public MileageTransaction restoreUsage(String paymentId, Long memberId, BigDecimal pointsToRestore) {
+        // 1. 현재 잔액 조회
+        BigDecimal currentBalance = getCurrentBalance(memberId);
+        
+        // 2. 복구 거래 생성
+        MileageTransaction transaction = MileageTransaction.builder()
+                .memberId(memberId)
+                .paymentId(paymentId)
+                .type(MileageTransaction.TransactionType.REFUND)
+                .pointsAmount(pointsToRestore) // 양수로 복구
+                .balanceBefore(currentBalance)
+                .balanceAfter(currentBalance.add(pointsToRestore))
+                .description(String.format("결제 취소로 인한 마일리지 사용 복구 (%s포인트)", pointsToRestore))
+                .status(MileageTransaction.TransactionStatus.COMPLETED)
+                .processedAt(LocalDateTime.now())
+                .build();
+        
+        // 3. 저장
+        MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
+        
+        log.info("마일리지 사용 복구 완료 - 회원ID: {}, 복구포인트: {}, 복구후잔액: {}", 
+                memberId, pointsToRestore, transaction.getBalanceAfter());
+        
+        return savedTransaction;
+    }
+    
+    /**
      * 회원의 현재 마일리지 잔액 조회
      */
     @Transactional(readOnly = true)
