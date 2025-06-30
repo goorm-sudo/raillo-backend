@@ -3,9 +3,6 @@ package com.sudo.railo.train.application.dto.request;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.train.exception.TrainErrorCode;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Max;
@@ -42,32 +39,6 @@ public record TrainSearchRequest(
 	@Pattern(regexp = "^([01]?[0-9]|2[0-3])$", message = "출발 시간은 00~23 사이의 정시 값이어야 합니다")
 	String departureHour
 ) {
-
-	public TrainSearchRequest {
-		// Compact Constructor에서 비즈니스 로직 검증
-		if (departureStationId.equals(arrivalStationId)) {
-			throw new BusinessException(TrainErrorCode.INVALID_ROUTE);
-		}
-	}
-
-	/**
-	 * 비즈니스 검증 메서드
-	 */
-	public void validateBusinessRules() {
-		if (operationDate.isAfter(LocalDate.now().plusMonths(1))) {
-			throw new BusinessException(TrainErrorCode.OPERATION_DATE_TOO_FAR);
-		}
-
-		// 당일 검색 시 현재 시간 이후인지 검증
-		if (operationDate.equals(LocalDate.now())) {
-			int requestHour = Integer.parseInt(departureHour);
-			int currentHour = LocalTime.now().getHour();
-
-			if (requestHour < currentHour) {
-				throw new BusinessException(TrainErrorCode.DEPARTURE_TIME_PASSED);
-			}
-		}
-	}
 
 	/**
 	 * 출발 희망 시간을 LocalTime으로 변환

@@ -17,12 +17,13 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
-import com.sudo.railo.train.application.dto.request.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
+import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.SeatTypeInfo;
 import com.sudo.railo.train.application.dto.response.StandingTypeInfo;
 import com.sudo.railo.train.application.dto.response.TrainSearchResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
+import com.sudo.railo.train.application.validator.TrainSearchValidator;
 import com.sudo.railo.train.domain.StationFare;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
@@ -43,6 +44,7 @@ public class TrainScheduleService {
 
 	private static final double STANDING_RATIO = 0.15; // 15%, TODO: 열차 종류별 다른 % 적용
 
+	private final TrainSearchValidator trainSearchValidator;
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final TrainScheduleRepositoryCustom trainScheduleRepositoryCustom;
 	private final StationFareRepository stationFareRepository;
@@ -109,6 +111,8 @@ public class TrainScheduleService {
 		log.info("열차 조회 시작: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후",
 			request.departureStationId(), request.arrivalStationId(),
 			request.operationDate(), request.passengerCount(), request.departureHour());
+
+		trainSearchValidator.validateTrainSearchRequest(request);
 
 		// 1.  조회 조건에 맞는 기본 열차 정보 조회
 		Slice<TrainBasicInfo> trainSlice = findTrainBasicInfo(request, pageable);

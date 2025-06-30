@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.train.application.TrainScheduleService;
-import com.sudo.railo.train.application.dto.request.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
+import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.TrainScheduleSuccess;
 import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 
@@ -58,8 +58,6 @@ public class TrainScheduleController {
 		@Valid @RequestBody TrainSearchRequest request,
 		@PageableDefault(size = 20, sort = "departureTime")
 		@Parameter(description = "페이징 정보 (page, size)", hidden = true) Pageable pageable) {
-
-		request.validateBusinessRules();
 
 		log.info("열차 검색 요청: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후, page: {}, size: {}",
 			request.departureStationId(), request.arrivalStationId(),
