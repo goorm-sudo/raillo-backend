@@ -265,6 +265,7 @@ public class TrainScheduleService {
 		StandingTypeInfo standingInfo = createStandingInfoIfNeeded(sectionStatus, fare);
 
 		return TrainSearchResponse.of(
+			trainInfo.trainScheduleId(),
 			String.format("%03d", trainInfo.trainNumber()),  // 열차번호 3자리 포맷
 			trainInfo.trainName(),                           // 열차명
 			trainInfo.departureStationName(),                // 출발역명
