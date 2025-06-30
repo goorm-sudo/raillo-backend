@@ -40,10 +40,10 @@ import lombok.NoArgsConstructor;
 @Table(
 	name = "train_schedule",
 	indexes = {
-		// 1. 열차 예약 검색용 복합 인덱스 (날짜 + 운행상태 + 출발역 + 도착역 + 출발시간)
-		// ex) 6월 20일 서울→부산 예약 가능한 열차 조회 (시간순 정렬)
-		@Index(name = "idx_schedule_booking",
-			columnList = "operation_date, operation_status, departure_station_id, arrival_station_id, departure_time"),
+		// 1. 열차 예약 검색용 복합 인덱스 (날짜 + 운행상태 + 출발시간)
+		// ex) 6월 20일 예약 가능한 열차 조회 (시간순 정렬)
+		@Index(name = "idx_schedule_basic_filter",
+			columnList = "operation_date, operation_status, departure_time"),
 
 		// 2. 캘린더 전용 인덱스 (날짜별 운행 여부 조회)
 		@Index(name = "idx_schedule_calendar",
