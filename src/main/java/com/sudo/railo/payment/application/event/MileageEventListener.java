@@ -104,14 +104,14 @@ public class MileageEventListener {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processMileageEarning(Payment payment) {
-        log.info("마일리지 적립 처리 - 회원ID: {}, 적립포인트: {}", 
+        log.debug("마일리지 적립 처리 - 회원ID: {}, 적립포인트: {}", 
                 payment.getMemberId(), payment.getMileageToEarn());
         
         try {
             MileageTransaction earningTransaction = mileageExecutionService.executeEarning(payment);
             
             if (earningTransaction != null) {
-                log.info("마일리지 적립 완료 - 거래ID: {}, 회원ID: {}, 적립포인트: {}", 
+                log.debug("마일리지 적립 완료 - 거래ID: {}, 회원ID: {}, 적립포인트: {}", 
                         earningTransaction.getTransactionId(), 
                         payment.getMemberId(), 
                         payment.getMileageToEarn());
@@ -131,7 +131,7 @@ public class MileageEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async("taskExecutor")
     public void handlePaymentCancelledEvent(PaymentCancelledEvent event) {
-        log.info("결제 취소 마일리지 처리 시작 - 결제ID: {}", event.getPaymentId());
+        log.debug("결제 취소 마일리지 처리 시작 - 결제ID: {}", event.getPaymentId());
         
         try {
             Payment payment = event.getPayment();
@@ -152,7 +152,7 @@ public class MileageEventListener {
                 cancelMileageEarning(payment);
             }
             
-            log.info("결제 취소 마일리지 처리 완료 - 결제ID: {}", event.getPaymentId());
+            log.debug("결제 취소 마일리지 처리 완료 - 결제ID: {}", event.getPaymentId());
             
         } catch (Exception e) {
             log.error("결제 취소 마일리지 처리 중 오류 발생 - 결제ID: {}", event.getPaymentId(), e);
@@ -164,7 +164,7 @@ public class MileageEventListener {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void restoreMileageUsage(Payment payment) {
-        log.info("마일리지 사용 복구 - 회원ID: {}, 복구포인트: {}", 
+        log.debug("마일리지 사용 복구 - 회원ID: {}, 복구포인트: {}", 
                 payment.getMemberId(), payment.getMileagePointsUsed());
         
         try {
@@ -174,7 +174,7 @@ public class MileageEventListener {
                     payment.getMileagePointsUsed()
             );
             
-            log.info("마일리지 사용 복구 완료 - 거래ID: {}", restoreTransaction.getTransactionId());
+            log.debug("마일리지 사용 복구 완료 - 거래ID: {}", restoreTransaction.getTransactionId());
             
         } catch (Exception e) {
             log.error("마일리지 사용 복구 중 오류 - 회원ID: {}", payment.getMemberId(), e);
@@ -187,7 +187,7 @@ public class MileageEventListener {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void cancelMileageEarning(Payment payment) {
-        log.info("마일리지 적립 취소 - 회원ID: {}, 취소포인트: {}", 
+        log.debug("마일리지 적립 취소 - 회원ID: {}, 취소포인트: {}", 
                 payment.getMemberId(), payment.getMileageToEarn());
         
         try {
@@ -197,7 +197,7 @@ public class MileageEventListener {
                     payment.getMileageToEarn()
             );
             
-            log.info("마일리지 적립 취소 완료 - 거래ID: {}", cancelTransaction.getTransactionId());
+            log.debug("마일리지 적립 취소 완료 - 거래ID: {}", cancelTransaction.getTransactionId());
             
         } catch (Exception e) {
             log.error("마일리지 적립 취소 중 오류 - 회원ID: {}", payment.getMemberId(), e);

@@ -36,7 +36,7 @@ public class MileageExecutionService {
         
         if (payment.getMileageToEarn() == null || 
             payment.getMileageToEarn().compareTo(BigDecimal.ZERO) <= 0) {
-            log.info("적립할 마일리지가 없습니다 - 결제ID: {}", payment.getPaymentId());
+            log.debug("적립할 마일리지가 없습니다 - 결제ID: {}", payment.getPaymentId());
             return null;
         }
         
@@ -58,7 +58,7 @@ public class MileageExecutionService {
         // 4. 저장
         MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
         
-        log.info("마일리지 적립 완료 - 회원ID: {}, 적립포인트: {}, 적립후잔액: {}", 
+        log.debug("마일리지 적립 완료 - 회원ID: {}, 적립포인트: {}, 적립후잔액: {}", 
                 payment.getMemberId(), payment.getMileageToEarn(), transaction.getBalanceAfter());
         
         return savedTransaction;
@@ -75,7 +75,7 @@ public class MileageExecutionService {
         
         if (payment.getMileagePointsUsed() == null || 
             payment.getMileagePointsUsed().compareTo(BigDecimal.ZERO) <= 0) {
-            log.info("사용할 마일리지가 없습니다 - 결제ID: {}", payment.getPaymentId());
+            log.debug("사용할 마일리지가 없습니다 - 결제ID: {}", payment.getPaymentId());
             return null;
         }
         
@@ -104,7 +104,7 @@ public class MileageExecutionService {
         // 5. 저장
         MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
         
-        log.info("마일리지 사용 완료 - 회원ID: {}, 사용포인트: {}, 사용후잔액: {}", 
+        log.debug("마일리지 사용 완료 - 회원ID: {}, 사용포인트: {}, 사용후잔액: {}", 
                 payment.getMemberId(), payment.getMileagePointsUsed(), transaction.getBalanceAfter());
         
         return savedTransaction;
@@ -133,7 +133,7 @@ public class MileageExecutionService {
         // 3. 저장
         MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
         
-        log.info("마일리지 사용 취소 완료 - 회원ID: {}, 복구포인트: {}, 복구후잔액: {}", 
+        log.debug("마일리지 사용 취소 완료 - 회원ID: {}, 복구포인트: {}, 복구후잔액: {}", 
                 memberId, pointsToRestore, transaction.getBalanceAfter());
         
         return savedTransaction;
@@ -169,7 +169,7 @@ public class MileageExecutionService {
         // 4. 저장
         MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
         
-        log.info("마일리지 적립 취소 완료 - 회원ID: {}, 회수포인트: {}, 회수후잔액: {}", 
+        log.debug("마일리지 적립 취소 완료 - 회원ID: {}, 회수포인트: {}, 회수후잔액: {}", 
                 memberId, pointsToCancel, transaction.getBalanceAfter());
         
         return savedTransaction;
@@ -203,7 +203,7 @@ public class MileageExecutionService {
         // 3. 저장
         MileageTransaction savedTransaction = mileageTransactionRepository.save(transaction);
         
-        log.info("마일리지 사용 복구 완료 - 회원ID: {}, 복구포인트: {}, 복구후잔액: {}", 
+        log.debug("마일리지 사용 복구 완료 - 회원ID: {}, 복구포인트: {}, 복구후잔액: {}", 
                 memberId, pointsToRestore, transaction.getBalanceAfter());
         
         return savedTransaction;
@@ -253,7 +253,7 @@ public class MileageExecutionService {
             
             mileageTransactionRepository.save(expireTransaction);
             
-            log.info("마일리지 만료 처리 - 회원ID: {}, 만료포인트: {}", 
+            log.debug("마일리지 만료 처리 - 회원ID: {}, 만료포인트: {}", 
                     expiredTransaction.getMemberId(), expiredTransaction.getPointsAmount());
         }
     }
