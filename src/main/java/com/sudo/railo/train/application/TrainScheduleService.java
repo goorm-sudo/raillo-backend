@@ -26,7 +26,6 @@ import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageRespons
 import com.sudo.railo.train.domain.StationFare;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
-import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
 import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 import com.sudo.railo.train.infrastructure.StationFareRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
@@ -47,7 +46,6 @@ public class TrainScheduleService {
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final TrainScheduleRepositoryCustom trainScheduleRepositoryCustom;
 	private final StationFareRepository stationFareRepository;
-	private final ScheduleStopRepository scheduleStopRepository;
 	private final StationRepository stationRepository;
 	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 
