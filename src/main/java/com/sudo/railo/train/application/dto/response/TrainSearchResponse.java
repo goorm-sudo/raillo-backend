@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "열차 검색 응답")
 public record TrainSearchResponse(
+	@Schema(description = "열차 스케줄 ID", example = "26")
+	Long trainScheduleId,
+
 	@Schema(description = "열차 번호", example = "027")
 	String trainNumber,
 
@@ -48,15 +51,17 @@ public record TrainSearchResponse(
 	/**
 	 * 생성 메서드
 	 */
-	public static TrainSearchResponse of(String trainNumber, String trainName,
+	public static TrainSearchResponse of(Long trainScheduleId, String trainNumber, String trainName,
 		String departureStationName, String arrivalStationName,
 		LocalTime departureTime, LocalTime arrivalTime,
 		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat,
 		StandingTypeInfo standing) {
 
-		validateTrainSearchData(trainNumber, trainName, departureTime, arrivalTime, standardSeat, firstClassSeat);
+		validateTrainSearchData(trainScheduleId, trainNumber, trainName, departureTime, arrivalTime, standardSeat,
+			firstClassSeat);
 
 		return new TrainSearchResponse(
+			trainScheduleId,
 			trainNumber, trainName,
 			departureStationName, arrivalStationName,
 			departureTime, arrivalTime,
@@ -65,9 +70,12 @@ public record TrainSearchResponse(
 		);
 	}
 
-	private static void validateTrainSearchData(String trainNumber, String trainName,
+	private static void validateTrainSearchData(Long trainScheduleId, String trainNumber, String trainName,
 		LocalTime departureTime, LocalTime arrivalTime,
 		SeatTypeInfo standardSeat, SeatTypeInfo firstClassSeat) {
+		if (trainScheduleId == null) {
+			throw new IllegalArgumentException("열차 스케줄 ID는 필수입니다");
+		}
 		if (trainNumber == null || trainNumber.isBlank()) {
 			throw new IllegalArgumentException("열차번호는 필수입니다");
 		}
