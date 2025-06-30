@@ -77,9 +77,6 @@ public record TrainSearchResponse(
 		if (standardSeat == null || firstClassSeat == null) {
 			throw new IllegalArgumentException("좌석 정보는 필수입니다");
 		}
-		if (arrivalTime.isBefore(departureTime)) {
-			throw new IllegalArgumentException("도착시간은 출발시간보다 늦어야 합니다");
-		}
 	}
 
 	/* 편의 메서드 */
