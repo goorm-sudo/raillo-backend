@@ -26,13 +26,13 @@ public class MockCreditCardGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[Mock 신용카드] 결제 요청: orderId={}, amount={}", 
+        log.debug("[Mock 신용카드] 결제 요청: orderId={}, amount={}", 
                 request.getMerchantOrderId(), request.getAmount());
         
         String mockPaymentId = "C" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         
         // Mock 신용카드는 카카오페이/네이버페이와 동일하게 바로 승인 처리
-        log.info("[Mock 신용카드] Mock 결제 - 리다이렉트 없이 바로 승인 처리");
+        log.debug("[Mock 신용카드] Mock 결제 - 리다이렉트 없이 바로 승인 처리");
         
         return PgPaymentResponse.builder()
                 .success(true)
@@ -47,7 +47,7 @@ public class MockCreditCardGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[Mock 신용카드] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[Mock 신용카드] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         // Mock 승인 처리
         return PgPaymentResponse.builder()
@@ -63,7 +63,7 @@ public class MockCreditCardGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[Mock 신용카드] 결제 취소: tid={}, amount={}", 
+        log.debug("[Mock 신용카드] 결제 취소: tid={}, amount={}", 
                 request.getPgTransactionId(), request.getCancelAmount());
         
         return PgPaymentCancelResponse.builder()
@@ -77,7 +77,7 @@ public class MockCreditCardGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[Mock 신용카드] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[Mock 신용카드] 결제 상태 조회: tid={}", pgTransactionId);
         
         return PgPaymentResponse.builder()
                 .success(true)

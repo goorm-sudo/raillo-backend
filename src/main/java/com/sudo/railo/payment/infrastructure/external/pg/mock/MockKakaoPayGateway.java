@@ -25,7 +25,7 @@ public class MockKakaoPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[Mock 카카오페이] 결제 요청: orderId={}, amount={}", 
+        log.debug("[Mock 카카오페이] 결제 요청: orderId={}, amount={}", 
                 request.getMerchantOrderId(), request.getAmount());
         
         String mockTid = "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
@@ -43,7 +43,7 @@ public class MockKakaoPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[Mock 카카오페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[Mock 카카오페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         String mockApprovalNumber = "A" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
         
@@ -60,7 +60,7 @@ public class MockKakaoPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[Mock 카카오페이] 결제 취소: tid={}, amount={}", 
+        log.debug("[Mock 카카오페이] 결제 취소: tid={}, amount={}", 
                 request.getPgTransactionId(), request.getCancelAmount());
         
         String mockCancelApprovalNumber = "C" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
@@ -75,7 +75,7 @@ public class MockKakaoPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[Mock 카카오페이] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[Mock 카카오페이] 결제 상태 조회: tid={}", pgTransactionId);
         
         return PgPaymentResponse.builder()
                 .success(true)

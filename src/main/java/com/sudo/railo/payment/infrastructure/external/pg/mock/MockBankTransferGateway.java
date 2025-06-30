@@ -24,13 +24,13 @@ public class MockBankTransferGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[Mock 계좌이체] 결제 요청: orderId={}, amount={}", 
+        log.debug("[Mock 계좌이체] 결제 요청: orderId={}, amount={}", 
                 request.getMerchantOrderId(), request.getAmount());
         
         String mockPaymentId = "T" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         
         // Mock 계좌이체는 가상계좌 발급 후 입금 대기 상태
-        log.info("[Mock 계좌이체] 가상계좌 발급 완료 - 입금 대기 상태");
+        log.debug("[Mock 계좌이체] 가상계좌 발급 완료 - 입금 대기 상태");
         
         return PgPaymentResponse.builder()
                 .success(true)
@@ -45,13 +45,13 @@ public class MockBankTransferGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[Mock 계좌이체] 입금 확인 및 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[Mock 계좌이체] 입금 확인 및 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         // 입금 확인 시뮬레이션 (95% 성공률 - 입금 확인됨)
         boolean isSuccess = Math.random() > 0.05;
         
         if (isSuccess) {
-            log.info("[Mock 계좌이체] 입금 확인 완료 - 결제 승인 성공: tid={}", pgTransactionId);
+            log.debug("[Mock 계좌이체] 입금 확인 완료 - 결제 승인 성공: tid={}", pgTransactionId);
             
             return PgPaymentResponse.builder()
                     .success(true)
@@ -78,7 +78,7 @@ public class MockBankTransferGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[Mock 계좌이체] 결제 취소: tid={}", request.getPgTransactionId());
+        log.debug("[Mock 계좌이체] 결제 취소: tid={}", request.getPgTransactionId());
         
         return PgPaymentCancelResponse.builder()
                 .success(true)
@@ -89,7 +89,7 @@ public class MockBankTransferGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[Mock 계좌이체] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[Mock 계좌이체] 결제 상태 조회: tid={}", pgTransactionId);
         
         // 입금 대기 중인 상태로 응답 (운영에서는 은행에서 입금 상태 확인)
         return PgPaymentResponse.builder()

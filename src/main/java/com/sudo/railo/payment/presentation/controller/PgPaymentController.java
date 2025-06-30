@@ -37,7 +37,7 @@ public class PgPaymentController {
      */
     @PostMapping("/request")
     public ResponseEntity<SuccessResponse<PgPaymentResponse>> requestPayment(@RequestBody PgPaymentRequestDto request) {
-        log.info("PG 결제 요청: paymentMethod={}, orderId={}", request.getPaymentMethod(), request.getMerchantOrderId());
+        log.debug("PG 결제 요청: paymentMethod={}, orderId={}", request.getPaymentMethod(), request.getMerchantOrderId());
         
         // DTO를 PG 요청 객체로 변환
         PgPaymentRequest pgRequest = PgPaymentRequest.builder()
@@ -64,7 +64,10 @@ public class PgPaymentController {
      */
     @PostMapping("/approve")
     public ResponseEntity<SuccessResponse<PaymentExecuteResponse>> approvePayment(@RequestBody PgPaymentApproveDto request) {
-        log.info("PG 결제 승인: paymentMethod={}, tid={}", request.getPaymentMethod(), request.getPgTransactionId());
+        log.debug("PG 결제 승인: paymentMethod={}, tid={}", request.getPaymentMethod(), request.getPgTransactionId());
+        
+        // 비회원 정보 검증
+        validateNonMemberInfo(request);
         
         // 1. PG 결제 승인
         PgPaymentResponse pgResponse = pgPaymentService.approvePayment(
@@ -80,7 +83,7 @@ public class PgPaymentController {
             try {
                 // 1. 결제 계산 정보 조회 (마일리지 사용량 포함)
                 PaymentCalculationResponse calculationResponse = paymentCalculationService.getCalculation(request.getCalculationId());
-                log.info("결제 계산 정보 조회 완료 - 마일리지 사용: {}", calculationResponse.getMileageInfo().getUsedMileage());
+                log.debug("결제 계산 정보 조회 완료 - 마일리지 사용: {}", calculationResponse.getMileageInfo().getUsedMileage());
                 
                 PaymentExecuteRequest paymentRequest = PaymentExecuteRequest.builder()
                         .calculationId(request.getCalculationId())
@@ -95,10 +98,10 @@ public class PgPaymentController {
                         // 마일리지 정보 추가 (계산 결과에서 가져옴)
                         .mileageToUse(calculationResponse.getMileageInfo().getUsedMileage())
                         .availableMileage(calculationResponse.getMileageInfo().getAvailableMileage())
-                        // 비회원 정보 설정 (비로그인 또는 게스트인 경우)
-                        .nonMemberName(request.getMemberId() != null ? null : "결제자") // 회원인 경우 null
-                        .nonMemberPhone(request.getMemberId() != null ? null : "01012345678") // 회원인 경우 null
-                        .nonMemberPassword(request.getMemberId() != null ? null : "1234") // 회원인 경우 null
+                        // 비회원 정보 설정
+                        .nonMemberName(request.getMemberId() != null ? null : request.getNonMemberName())
+                        .nonMemberPhone(request.getMemberId() != null ? null : request.getNonMemberPhone()) 
+                        .nonMemberPassword(request.getMemberId() != null ? null : request.getNonMemberPassword())
                         // 현금영수증 정보 설정
                         .requestReceipt(request.getRequestReceipt() != null ? request.getRequestReceipt() : false)
                         .receiptType(request.getReceiptType())
@@ -109,7 +112,7 @@ public class PgPaymentController {
                 // 결제 처리 및 DB 저장
                 PaymentExecuteResponse paymentResponse = paymentService.executePayment(paymentRequest);
                 
-                log.info("결제 데이터 저장 완료: paymentId={}, status={}", 
+                log.debug("결제 데이터 저장 완료: paymentId={}, status={}", 
                         paymentResponse.getPaymentId(), paymentResponse.getPaymentStatus());
                 
                 return ResponseEntity.ok(SuccessResponse.of(PgPaymentSuccess.PG_PAYMENT_APPROVE_SUCCESS, paymentResponse));
@@ -157,7 +160,7 @@ public class PgPaymentController {
      */
     @PostMapping("/cancel")
     public ResponseEntity<SuccessResponse<PgPaymentCancelResponse>> cancelPayment(@RequestBody PgPaymentCancelDto request) {
-        log.info("PG 결제 취소: paymentMethod={}, tid={}", request.getPaymentMethod(), request.getPgTransactionId());
+        log.debug("PG 결제 취소: paymentMethod={}, tid={}", request.getPaymentMethod(), request.getPgTransactionId());
         
         PgPaymentCancelRequest cancelRequest = PgPaymentCancelRequest.builder()
                 .pgTransactionId(request.getPgTransactionId())
@@ -180,11 +183,30 @@ public class PgPaymentController {
     public ResponseEntity<SuccessResponse<PgPaymentResponse>> getPaymentStatus(
             @PathVariable PaymentMethod paymentMethod,
             @PathVariable String pgTransactionId) {
-        log.info("PG 결제 상태 조회: paymentMethod={}, tid={}", paymentMethod, pgTransactionId);
+        log.debug("PG 결제 상태 조회: paymentMethod={}, tid={}", paymentMethod, pgTransactionId);
         
         PgPaymentResponse response = pgPaymentService.getPaymentStatus(paymentMethod, pgTransactionId);
         
         return ResponseEntity.ok(SuccessResponse.of(PgPaymentSuccess.PG_PAYMENT_STATUS_SUCCESS, response));
+    }
+    
+    /**
+     * 비회원 정보 검증
+     */
+    private void validateNonMemberInfo(PgPaymentApproveDto request) {
+        // 비회원인 경우 비회원 정보 검증
+        if (request.getMemberId() == null) {
+            if (request.getNonMemberName() == null || request.getNonMemberName().trim().isEmpty()) {
+                throw new IllegalArgumentException("비회원 이름은 필수입니다.");
+            }
+            if (request.getNonMemberPhone() == null || !request.getNonMemberPhone().matches("^[0-9]{11}$")) {
+                throw new IllegalArgumentException("전화번호는 11자리 숫자여야 합니다. (예: 01012345678)");
+            }
+            if (request.getNonMemberPassword() == null || !request.getNonMemberPassword().matches("^[0-9]{5}$")) {
+                throw new IllegalArgumentException("비밀번호는 5자리 숫자여야 합니다. (예: 12345)");
+            }
+            log.debug("비회원 정보 검증 완료");
+        }
     }
     
     // === DTO 클래스들 ===
@@ -212,6 +234,11 @@ public class PgPaymentController {
         
         // 회원 정보
         private Long memberId; // 로그인된 회원 ID (비회원인 경우 null)
+        
+        // 비회원 정보 (비회원인 경우 필수)
+        private String nonMemberName;      // 예약자 이름
+        private String nonMemberPhone;     // 전화번호
+        private String nonMemberPassword;  // 비밀번호
         
         // 현금영수증 정보
         private Boolean requestReceipt;

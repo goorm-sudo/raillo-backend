@@ -52,7 +52,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
 
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[카카오페이] 결제 요청: orderId={}, amount={}", request.getMerchantOrderId(), request.getAmount());
+        log.debug("[카카오페이] 결제 요청: orderId={}, amount={}", request.getMerchantOrderId(), request.getAmount());
         
         try {
             // 카카오페이 결제 준비 요청
@@ -84,7 +84,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 KakaoPayReadyResponse kakaoResponse = response.getBody();
                 
-                log.info("[카카오페이] 결제 준비 성공: tid={}, paymentUrl={}", 
+                log.debug("[카카오페이] 결제 준비 성공: tid={}, paymentUrl={}", 
                         kakaoResponse.getTid(), kakaoResponse.getNextRedirectPcUrl());
                 
                 return PgPaymentResponse.builder()
@@ -107,7 +107,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
 
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[카카오페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[카카오페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         // 카카오페이는 프론트엔드에서 pg_token을 받아서 처리해야 하지만
         // 기본 인터페이스에 맞춰 간단한 승인 처리
@@ -122,7 +122,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
 
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[카카오페이] 결제 취소: tid={}, amount={}", request.getPgTransactionId(), request.getCancelAmount());
+        log.debug("[카카오페이] 결제 취소: tid={}, amount={}", request.getPgTransactionId(), request.getCancelAmount());
         
         try {
             KakaoPayCancelRequest kakaoRequest = KakaoPayCancelRequest.builder()
@@ -145,7 +145,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 KakaoPayCancelResponse kakaoResponse = response.getBody();
                 
-                log.info("[카카오페이] 결제 취소 성공: tid={}", kakaoResponse.getTid());
+                log.debug("[카카오페이] 결제 취소 성공: tid={}", kakaoResponse.getTid());
                 
                 return PgPaymentCancelResponse.builder()
                         .success(true)
@@ -175,7 +175,7 @@ public class KakaoPayGateway implements PgPaymentGateway {
 
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[카카오페이] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[카카오페이] 결제 상태 조회: tid={}", pgTransactionId);
         
         // 카카오페이는 별도 상태 조회 API가 없어서 간단한 응답 반환
         return PgPaymentResponse.builder()

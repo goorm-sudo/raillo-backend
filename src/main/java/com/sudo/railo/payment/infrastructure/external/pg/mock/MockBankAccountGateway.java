@@ -24,13 +24,13 @@ public class MockBankAccountGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[Mock 은행계좌] 결제 요청: orderId={}, amount={}", 
+        log.debug("[Mock 은행계좌] 결제 요청: orderId={}, amount={}", 
                 request.getMerchantOrderId(), request.getAmount());
         
         String mockPaymentId = "B" + UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         
         // Mock 은행계좌는 바로 승인 처리 (운영에서는 은행 앱으로 리다이렉트)
-        log.info("[Mock 은행계좌] Mock 결제 - 리다이렉트 없이 바로 승인 처리");
+        log.debug("[Mock 은행계좌] Mock 결제 - 리다이렉트 없이 바로 승인 처리");
         
         return PgPaymentResponse.builder()
                 .success(true)
@@ -45,13 +45,13 @@ public class MockBankAccountGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[Mock 은행계좌] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[Mock 은행계좌] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         // 계좌 유효성 검사 시뮬레이션 (90% 성공률 - 계좌번호/비밀번호 오류 가능)
         boolean isSuccess = Math.random() > 0.1;
         
         if (isSuccess) {
-            log.info("[Mock 은행계좌] 결제 승인 성공: tid={}", pgTransactionId);
+            log.debug("[Mock 은행계좌] 결제 승인 성공: tid={}", pgTransactionId);
             
             return PgPaymentResponse.builder()
                     .success(true)
@@ -78,7 +78,7 @@ public class MockBankAccountGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[Mock 은행계좌] 결제 취소: tid={}", request.getPgTransactionId());
+        log.debug("[Mock 은행계좌] 결제 취소: tid={}", request.getPgTransactionId());
         
         return PgPaymentCancelResponse.builder()
                 .success(true)
@@ -89,7 +89,7 @@ public class MockBankAccountGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[Mock 은행계좌] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[Mock 은행계좌] 결제 상태 조회: tid={}", pgTransactionId);
         
         return PgPaymentResponse.builder()
                 .success(true)

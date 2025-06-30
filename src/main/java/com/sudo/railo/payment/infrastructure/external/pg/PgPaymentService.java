@@ -33,7 +33,7 @@ public class PgPaymentService {
      * 결제 요청
      */
     public PgPaymentResponse requestPayment(PaymentMethod paymentMethod, PgPaymentRequest request) {
-        log.info("PG 결제 요청: method={}, orderId={}", paymentMethod, request.getMerchantOrderId());
+        log.debug("PG 결제 요청: method={}, orderId={}", paymentMethod, request.getMerchantOrderId());
         
         PgPaymentGateway gateway = getGateway(paymentMethod);
         return gateway.requestPayment(request);
@@ -43,7 +43,7 @@ public class PgPaymentService {
      * 결제 승인
      */
     public PgPaymentResponse approvePayment(PaymentMethod paymentMethod, String pgTransactionId, String merchantOrderId) {
-        log.info("PG 결제 승인: method={}, tid={}, orderId={}", paymentMethod, pgTransactionId, merchantOrderId);
+        log.debug("PG 결제 승인: method={}, tid={}, orderId={}", paymentMethod, pgTransactionId, merchantOrderId);
         
         PgPaymentGateway gateway = getGateway(paymentMethod);
         return gateway.approvePayment(pgTransactionId, merchantOrderId);
@@ -53,7 +53,7 @@ public class PgPaymentService {
      * 결제 취소
      */
     public PgPaymentCancelResponse cancelPayment(PaymentMethod paymentMethod, PgPaymentCancelRequest request) {
-        log.info("PG 결제 취소: method={}, tid={}", paymentMethod, request.getPgTransactionId());
+        log.debug("PG 결제 취소: method={}, tid={}", paymentMethod, request.getPgTransactionId());
         
         PgPaymentGateway gateway = getGateway(paymentMethod);
         return gateway.cancelPayment(request);
@@ -63,7 +63,7 @@ public class PgPaymentService {
      * 결제 상태 조회
      */
     public PgPaymentResponse getPaymentStatus(PaymentMethod paymentMethod, String pgTransactionId) {
-        log.info("PG 결제 상태 조회: method={}, tid={}", paymentMethod, pgTransactionId);
+        log.debug("PG 결제 상태 조회: method={}, tid={}", paymentMethod, pgTransactionId);
         
         PgPaymentGateway gateway = getGateway(paymentMethod);
         return gateway.getPaymentStatus(pgTransactionId);

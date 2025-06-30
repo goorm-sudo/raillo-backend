@@ -40,7 +40,7 @@ public class NaverPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse requestPayment(PgPaymentRequest request) {
-        log.info("[네이버페이] 결제 요청: orderId={}, amount={}", 
+        log.debug("[네이버페이] 결제 요청: orderId={}, amount={}", 
                 request.getMerchantOrderId(), request.getAmount());
         
         try {
@@ -69,7 +69,7 @@ public class NaverPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse approvePayment(String pgTransactionId, String merchantOrderId) {
-        log.info("[네이버페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
+        log.debug("[네이버페이] 결제 승인: tid={}, orderId={}", pgTransactionId, merchantOrderId);
         
         try {
             // 네이버페이 승인 로직 구현
@@ -95,7 +95,7 @@ public class NaverPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentCancelResponse cancelPayment(PgPaymentCancelRequest request) {
-        log.info("[네이버페이] 결제 취소: tid={}", request.getPgTransactionId());
+        log.debug("[네이버페이] 결제 취소: tid={}", request.getPgTransactionId());
         
         try {
             // 네이버페이 취소 로직 구현
@@ -120,7 +120,7 @@ public class NaverPayGateway implements PgPaymentGateway {
     
     @Override
     public PgPaymentResponse getPaymentStatus(String pgTransactionId) {
-        log.info("[네이버페이] 결제 상태 조회: tid={}", pgTransactionId);
+        log.debug("[네이버페이] 결제 상태 조회: tid={}", pgTransactionId);
         
         // 네이버페이 상태 조회 로직 구현
         return PgPaymentResponse.builder()
