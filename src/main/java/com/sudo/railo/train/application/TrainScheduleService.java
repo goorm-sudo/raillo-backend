@@ -8,8 +8,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +21,8 @@ import com.sudo.railo.train.application.dto.request.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.SeatTypeInfo;
 import com.sudo.railo.train.application.dto.response.StandingTypeInfo;
-import com.sudo.railo.train.application.dto.response.TrainSearchPageResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchResponse;
+import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 import com.sudo.railo.train.domain.StationFare;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
@@ -107,22 +107,24 @@ public class TrainScheduleService {
 	 * 3. 각 열차별 좌석 상태 계산 및 응답 생성
 	 * 4. 최종 조회 결과 반환
 	 */
-	public TrainSearchPageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
+	public TrainSearchSlicePageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
 		log.info("열차 조회 시작: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후",
 			request.departureStationId(), request.arrivalStationId(),
 			request.operationDate(), request.passengerCount(), request.departureHour());
 
 		// 1.  조회 조건에 맞는 기본 열차 정보 조회
-		Page<TrainBasicInfo> trainPage = findTrainBasicInfo(request, pageable);
+		Slice<TrainBasicInfo> trainSlice = findTrainBasicInfo(request, pageable);
 
 		// 2. 구간별 요금 정보 조회 (일반실/특실 요금)
 		StationFare fare = findStationFare(request.departureStationId(), request.arrivalStationId());
 
 		// 3. 각 열차별 좌석 상태 계산 및 응답 생성
-		List<TrainSearchResponse> trainSearchResults = processTrainSearchResults(trainPage.getContent(), fare, request);
+		List<TrainSearchResponse> trainSearchResults = processTrainSearchResults(trainSlice.getContent(), fare,
+			request);
 
-		return createTrainSearchPageResponse(trainSearchResults, trainPage);
+		log.info("Slice 기반 열차 조회 완료: {}건 조회, hasNext: {}", trainSearchResults.size(), trainSlice.hasNext());
 
+		return createTrainSearchPageResponse(trainSearchResults, trainSlice);
 	}
 
 	// ============================================
@@ -132,11 +134,14 @@ public class TrainScheduleService {
 	/**
 	 * 기본 열차 정보 조회
 	 */
-	private Page<TrainBasicInfo> findTrainBasicInfo(TrainSearchRequest request, Pageable pageable) {
+	private Slice<TrainBasicInfo> findTrainBasicInfo(TrainSearchRequest request, Pageable pageable) {
 		LocalTime departureTimeFrom = request.getDepartureTimeFilter();
 
-		Page<TrainBasicInfo> trainPage = trainScheduleRepositoryCustom.findTrainBasicInfo(
-			request.departureStationId(), request.arrivalStationId(), request.operationDate(), departureTimeFrom,
+		Slice<TrainBasicInfo> trainPage = trainScheduleRepositoryCustom.findTrainBasicInfo(
+			request.departureStationId(),
+			request.arrivalStationId(),
+			request.operationDate(),
+			departureTimeFrom,
 			pageable);
 
 		if (trainPage.isEmpty()) {
@@ -189,17 +194,9 @@ public class TrainScheduleService {
 	/**
 	 * 열차 조회 응답 생성
 	 */
-	private TrainSearchPageResponse createTrainSearchPageResponse(List<TrainSearchResponse> trainSearchResults,
-		Page<TrainBasicInfo> trainPage) {
-		return TrainSearchPageResponse.of(
-			trainSearchResults,
-			trainPage.getNumber(),
-			trainPage.getSize(),
-			trainPage.getTotalElements(),
-			trainPage.getTotalPages(),
-			trainPage.hasNext(),
-			trainPage.hasPrevious()
-		);
+	private TrainSearchSlicePageResponse createTrainSearchPageResponse(List<TrainSearchResponse> trainSearchResults,
+		Slice<TrainBasicInfo> trainSlice) {
+		return TrainSearchSlicePageResponse.of(trainSearchResults, trainSlice);
 	}
 
 	// ============================================

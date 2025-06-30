@@ -5,8 +5,8 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
 import com.sudo.railo.train.domain.type.CarType;
@@ -29,7 +29,7 @@ public interface TrainScheduleRepositoryCustom {
 	 * @param pageable 페이징 정보
 	 * @return 열차 기본 정보 페이지
 	 */
-	Page<TrainBasicInfo> findTrainBasicInfo(
+	Slice<TrainBasicInfo> findTrainBasicInfo(
 		Long departureStationId,
 		Long arrivalStationId,
 		LocalDate operationDate,

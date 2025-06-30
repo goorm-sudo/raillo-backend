@@ -2,16 +2,15 @@ package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.Tuple;
@@ -68,7 +67,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	 * - 출발역, 도착역을 경유하는 모든 열차 조회
 	 */
 	@Override
-	public Page<TrainBasicInfo> findTrainBasicInfo(
+	public Slice<TrainBasicInfo> findTrainBasicInfo(
 		Long departureStationId, Long arrivalStationId, LocalDate operationDate,
 		LocalTime departureTimeFrom, Pageable pageable) {
 
@@ -123,11 +122,16 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			)
 			.orderBy(depStop2.departureTime.asc())
 			.offset(pageable.getOffset())
-			.limit(pageable.getPageSize())
+			.limit(pageable.getPageSize() + 1)                             // hasNext 확인용 +1
 			.fetch();
 
+		// hasNext 확인 및 데이터 조정
+		boolean hasNext = results.size() > pageable.getPageSize();
+		List<TrainBasicInfoWithStops> content = hasNext ?
+			results.subList(0, pageable.getPageSize()) : results;
+
 		// DTO 변환
-		List<TrainBasicInfo> content = results.stream()
+		List<TrainBasicInfo> trainBasicInfos = results.stream()
 			.map(temp -> new TrainBasicInfo(
 				temp.getScheduleId(),
 				temp.getTrainNumber(),
@@ -139,27 +143,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			))
 			.collect(Collectors.toList());
 
-		if (content.isEmpty()) {
-			return new PageImpl<>(Collections.emptyList(), pageable, 0);
-		}
-
-		// 전체 개수 조회
-		Long total = queryFactory
-			.select(ts.id.countDistinct())
-			.from(ts)
-			.join(ts.scheduleStops, departureStop)
-			.join(ts.scheduleStops, arrivalStop)
-			.where(
-				ts.operationDate.eq(operationDate)
-					.and(ts.operationStatus.eq(OperationStatus.ACTIVE))
-					.and(departureStop.station.id.eq(departureStationId))
-					.and(arrivalStop.station.id.eq(arrivalStationId))
-					.and(departureStop.stopOrder.lt(arrivalStop.stopOrder))
-					.and(departureStop.departureTime.goe(departureTimeFrom))
-			)
-			.fetchOne();
-
-		return new PageImpl<>(content, pageable, total != null ? total : 0);
+		return new SliceImpl<>(trainBasicInfos, pageable, hasNext);
 	}
 
 	/**
