@@ -9,8 +9,8 @@ import org.apache.poi.ss.util.CellAddress;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sudo.railo.train.application.dto.ScheduleStopData;
-import com.sudo.railo.train.application.dto.TrainScheduleData;
+import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
+import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
@@ -32,7 +32,21 @@ public class TrainScheduleCreator {
 	private final TrainScheduleRepository trainScheduleRepository;
 
 	@Transactional
+	public void createTrainSchedule() {
+		LocalDate localDate = trainScheduleRepository.findLastOperationDate()
+			.map(date -> date.plusDays(1))
+			.orElse(LocalDate.now());
+
+		createTrainSchedule(localDate);
+	}
+
+	@Transactional
 	public void createTrainSchedule(LocalDate localDate) {
+		if (trainScheduleRepository.existsByOperationDate(localDate)) {
+			log.info("[{}] 이미 운행 스케줄이 존재합니다.", localDate);
+			return;
+		}
+
 		log.info("[{}] 운행 스케줄 생성 시작", localDate);
 
 		List<Sheet> sheets = parser.getSheets();

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sudo.railo.train.application.dto.TrainData;
+import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.config.TrainTemplateProperties;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.infrastructure.TrainRepository;

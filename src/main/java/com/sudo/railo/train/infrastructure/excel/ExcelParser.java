@@ -1,15 +1,46 @@
 package com.sudo.railo.train.infrastructure.excel;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.util.ObjectUtils;
 
 abstract class ExcelParser {
 
 	private static final String FILES_DIR = System.getProperty("user.dir") + "/files/";
 
-	protected String getFilePath(String fileName) {
-		return FILES_DIR + fileName;
+	protected abstract String getFileName();
+
+	protected List<String> getExcludeSheetNames() {
+		return List.of();
+	}
+
+	public List<Sheet> getSheets() {
+		List<Sheet> sheets = new ArrayList<>();
+		try (FileInputStream stream = new FileInputStream(FILES_DIR + getFileName())) {
+			Workbook workbook = WorkbookFactory.create(stream);
+			for (Sheet sheet : workbook) {
+				boolean isExcluded = getExcludeSheetNames().stream()
+					.anyMatch(excludeName -> sheet.getSheetName().contains(excludeName));
+
+				if (!isExcluded) {
+					sheets.add(sheet);
+				}
+			}
+		} catch (FileNotFoundException ex) {
+			throw new IllegalStateException("파일을 찾을 수 없습니다: " + getFileName(), ex);
+		} catch (IOException ex) {
+			throw new IllegalStateException("파일을 읽을 수 없습니다." + getFileName(), ex);
+		}
+		return sheets;
 	}
 
 	protected boolean isEmpty(Row row, int cellNum) {
