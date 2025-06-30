@@ -1,5 +1,6 @@
 package com.sudo.railo.booking.application;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
@@ -17,8 +18,8 @@ public class ReservationApplicationService {
 	private final ReservationService reservationService;
 	private final SeatReservationService seatReservationService;
 
-	public ReservationCreateResponse createReservation(ReservationCreateRequest request) {
-		Reservation reservation = reservationService.createReservation(request);
+	public ReservationCreateResponse createReservation(ReservationCreateRequest request, UserDetails userDetails) {
+		Reservation reservation = reservationService.createReservation(request, userDetails);
 		SeatReservation seatReservation = seatReservationService.reserveNewSeat(reservation, request);
 		return new ReservationCreateResponse(reservation.getId(), seatReservation.getId());
 	}

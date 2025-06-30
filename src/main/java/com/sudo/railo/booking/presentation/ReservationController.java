@@ -1,5 +1,7 @@
 package com.sudo.railo.booking.presentation;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,8 +30,11 @@ public class ReservationController {
 	 * @return 예약 생성 성공 응답
 	 */
 	@PostMapping
-	public SuccessResponse<ReservationCreateResponse> createReservation(@RequestBody ReservationCreateRequest request) {
-		ReservationCreateResponse response = reservationApplicationService.createReservation(request);
+	public SuccessResponse<ReservationCreateResponse> createReservation(
+		@RequestBody ReservationCreateRequest request,
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		ReservationCreateResponse response = reservationApplicationService.createReservation(request, userDetails);
 		return SuccessResponse.of(ReservationSuccess.RESERVATION_CREATE_SUCCESS, response);
 	}
 
