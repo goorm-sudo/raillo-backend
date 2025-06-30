@@ -9,6 +9,7 @@ import com.sudo.railo.booking.application.dto.response.ReservationCreateResponse
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +19,7 @@ public class ReservationApplicationService {
 	private final ReservationService reservationService;
 	private final SeatReservationService seatReservationService;
 
+	@Transactional
 	public ReservationCreateResponse createReservation(ReservationCreateRequest request, UserDetails userDetails) {
 		Reservation reservation = reservationService.createReservation(request, userDetails);
 		SeatReservation seatReservation = seatReservationService.reserveNewSeat(reservation, request);
