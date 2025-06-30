@@ -131,7 +131,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			results.subList(0, pageable.getPageSize()) : results;
 
 		// DTO 변환
-		List<TrainBasicInfo> trainBasicInfos = results.stream()
+		List<TrainBasicInfo> trainBasicInfos = content.stream()
 			.map(temp -> new TrainBasicInfo(
 				temp.getScheduleId(),
 				temp.getTrainNumber(),
