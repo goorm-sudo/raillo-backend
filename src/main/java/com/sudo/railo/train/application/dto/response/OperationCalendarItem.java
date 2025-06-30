@@ -1,4 +1,4 @@
-package com.sudo.railo.train.application.dto.request;
+package com.sudo.railo.train.application.dto.response;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
