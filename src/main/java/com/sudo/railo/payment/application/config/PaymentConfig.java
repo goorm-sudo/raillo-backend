@@ -59,9 +59,9 @@ public class PaymentConfig {
         private BigDecimal conversionRate = new BigDecimal("1.0");
         
         /**
-         * 최대 마일리지 사용 비율 (전체 결제금액의 50%)
+         * 최대 마일리지 사용 비율 (전체 결제금액의 100%)
          */
-        private BigDecimal maxUsageRate = new BigDecimal("0.5");
+        private BigDecimal maxUsageRate = new BigDecimal("1.0");
         
         /**
          * 마일리지 최소 사용 금액
