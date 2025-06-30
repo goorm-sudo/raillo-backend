@@ -16,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
@@ -41,14 +40,12 @@ public class TokenProvider {
 	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
 	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 	private final Key key;
-	private final RedisUtil redisUtil;
 
 	public TokenProvider(
-		@Value("${jwt.secret}") String secretKey, RedisUtil redisUtil
+		@Value("${jwt.secret}") String secretKey
 	) {
 		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 		this.key = Keys.hmacShaKeyFor(keyBytes);
-		this.redisUtil = redisUtil;
 	}
 
 	// 토큰 생성 메서드
