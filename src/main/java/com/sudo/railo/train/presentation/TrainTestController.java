@@ -32,9 +32,9 @@ public class TrainTestController {
 		return ResponseEntity.ok("열차 스케줄 생성");
 	}
 
-	@PostMapping("/train-schedule/today")
-	public ResponseEntity<?> createTodayTrainSchedule() {
-		trainScheduleCreator.createTrainSchedule(LocalDate.now());
+	@PostMapping("/train-schedule/one")
+	public ResponseEntity<?> createOneTrainSchedule() {
+		trainScheduleCreator.createTrainSchedule();
 
 		return ResponseEntity.ok("열차 스케줄 생성");
 	}
