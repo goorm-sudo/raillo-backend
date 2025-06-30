@@ -40,7 +40,7 @@ public class MileageController {
             @Parameter(description = "회원 ID", required = true)
             @PathVariable @NotNull Long memberId) {
         
-        log.info("마일리지 잔액 조회 API 호출 - 회원ID: {}", memberId);
+        log.debug("마일리지 잔액 조회 API 호출 - 회원ID: {}", memberId);
         
         MileageBalanceInfo balanceInfo = mileageBalanceService.getMileageBalance(memberId);
         
@@ -58,7 +58,7 @@ public class MileageController {
             @Parameter(description = "회원 ID", required = true)
             @PathVariable @NotNull Long memberId) {
         
-        log.info("사용 가능한 마일리지 조회 API 호출 - 회원ID: {}", memberId);
+        log.debug("사용 가능한 마일리지 조회 API 호출 - 회원ID: {}", memberId);
         
         List<MileageTransaction> availableMileage = mileageBalanceService.getAvailableMileageForUsage(memberId);
         
@@ -82,7 +82,7 @@ public class MileageController {
             @Parameter(description = "조회 종료일 (ISO 형식)", example = "2024-12-31T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         
-        log.info("마일리지 통계 조회 API 호출 - 회원ID: {}, 기간: {} ~ {}", memberId, startDate, endDate);
+        log.debug("마일리지 통계 조회 API 호출 - 회원ID: {}, 기간: {} ~ {}", memberId, startDate, endDate);
         
         MileageStatistics statistics = mileageBalanceService.getMileageStatisticsByPeriod(memberId, startDate, endDate);
         
@@ -100,7 +100,7 @@ public class MileageController {
             @Parameter(description = "회원 ID", required = true)
             @PathVariable @NotNull Long memberId) {
         
-        log.info("마일리지 간단 잔액 조회 API 호출 - 회원ID: {}", memberId);
+        log.debug("마일리지 간단 잔액 조회 API 호출 - 회원ID: {}", memberId);
         
         MileageBalanceInfo balanceInfo = mileageBalanceService.getMileageBalance(memberId);
         

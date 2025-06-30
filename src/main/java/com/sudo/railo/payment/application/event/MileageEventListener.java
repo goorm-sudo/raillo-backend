@@ -37,7 +37,7 @@ public class MileageEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async("taskExecutor")
     public void handlePaymentCompletedEvent(PaymentCompletedEvent event) {
-        log.info("마일리지 이벤트 처리 시작 - 결제ID: {}", event.getPaymentId());
+        log.debug("마일리지 이벤트 처리 시작 - 결제ID: {}", event.getPaymentId());
         
         try {
             Payment payment = event.getPayment();
@@ -58,10 +58,10 @@ public class MileageEventListener {
                 processMileageEarning(payment);
             }
             
-            log.info("마일리지 이벤트 처리 완료 - 결제ID: {}", event.getPaymentId());
+            log.debug("마일리지 이벤트 처리 완료 - 결제ID: {}", event.getPaymentId());
             
         } catch (Exception e) {
-            log.error("마일리지 이벤트 처리 중 오류 발생 - 결제ID: {}", event.getPaymentId(), e);
+            log.error("마일리지 이벤트 처리 중 오류 발생", e);
             // 이벤트 처리 실패는 메인 결제 트랜잭션에 영향주지 않음
             // 별도 보상 작업이나 재시도 로직 필요 시 추가
         }
@@ -74,14 +74,14 @@ public class MileageEventListener {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processMileageUsage(Payment payment) {
-        log.info("마일리지 사용 처리 - 회원ID: {}, 사용포인트: {}", 
+        log.debug("마일리지 사용 처리 - 회원ID: {}, 사용포인트: {}", 
                 payment.getMemberId(), payment.getMileagePointsUsed());
         
         try {
             MileageTransaction usageTransaction = mileageExecutionService.executeUsage(payment);
             
             if (usageTransaction != null) {
-                log.info("마일리지 사용 완료 - 거래ID: {}, 회원ID: {}, 사용포인트: {}", 
+                log.debug("마일리지 사용 완료 - 거래ID: {}, 회원ID: {}, 사용포인트: {}", 
                         usageTransaction.getTransactionId(), 
                         payment.getMemberId(), 
                         payment.getMileagePointsUsed());

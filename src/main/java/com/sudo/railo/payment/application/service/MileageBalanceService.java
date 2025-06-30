@@ -33,7 +33,7 @@ public class MileageBalanceService {
      * 회원의 마일리지 잔액 정보 조회
      */
     public MileageBalanceInfo getMileageBalance(Long memberId) {
-        log.info("마일리지 잔액 조회 - 회원ID: {}", memberId);
+        log.debug("마일리지 잔액 조회 - 회원ID: {}", memberId);
         
         // 현재 총 잔액을 조회합니다.
         BigDecimal currentBalance = mileageExecutionService.getCurrentBalance(memberId);
@@ -58,7 +58,7 @@ public class MileageBalanceService {
         // 만료 예정 마일리지를 조회합니다.
         BigDecimal expiringMileage = calculateExpiringMileage(memberId);
         
-        log.info("마일리지 잔액 조회 완료 - 회원ID: {}, 현재잔액: {}, 활성잔액: {}, 만료예정: {}", 
+        log.debug("마일리지 잔액 조회 완료 - 회원ID: {}, 현재잔액: {}, 활성잔액: {}, 만료예정: {}", 
                 memberId, currentBalance, activeBalance, expiringMileage);
         
         return MileageBalanceInfo.builder()
@@ -179,7 +179,7 @@ public class MileageBalanceService {
      * 회원의 사용 가능한 마일리지 내역 조회 (FIFO 순서)
      */
     public List<MileageTransaction> getAvailableMileageForUsage(Long memberId) {
-        log.info("사용 가능한 마일리지 조회 - 회원ID: {}", memberId);
+        log.debug("사용 가능한 마일리지 조회 - 회원ID: {}", memberId);
         
         return mileageTransactionRepository.findAvailableMileageForUsage(memberId, LocalDateTime.now());
     }
@@ -188,7 +188,7 @@ public class MileageBalanceService {
      * 특정 기간의 마일리지 거래 통계
      */
     public MileageStatistics getMileageStatisticsByPeriod(Long memberId, LocalDateTime startDate, LocalDateTime endDate) {
-        log.info("기간별 마일리지 통계 조회 - 회원ID: {}, 기간: {} ~ {}", memberId, startDate, endDate);
+        log.debug("기간별 마일리지 통계 조회 - 회원ID: {}, 기간: {} ~ {}", memberId, startDate, endDate);
         
         Object statisticsObj = mileageTransactionRepository.getMileageStatistics(memberId, startDate, endDate);
         
