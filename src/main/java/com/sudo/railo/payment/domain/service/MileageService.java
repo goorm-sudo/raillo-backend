@@ -8,7 +8,7 @@ import java.math.RoundingMode;
 
 /**
  * 마일리지 도메인 서비스
- * 1포인트 = 1원, 최대 100%, 최소 1,000포인트, 100포인트 단위
+ * 1포인트 = 1원, 최대 100%, 최소 1,000포인트, 1포인트 단위
  */
 @Service
 @Slf4j
@@ -16,7 +16,7 @@ public class MileageService {
 
     private static final BigDecimal MAX_USAGE_RATE = new BigDecimal("1.00");
     private static final BigDecimal MIN_USAGE_AMOUNT = new BigDecimal("1000");
-    private static final BigDecimal USAGE_UNIT = new BigDecimal("100");
+    private static final BigDecimal USAGE_UNIT = new BigDecimal("1");
     private static final BigDecimal EARNING_RATE = new BigDecimal("0.01");
     private static final BigDecimal MILEAGE_TO_WON_RATE = BigDecimal.ONE;
 
