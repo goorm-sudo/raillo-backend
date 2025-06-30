@@ -43,7 +43,7 @@ public class PaymentCalculationService {
      * 결제 금액 계산 (마일리지 통합)
      */
     public PaymentCalculationResponse calculatePayment(PaymentCalculationRequest request) {
-        log.info("결제 계산 시작 - 주문ID: {}, 사용자: {}, 원본금액: {}, 마일리지사용: {}", 
+        log.debug("결제 계산 시작 - 주문ID: {}, 사용자: {}, 원본금액: {}, 마일리지사용: {}", 
                 request.getExternalOrderId(), request.getUserId(), 
                 request.getOriginalAmount(), request.getMileageToUse());
         
@@ -56,7 +56,7 @@ public class PaymentCalculationService {
         );
         
         if (!mileageValid) {
-            log.warn("마일리지 사용 검증 실패 - 요청: {}, 보유: {}, 결제금액: {}", 
+            log.debug("마일리지 사용 검증 실패 - 요청: {}, 보유: {}, 결제금액: {}", 
                     request.getMileageToUse(), request.getAvailableMileage(), request.getOriginalAmount());
             throw new PaymentValidationException("마일리지 사용 조건을 만족하지 않습니다");
         }
@@ -97,7 +97,7 @@ public class PaymentCalculationService {
         // 이벤트 발행
         eventPublisher.publishCalculationEvent(calculationId, request.getExternalOrderId(), request.getUserId());
         
-        log.info("결제 계산 완료 - 계산ID: {}, 원본금액: {}, 최종금액: {}, 마일리지할인: {}", 
+        log.debug("결제 계산 완료 - 계산ID: {}, 원본금액: {}, 최종금액: {}, 마일리지할인: {}", 
                 calculationId, request.getOriginalAmount(), finalAmount, mileageInfo.getMileageDiscount());
         
         // 응답 생성

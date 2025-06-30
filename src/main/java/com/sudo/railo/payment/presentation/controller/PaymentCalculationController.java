@@ -23,13 +23,13 @@ public class PaymentCalculationController {
     public ResponseEntity<PaymentCalculationResponse> calculatePayment(
             @RequestBody @Valid PaymentCalculationRequest request) {
         
-        log.info("결제 계산 요청: orderId={}, userId={}, amount={}", 
-            request.getExternalOrderId(), request.getUserId(), request.getOriginalAmount());
+                log.debug("결제 계산 요청: orderId={}, userId={}, amount={}",
+                request.getExternalOrderId(), request.getUserId(), request.getOriginalAmount());
         
         try {
             PaymentCalculationResponse response = paymentCalculationService.calculatePayment(request);
             
-            log.info("결제 계산 완료: calculationId={}, finalAmount={}", 
+                    log.debug("결제 계산 완료: calculationId={}, finalAmount={}",
                 response.getCalculationId(), response.getFinalPayableAmount());
             
             return ResponseEntity.ok(response);

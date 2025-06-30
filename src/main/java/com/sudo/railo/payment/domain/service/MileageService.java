@@ -26,7 +26,7 @@ public class MileageService {
         }
 
         if (requestedMileage.compareTo(availableMileage) > 0) {
-            log.warn("보유 마일리지 부족 - 요청: {}, 보유: {}", requestedMileage, availableMileage);
+            log.debug("보유 마일리지 부족 - 요청: {}, 보유: {}", requestedMileage, availableMileage);
             return false;
         }
 
