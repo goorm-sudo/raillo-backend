@@ -18,13 +18,13 @@ public class PaymentEventPublisher {
     
     public void publishCalculationEvent(String calculationId, String orderId, String userId) {
         PaymentEvent event = PaymentEvent.createCalculationEvent(calculationId, orderId, userId);
-        log.info("결제 계산 이벤트 발행: calculationId={}, orderId={}", calculationId, orderId);
+        log.debug("결제 계산 이벤트 발행: calculationId={}, orderId={}", calculationId, orderId);
         eventPublisher.publishEvent(event);
     }
     
     public void publishExecutionEvent(String paymentId, String orderId, String userId) {
         PaymentEvent event = PaymentEvent.createExecutionEvent(paymentId, orderId, userId);
-        log.info("결제 실행 이벤트 발행: paymentId={}, orderId={}", paymentId, orderId);
+        log.debug("결제 실행 이벤트 발행: paymentId={}, orderId={}", paymentId, orderId);
         eventPublisher.publishEvent(event);
     }
     
@@ -34,7 +34,7 @@ public class PaymentEventPublisher {
     public void publishPaymentCompleted(Payment payment) {
         PaymentCompletedEvent event = PaymentCompletedEvent.from(payment);
         
-        log.info("결제 완료 이벤트 발행: paymentId={}, memberId={}, mileageToEarn={}", 
+        log.debug("결제 완료 이벤트 발행: paymentId={}, memberId={}, mileageToEarn={}", 
                 payment.getPaymentId(), payment.getMemberId(), payment.getMileageToEarn());
         eventPublisher.publishEvent(event);
     }
@@ -45,7 +45,7 @@ public class PaymentEventPublisher {
     public void publishPaymentCancelled(Payment payment, String cancelReason) {
         PaymentCancelledEvent event = PaymentCancelledEvent.from(payment, cancelReason);
         
-        log.info("결제 취소 이벤트 발행: paymentId={}, memberId={}, cancelReason={}", 
+        log.debug("결제 취소 이벤트 발행: paymentId={}, memberId={}, cancelReason={}", 
                 payment.getPaymentId(), payment.getMemberId(), cancelReason);
         eventPublisher.publishEvent(event);
     }

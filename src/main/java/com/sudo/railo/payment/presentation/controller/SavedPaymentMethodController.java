@@ -34,7 +34,7 @@ public class SavedPaymentMethodController {
     public ResponseEntity<List<SavedPaymentMethodResponseDto>> getSavedPaymentMethods(
             @RequestParam Long memberId) {
         
-        log.info("저장된 결제수단 목록 조회 요청 - memberId: {}", memberId);
+        log.debug("저장된 결제수단 목록 조회 요청 - memberId: {}", memberId);
         
         List<SavedPaymentMethodEntity> savedMethods = savedPaymentMethodRepository.findByMemberIdAndIsActiveTrue(memberId);
         
@@ -54,7 +54,7 @@ public class SavedPaymentMethodController {
     public ResponseEntity<SavedPaymentMethodResponseDto> savePaymentMethod(
             @RequestBody SavedPaymentMethodRequestDto request) {
         
-        log.info("결제수단 저장 요청: {}", request);
+        log.debug("결제수단 저장 요청: {}", request);
         
         // 엔티티 생성
         SavedPaymentMethodEntity entity = createEntity(request);
@@ -65,7 +65,7 @@ public class SavedPaymentMethodController {
         // 응답 DTO 변환
         SavedPaymentMethodResponseDto response = convertToResponseDto(saved);
         
-        log.info("결제수단 저장 완료: ID={}, 타입={}, 별명={}", 
+        log.debug("결제수단 저장 완료: ID={}, 타입={}, 별명={}", 
                 response.getId(), response.getPaymentMethodType(), response.getAlias());
         
         return ResponseEntity.ok(response);
@@ -77,7 +77,7 @@ public class SavedPaymentMethodController {
     @DeleteMapping("/{paymentMethodId}")
     public ResponseEntity<Void> deletePaymentMethod(@PathVariable Long paymentMethodId) {
         
-        log.info("결제수단 삭제 요청 - paymentMethodId: {}", paymentMethodId);
+        log.debug("결제수단 삭제 요청 - paymentMethodId: {}", paymentMethodId);
         
         SavedPaymentMethodEntity entity = savedPaymentMethodRepository.findById(paymentMethodId)
                 .orElseThrow(() -> new IllegalArgumentException("결제수단을 찾을 수 없습니다: " + paymentMethodId));
@@ -86,7 +86,7 @@ public class SavedPaymentMethodController {
         entity.setIsActive(false);
         savedPaymentMethodRepository.save(entity);
         
-        log.info("결제수단 삭제 완료: {}", paymentMethodId);
+        log.debug("결제수단 삭제 완료: {}", paymentMethodId);
         
         return ResponseEntity.ok().build();
     }
@@ -99,7 +99,7 @@ public class SavedPaymentMethodController {
             @PathVariable Long paymentMethodId,
             @RequestParam Long memberId) {
         
-        log.info("기본 결제수단 설정 요청 - paymentMethodId: {}, memberId: {}", paymentMethodId, memberId);
+        log.debug("기본 결제수단 설정 요청 - paymentMethodId: {}, memberId: {}", paymentMethodId, memberId);
         
         // 기존 기본 결제수단 해제
         savedPaymentMethodRepository.updateAllToNonDefault(memberId);
@@ -111,7 +111,7 @@ public class SavedPaymentMethodController {
         entity.setIsDefault(true);
         savedPaymentMethodRepository.save(entity);
         
-        log.info("기본 결제수단 설정 완료: {}", paymentMethodId);
+        log.debug("기본 결제수단 설정 완료: {}", paymentMethodId);
         
         return ResponseEntity.ok().build();
     }
@@ -125,7 +125,7 @@ public class SavedPaymentMethodController {
             @PathVariable Long paymentMethodId,
             @RequestParam Long memberId) {
         
-        log.info("결제용 원본 결제수단 조회 요청 - paymentMethodId: {}, memberId: {}", paymentMethodId, memberId);
+        log.debug("결제용 원본 결제수단 조회 요청 - paymentMethodId: {}, memberId: {}", paymentMethodId, memberId);
         
         SavedPaymentMethodEntity entity = savedPaymentMethodRepository.findById(paymentMethodId)
                 .orElseThrow(() -> new IllegalArgumentException("결제수단을 찾을 수 없습니다: " + paymentMethodId));
@@ -138,7 +138,7 @@ public class SavedPaymentMethodController {
         // 원본 데이터 반환 (마스킹 없음)
         SavedPaymentMethodResponseDto response = convertToRawResponseDto(entity);
         
-        log.info("결제용 원본 결제수단 조회 완료 - ID: {}", paymentMethodId);
+        log.debug("결제용 원본 결제수단 조회 완료 - ID: {}", paymentMethodId);
         
         return ResponseEntity.ok(response);
     }
