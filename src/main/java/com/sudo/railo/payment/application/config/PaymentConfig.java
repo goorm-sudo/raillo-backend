@@ -7,10 +7,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Duration;
 
-/**
- * 결제 도메인 설정 외부화 클래스
- * application.yml에서 payment.* 설정값들을 관리
- */
 @Data
 @Component
 @ConfigurationProperties(prefix = "payment")
