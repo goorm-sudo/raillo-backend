@@ -15,7 +15,7 @@ import com.sudo.railo.train.application.TrainScheduleService;
 import com.sudo.railo.train.application.dto.request.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.TrainScheduleSuccess;
-import com.sudo.railo.train.application.dto.response.TrainSearchPageResponse;
+import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -54,19 +54,19 @@ public class TrainScheduleController {
 		summary = "열차 스케줄 검색",
 		description = "출발역, 도착역, 운행 날짜로 열차 스케줄 검색"
 	)
-	public SuccessResponse<TrainSearchPageResponse> searchTrainSchedules(
+	public SuccessResponse<TrainSearchSlicePageResponse> searchTrainSchedules(
 		@Valid @RequestBody TrainSearchRequest request,
 		@PageableDefault(size = 20, sort = "departureTime")
-		@Parameter(description = "페이징 정보", hidden = true) Pageable pageable) {
+		@Parameter(description = "페이징 정보 (page, size)", hidden = true) Pageable pageable) {
 
 		request.validateBusinessRules();
 
-		log.info("열차 검색 요청: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후, page: {}",
+		log.info("열차 검색 요청: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후, page: {}, size: {}",
 			request.departureStationId(), request.arrivalStationId(),
 			request.operationDate(), request.passengerCount(), request.departureHour(),
-			pageable.getPageNumber());
+			pageable.getPageNumber(), pageable.getPageSize());
 
-		TrainSearchPageResponse response = trainScheduleService.searchTrains(request, pageable);
+		TrainSearchSlicePageResponse response = trainScheduleService.searchTrains(request, pageable);
 
 		return SuccessResponse.of(TrainScheduleSuccess.TRAIN_SEARCH_SUCCESS, response);
 	}
