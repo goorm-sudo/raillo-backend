@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TrainScheduleService {
 
-	private static final double STANDING_RATIO = 0.15; // 15%, TODO: 열차 종류별 다른 % 적용
+	@Value("${train.standing.ratio:0.15}") // 기본값 0.15
+	private double standingRatio;  //TODO: 열차 종류별 다른 % 적용
 
 	private final TrainSearchValidator trainSearchValidator;
 	private final TrainScheduleRepository trainScheduleRepository;
@@ -354,7 +356,7 @@ public class TrainScheduleService {
 		try {
 			int totalSeats = trainScheduleRepositoryCustom.findTotalSeatsByTrainScheduleId(trainScheduleId);
 
-			int maxAllowedStandingCount = (int)(totalSeats * STANDING_RATIO);
+			int maxAllowedStandingCount = (int)(totalSeats * standingRatio);
 
 			// 현재 구간에서 예약된 입석 수 조회, 추가 입석 가능 인원 수 계산
 			int currentStandingReservations = seatReservationRepositoryCustom.countOverlappingStandingReservations(
