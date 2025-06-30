@@ -2,6 +2,7 @@ package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
+import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrain;
 import com.sudo.railo.train.domain.QTrainCar;
@@ -25,6 +27,8 @@ import com.sudo.railo.train.domain.QTrainSchedule;
 import com.sudo.railo.train.domain.status.OperationStatus;
 import com.sudo.railo.train.domain.type.CarType;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -60,10 +64,8 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	}
 
 	/**
-	 *  열차 기본 정보 조회 (페이징)
-	 * - 출발역, 도착역, 운행날짜 조건으로 열차 목록 조회
-	 * - 출발시간 순으로 정렬
-	 * - 페이징 처리
+	 * 열차 기본 정보 조회
+	 * - 출발역, 도착역을 경유하는 모든 열차 조회
 	 */
 	@Override
 	public Page<TrainBasicInfo> findTrainBasicInfo(
@@ -72,40 +74,89 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 
 		QTrainSchedule ts = QTrainSchedule.trainSchedule;
 		QTrain t = QTrain.train;
+		QScheduleStop departureStop = new QScheduleStop("departureStop");
+		QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
 		QStation departureStation = new QStation("departureStation");
 		QStation arrivalStation = new QStation("arrivalStation");
 
-		// WHERE 조건 - 인덱스 순서에 맞춤
-		BooleanBuilder whereCondition = new BooleanBuilder()
-			.and(ts.operationDate.eq(operationDate))                // 1번째: 운행날짜
-			.and(ts.operationStatus.eq(OperationStatus.ACTIVE))     // 2번째: 운행 상태
-			.and(ts.departureStation.id.eq(departureStationId))     // 3번째: 출발역
-			.and(ts.arrivalStation.id.eq(arrivalStationId))         // 4번째: 도착역
-			.and(ts.departureTime.goe(departureTimeFrom));          // 5번째: 출발 시간 이후 (Greater than Or Equal)
-
-		// 열차 기본 정보 조회 쿼리
-		List<TrainBasicInfo> content = queryFactory
-			.select(Projections.constructor(TrainBasicInfo.class,
-				ts.id,                              // 열차 스케줄 ID
-				t.trainNumber,                      // 열차 번호
-				t.trainName,                        // 열차명 (KTX, SRT 등)
-				departureStation.stationName,       // 출발역명
-				arrivalStation.stationName,         // 도착역명
-				ts.departureTime,                   // 출발 시간
-				ts.arrivalTime))                    // 도착 시간
+		// 1단계: 출발역과 도착역을 모두 경유하는 스케줄 ID 조회
+		JPAQuery<Long> validScheduleSubQuery = queryFactory
+			.select(ts.id)
 			.from(ts)
-			.join(ts.train, t)                      // 열차 정보 조인
-			.where(whereCondition)
-			.orderBy(ts.departureTime.asc())        // 출발시간 오름차순 정렬
-			.offset(pageable.getOffset())           // 페이징 시작점
-			.limit(pageable.getPageSize())          // 페이징 크기
+			.join(ts.scheduleStops, departureStop)
+			.join(ts.scheduleStops, arrivalStop)
+			.where(
+				ts.operationDate.eq(operationDate)
+					.and(ts.operationStatus.eq(OperationStatus.ACTIVE))
+					.and(departureStop.station.id.eq(departureStationId))
+					.and(arrivalStop.station.id.eq(arrivalStationId))
+					.and(departureStop.stopOrder.lt(arrivalStop.stopOrder))      // 정차 순서 : 출발역 < 도착역, less than
+					.and(departureStop.departureTime.goe(departureTimeFrom))
+				// 출발 시간 : 출발역 < 도착역, Greater than Or Equal
+			)
+			.groupBy(ts.id);
+
+		// 2단계: 상세 정보 조회 (실제 출발/도착 시간, 역명)
+		QScheduleStop depStop2 = new QScheduleStop("depStop2");
+		QScheduleStop arrStop2 = new QScheduleStop("arrStop2");
+
+		List<TrainBasicInfoWithStops> results = queryFactory
+			.select(Projections.constructor(TrainBasicInfoWithStops.class,
+				ts.id,
+				t.trainNumber,
+				t.trainName,
+				depStop2.departureTime,
+				arrStop2.arrivalTime,
+				departureStation.stationName,
+				arrivalStation.stationName))
+			.from(ts)
+			.join(ts.train, t)
+			.join(ts.scheduleStops, depStop2)
+			.join(depStop2.station, departureStation)
+			.join(ts.scheduleStops, arrStop2)
+			.join(arrStop2.station, arrivalStation)
+			.where(
+				ts.id.in(validScheduleSubQuery)
+					.and(depStop2.station.id.eq(departureStationId))
+					.and(arrStop2.station.id.eq(arrivalStationId))
+					.and(depStop2.stopOrder.lt(arrStop2.stopOrder))         // less than
+			)
+			.orderBy(depStop2.departureTime.asc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize())
 			.fetch();
 
-		// 전체 개수 조회 (페이징 정보용)
+		// DTO 변환
+		List<TrainBasicInfo> content = results.stream()
+			.map(temp -> new TrainBasicInfo(
+				temp.getScheduleId(),
+				temp.getTrainNumber(),
+				temp.getTrainName(),
+				temp.getDepartureStationName(),
+				temp.getArrivalStationName(),
+				temp.getDepartureTime(),
+				temp.getArrivalTime()
+			))
+			.collect(Collectors.toList());
+
+		if (content.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, 0);
+		}
+
+		// 전체 개수 조회
 		Long total = queryFactory
-			.select(ts.count())
+			.select(ts.id.countDistinct())
 			.from(ts)
-			.where(whereCondition)
+			.join(ts.scheduleStops, departureStop)
+			.join(ts.scheduleStops, arrivalStop)
+			.where(
+				ts.operationDate.eq(operationDate)
+					.and(ts.operationStatus.eq(OperationStatus.ACTIVE))
+					.and(departureStop.station.id.eq(departureStationId))
+					.and(arrivalStop.station.id.eq(arrivalStationId))
+					.and(departureStop.stopOrder.lt(arrivalStop.stopOrder))
+					.and(departureStop.departureTime.goe(departureTimeFrom))
+			)
 			.fetchOne();
 
 		return new PageImpl<>(content, pageable, total != null ? total : 0);
@@ -158,5 +209,17 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			.fetchOne();
 
 		return totalSeats != null ? totalSeats : 0;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class TrainBasicInfoWithStops {
+		private Long scheduleId;
+		private Integer trainNumber;
+		private String trainName;
+		private LocalTime departureTime;
+		private LocalTime arrivalTime;
+		private String departureStationName;
+		private String arrivalStationName;
 	}
 }
