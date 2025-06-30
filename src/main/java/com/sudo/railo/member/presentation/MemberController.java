@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberController {
 
 	private final MemberService memberService;
+	private final TokenExtractor tokenExtractor;
 
 	@PostMapping("/guest/register")
 	public SuccessResponse<GuestRegisterResponse> guestRegister(@RequestBody @Valid GuestRegisterRequest request) {
@@ -36,7 +38,9 @@ public class MemberController {
 	@DeleteMapping("/members")
 	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
 
-		memberService.memberDelete(request);
+		String accessToken = tokenExtractor.resolveToken(request);
+
+		memberService.memberDelete(accessToken);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_DELETE_SUCCESS);
 	}

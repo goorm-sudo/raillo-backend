@@ -16,9 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.redis.MemberRedis;
-import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.TokenError;
+import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 
 import io.jsonwebtoken.Claims;
@@ -41,14 +40,12 @@ public class TokenProvider {
 	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
 	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
 	private final Key key;
-	private final RedisUtil redisUtil;
 
 	public TokenProvider(
-		@Value("${jwt.secret}") String secretKey, RedisUtil redisUtil
+		@Value("${jwt.secret}") String secretKey
 	) {
 		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 		this.key = Keys.hmacShaKeyFor(keyBytes);
-		this.redisUtil = redisUtil;
 	}
 
 	// 토큰 생성 메서드
@@ -98,7 +95,7 @@ public class TokenProvider {
 			.compact();
 	}
 
-	public TokenResponse reissueAccessToken(String refreshToken) {
+	public ReissueTokenResponse reissueAccessToken(String refreshToken) {
 
 		// 리프레시 토큰에서 사용자 정보 추출 -> 클레임 확인
 		Claims claims = parseClaims(refreshToken);
@@ -113,19 +110,14 @@ public class TokenProvider {
 		String authorities = claims.get(AUTHORITIES_KEY).toString();
 
 		String newAccessToken = generateAccessToken(memberNo, authorities);
-		String newRefreshToken = generateRefreshToken(memberNo, authorities);
-
-		MemberRedis memberRedis = new MemberRedis(memberNo, newRefreshToken);
-		redisUtil.saveMemberToken(memberRedis);
 
 		long now = System.currentTimeMillis();
 		Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
 
-		return new TokenResponse(
+		return new ReissueTokenResponse(
 			BEARER_TYPE,
 			newAccessToken,
-			accessTokenExpiresIn.getTime(),
-			newRefreshToken
+			accessTokenExpiresIn.getTime()
 		);
 	}
 

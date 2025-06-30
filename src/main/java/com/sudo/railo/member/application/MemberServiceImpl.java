@@ -17,7 +17,6 @@ import com.sudo.railo.member.domain.Role;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,7 +54,7 @@ public class MemberServiceImpl implements MemberService {
 	// 회원 삭제 로직
 	@Override
 	@Transactional
-	public void memberDelete(HttpServletRequest request) {
+	public void memberDelete(String accessToken) {
 
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 
@@ -70,7 +69,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		// 로그아웃 수행
-		memberAuthService.logout(request);
+		memberAuthService.logout(accessToken);
 	}
 
 	// 회원 조회 로직
