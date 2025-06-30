@@ -1,4 +1,4 @@
-package com.sudo.railo.train.application.dto;
+package com.sudo.railo.train.application.dto.excel;
 
 import com.sudo.railo.train.domain.type.TrainType;
 

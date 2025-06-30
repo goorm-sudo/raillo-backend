@@ -1,7 +1,5 @@
 package com.sudo.railo.train.infrastructure.scheduler;
 
-import java.time.LocalDate;
-
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +21,7 @@ public class TrainScheduler {
 	@Scheduled(cron = "0 0 2 * * *")
 	public void createTodayTrainSchedule() {
 		try {
-			trainScheduleCreator.createTrainSchedule(LocalDate.now());
+			trainScheduleCreator.createTrainSchedule();
 		} catch (Exception ex) {
 			log.error("운행 스케줄 생성 중 오류가 발생했습니다.", ex);
 		}
