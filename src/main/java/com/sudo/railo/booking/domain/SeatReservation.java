@@ -20,8 +20,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,6 +36,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
+@Table(
+	name = "seat_reservation",
+	indexes = {
+		@Index(name = "idx_seat_reservation_schedule", columnList = "train_schedule_id"),
+		@Index(name = "idx_seat_reservation_section", columnList = "train_schedule_id, departure_station_id, arrival_station_id"),
+		@Index(name = "idx_seat_reservation_seat", columnList = "train_schedule_id, seat_id")
+	}
+)
 public class SeatReservation extends BaseEntity {
 
 	@Id
@@ -46,7 +56,7 @@ public class SeatReservation extends BaseEntity {
 	private TrainSchedule trainSchedule;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "seat_id", nullable = false)
+	@JoinColumn(name = "seat_id", nullable = true) // 입석일 경우 true
 	private Seat seat;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -67,6 +77,9 @@ public class SeatReservation extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "arrival_station_id", nullable = false)
 	private Station arrivalStation;
+
+	@Column(name = "is_standing", nullable = false)
+	private boolean isStanding = false;
 
 	// 낙관적 락을 위한 필드
 	@Version
@@ -119,5 +132,4 @@ public class SeatReservation extends BaseEntity {
 		}
 		return this.reservedAt.isBefore(LocalDateTime.now().minusMinutes(expirationMinutes));
 	}
-
 }
