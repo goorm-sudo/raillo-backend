@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.sudo.railo.member.domain.Member;
+import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.domain.TrainSchedule;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,11 +20,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@AllArgsConstructor
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class Reservation {
@@ -32,17 +38,24 @@ public class Reservation {
 	@Column(name = "reservation_id")
 	private Long id;
 
-	// TODO: 운행 일정 id
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "train_schedule_id", nullable = false)
+	private TrainSchedule trainSchedule;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id")
 	private Member member;
 
-	// TODO: 출발역 id
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "departure_station_id", nullable = false)
+	private Station departureStation;
 
-	// TODO: 도착역 id
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "arrival_station_id", nullable = false)
+	private Station arrivalStation;
 
-	@Column(nullable = false)
+	// TODO: 예매번호 생성 방식 결정 필요, 임시 Nullable
+	@Column
 	private Long reservationNumber;
 
 	@Enumerated(EnumType.STRING)
@@ -62,10 +75,10 @@ public class Reservation {
 	@Column(nullable = false)
 	private LocalDateTime expiresAt;
 
+	@Column(nullable = false)
 	private LocalDateTime reservedAt;
 
 	private LocalDateTime paidAt;
 
 	private LocalDateTime cancelledAt;
-
 }
