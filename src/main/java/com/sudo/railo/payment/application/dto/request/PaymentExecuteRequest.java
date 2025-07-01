@@ -37,6 +37,14 @@ public class PaymentExecuteRequest {
     @Builder.Default
     private BigDecimal availableMileage = BigDecimal.ZERO;
     
+    // 현금영수증 정보
+    @Builder.Default
+    private Boolean requestReceipt = false; // 현금영수증 신청 여부
+    
+    private String receiptType; // 현금영수증 타입: "personal" 또는 "business"
+    private String receiptPhoneNumber; // 개인 소득공제용 휴대폰 번호
+    private String businessNumber; // 사업자 증빙용 사업자등록번호
+    
     @Data
     @Builder
     @NoArgsConstructor @AllArgsConstructor

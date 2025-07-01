@@ -68,4 +68,51 @@ public class Reservation {
 
 	private LocalDateTime cancelledAt;
 
+	/**
+	 * 결제 완료 처리
+	 * RESERVED -> PAID 상태 변경
+	 */
+	public void markAsPaid() {
+		if (this.reservationStatus != ReservationStatus.RESERVED) {
+			throw new IllegalStateException("예약 상태가 RESERVED가 아닙니다: " + this.reservationStatus);
+		}
+		this.reservationStatus = ReservationStatus.PAID;
+		this.paidAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 결제 취소 처리
+	 * RESERVED -> CANCELLED 상태 변경
+	 */
+	public void markAsCancelled() {
+		if (this.reservationStatus != ReservationStatus.RESERVED && 
+			this.reservationStatus != ReservationStatus.PAID) {
+			throw new IllegalStateException("취소 불가능한 예약 상태입니다: " + this.reservationStatus);
+		}
+		this.reservationStatus = ReservationStatus.CANCELLED;
+		this.cancelledAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 환불 처리
+	 * PAID -> REFUNDED 상태 변경
+	 */
+	public void markAsRefunded() {
+		if (this.reservationStatus != ReservationStatus.PAID) {
+			throw new IllegalStateException("환불 불가능한 예약 상태입니다: " + this.reservationStatus);
+		}
+		this.reservationStatus = ReservationStatus.REFUNDED;
+		this.cancelledAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 예약 만료 처리
+	 * RESERVED -> EXPIRED 상태 변경
+	 */
+	public void markAsExpired() {
+		if (this.reservationStatus != ReservationStatus.RESERVED) {
+			throw new IllegalStateException("만료 처리 불가능한 예약 상태입니다: " + this.reservationStatus);
+		}
+		this.reservationStatus = ReservationStatus.EXPIRED;
+	}
 }

@@ -38,13 +38,13 @@ public class PaymentCancelledEvent {
      */
     public static PaymentCancelledEvent from(Payment payment, String cancelReason) {
         return PaymentCancelledEvent.builder()
-                .paymentId(payment.getId())
+                .paymentId(payment.getPaymentId())
                 .reservationId(payment.getReservationId())
                 .externalOrderId(payment.getExternalOrderId())
                 .memberId(payment.getMemberId())
                 .cancelReason(cancelReason)
                 .cancelledAt(payment.getCancelledAt())
-                .mileageToRestore(payment.getMileageUsed())
+                .mileageToRestore(payment.getMileagePointsUsed())
                 .mileageEarnedToCancel(payment.getMileageToEarn())
                 .payment(payment)
                 .build();

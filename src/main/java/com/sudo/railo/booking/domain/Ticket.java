@@ -74,4 +74,39 @@ public class Ticket {
 
 	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
 	private String purchaseUid;
+
+	/**
+	 * 결제 완료 처리
+	 * RESERVED -> PAID 상태 변경
+	 */
+	public void markAsPaid() {
+		if (this.paymentStatus != PaymentStatus.RESERVED) {
+			throw new IllegalStateException("티켓 결제 상태가 RESERVED가 아닙니다: " + this.paymentStatus);
+		}
+		this.paymentStatus = PaymentStatus.PAID;
+		this.paymentAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 결제 취소 처리
+	 * RESERVED -> CANCELLED 상태 변경
+	 */
+	public void markAsCancelled() {
+		if (this.paymentStatus != PaymentStatus.RESERVED && 
+			this.paymentStatus != PaymentStatus.PAID) {
+			throw new IllegalStateException("취소 불가능한 티켓 결제 상태입니다: " + this.paymentStatus);
+		}
+		this.paymentStatus = PaymentStatus.CANCELLED;
+	}
+
+	/**
+	 * 환불 처리
+	 * PAID -> REFUNDED 상태 변경
+	 */
+	public void markAsRefunded() {
+		if (this.paymentStatus != PaymentStatus.PAID) {
+			throw new IllegalStateException("환불 불가능한 티켓 결제 상태입니다: " + this.paymentStatus);
+		}
+		this.paymentStatus = PaymentStatus.REFUNDED;
+	}
 }

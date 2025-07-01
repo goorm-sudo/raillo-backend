@@ -78,3 +78,10 @@ clean {
     delete file(querydslSrcDir)
 }
 
+// JPA Repository Bean 생성 최적화
+// Redis와 JPA Repository 충돌 방지
+tasks.withType(JavaCompile) {
+    options.fork = true
+    options.forkOptions.jvmArgs += ['-Xmx1g']
+}
+

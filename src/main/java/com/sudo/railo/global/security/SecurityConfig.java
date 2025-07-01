@@ -60,6 +60,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
 					.requestMatchers("/api/v1/guest/register").permitAll()
+					.requestMatchers("/api/v1/payments/pg/**").permitAll() // PG 결제 API는 인증 없이 접근 가능
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.anyRequest().authenticated();
 			})

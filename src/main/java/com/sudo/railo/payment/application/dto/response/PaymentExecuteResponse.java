@@ -1,6 +1,6 @@
 package com.sudo.railo.payment.application.dto.response;
 
-import com.sudo.railo.payment.domain.entity.PaymentStatus;
+import com.sudo.railo.payment.domain.entity.PaymentExecutionStatus;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,8 +12,9 @@ import java.util.Map;
 public class PaymentExecuteResponse {
     
     private Long paymentId;
+    private String reservationId;
     private String externalOrderId;
-    private PaymentStatus paymentStatus;
+    private PaymentExecutionStatus paymentStatus;
     private BigDecimal amountPaid;
     
     // 마일리지 관련 정보

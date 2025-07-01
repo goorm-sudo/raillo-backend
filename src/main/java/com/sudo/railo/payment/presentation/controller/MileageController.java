@@ -6,6 +6,7 @@ import com.sudo.railo.payment.application.service.MileageBalanceService;
 import com.sudo.railo.payment.domain.entity.MileageTransaction;
 import com.sudo.railo.payment.success.MileageSuccess;
 import com.sudo.railo.global.success.SuccessResponse;
+import com.sudo.railo.member.application.util.MemberUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import java.util.List;
 
 /**
  * 마일리지 관련 REST API 컨트롤러
+ * JWT 토큰에서 회원 정보를 자동으로 추출하여 사용
  */
 @RestController
 @RequestMapping("/api/v1/mileage")
@@ -30,15 +32,18 @@ import java.util.List;
 public class MileageController {
     
     private final MileageBalanceService mileageBalanceService;
+    private final MemberUtil memberUtil;
     
     /**
      * 회원 마일리지 잔액 조회
+     * JWT 토큰에서 memberId를 자동으로 추출
      */
-    @GetMapping("/balance/{memberId}")
-    @Operation(summary = "마일리지 잔액 조회", description = "회원의 현재 마일리지 잔액과 통계 정보를 조회합니다")
-    public ResponseEntity<SuccessResponse<MileageBalanceInfo>> getMileageBalance(
-            @Parameter(description = "회원 ID", required = true)
-            @PathVariable @NotNull Long memberId) {
+    @GetMapping("/balance")
+    @Operation(summary = "마일리지 잔액 조회", description = "현재 로그인한 회원의 마일리지 잔액과 통계 정보를 조회합니다")
+    public ResponseEntity<SuccessResponse<MileageBalanceInfo>> getMileageBalance() {
+        
+        // JWT 토큰에서 현재 로그인한 사용자의 memberId 추출
+        Long memberId = memberUtil.getCurrentMemberId();
         
         log.debug("마일리지 잔액 조회 API 호출 - 회원ID: {}", memberId);
         
@@ -51,12 +56,14 @@ public class MileageController {
     
     /**
      * 사용 가능한 마일리지 내역 조회 (FIFO 순서)
+     * JWT 토큰에서 memberId를 자동으로 추출
      */
-    @GetMapping("/available/{memberId}")
-    @Operation(summary = "사용 가능한 마일리지 조회", description = "회원의 사용 가능한 마일리지를 만료일 순서로 조회합니다")
-    public ResponseEntity<SuccessResponse<List<MileageTransaction>>> getAvailableMileage(
-            @Parameter(description = "회원 ID", required = true)
-            @PathVariable @NotNull Long memberId) {
+    @GetMapping("/available")
+    @Operation(summary = "사용 가능한 마일리지 조회", description = "현재 로그인한 회원의 사용 가능한 마일리지를 만료일 순서로 조회합니다")
+    public ResponseEntity<SuccessResponse<List<MileageTransaction>>> getAvailableMileage() {
+        
+        // JWT 토큰에서 현재 로그인한 사용자의 memberId 추출
+        Long memberId = memberUtil.getCurrentMemberId();
         
         log.debug("사용 가능한 마일리지 조회 API 호출 - 회원ID: {}", memberId);
         
@@ -69,18 +76,19 @@ public class MileageController {
     
     /**
      * 기간별 마일리지 통계 조회
+     * JWT 토큰에서 memberId를 자동으로 추출
      */
-    @GetMapping("/statistics/{memberId}")
-    @Operation(summary = "기간별 마일리지 통계", description = "특정 기간의 마일리지 적립/사용 통계를 조회합니다")
+    @GetMapping("/statistics")
+    @Operation(summary = "기간별 마일리지 통계", description = "현재 로그인한 회원의 특정 기간 마일리지 적립/사용 통계를 조회합니다")
     public ResponseEntity<SuccessResponse<MileageStatistics>> getMileageStatistics(
-            @Parameter(description = "회원 ID", required = true)
-            @PathVariable @NotNull Long memberId,
-            
             @Parameter(description = "조회 시작일 (ISO 형식)", example = "2024-01-01T00:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             
             @Parameter(description = "조회 종료일 (ISO 형식)", example = "2024-12-31T23:59:59")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        
+        // JWT 토큰에서 현재 로그인한 사용자의 memberId 추출
+        Long memberId = memberUtil.getCurrentMemberId();
         
         log.debug("마일리지 통계 조회 API 호출 - 회원ID: {}, 기간: {} ~ {}", memberId, startDate, endDate);
         
@@ -93,12 +101,14 @@ public class MileageController {
     
     /**
      * 마일리지 잔액 간단 조회 (잔액만)
+     * JWT 토큰에서 memberId를 자동으로 추출
      */
-    @GetMapping("/balance/{memberId}/simple")
-    @Operation(summary = "마일리지 잔액 간단 조회", description = "회원의 현재 마일리지 잔액만 간단히 조회합니다")
-    public ResponseEntity<SuccessResponse<SimpleMileageBalance>> getSimpleMileageBalance(
-            @Parameter(description = "회원 ID", required = true)
-            @PathVariable @NotNull Long memberId) {
+    @GetMapping("/balance/simple")
+    @Operation(summary = "마일리지 잔액 간단 조회", description = "현재 로그인한 회원의 마일리지 잔액만 간단히 조회합니다")
+    public ResponseEntity<SuccessResponse<SimpleMileageBalance>> getSimpleMileageBalance() {
+        
+        // JWT 토큰에서 현재 로그인한 사용자의 memberId 추출
+        Long memberId = memberUtil.getCurrentMemberId();
         
         log.debug("마일리지 간단 잔액 조회 API 호출 - 회원ID: {}", memberId);
         
