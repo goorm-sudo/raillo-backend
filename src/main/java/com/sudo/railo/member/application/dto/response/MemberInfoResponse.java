@@ -14,7 +14,7 @@ public record MemberInfoResponse(
 	@Schema(description = "회원 이름", example = "홍길동")
 	String name,
 
-	@Schema(description = "회원 연락처", example = "010-1234-5678")
+	@Schema(description = "회원 연락처", example = "01012345678")
 	String phoneNumber,
 
 	@Schema(description = "회원 역할", example = "MEMBER")

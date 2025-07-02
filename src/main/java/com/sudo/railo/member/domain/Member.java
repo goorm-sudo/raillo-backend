@@ -57,4 +57,8 @@ public class Member extends BaseEntity {
 	public static Member guestCreate(String name, String phoneNumber, String password) {
 		return new Member(name, phoneNumber, password, Role.GUEST, null);
 	}
+
+	public void updatePhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
 }

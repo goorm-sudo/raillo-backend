@@ -10,6 +10,7 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
+import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.domain.Member;
@@ -99,12 +100,40 @@ public class MemberServiceImpl implements MemberService {
 
 		MemberDetail memberDetail = member.getMemberDetail();
 
-		// 중복 이메일 예외
+		// 이미 본인 이메일이랑 동일한 이메일로 변경을 요청했을 경우 예외
 		if (memberDetail.getEmail().equals(request.newEmail())) {
+			throw new BusinessException(MemberError.SAME_EMAIL);
+		}
+		
+		// 다른 회원이 사용중인 이메일을 입력했을 경우 예외
+		if (memberRepository.existsByMemberDetailEmail(request.newEmail())) {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
 		}
 
 		memberDetail.updateEmail(request.newEmail());
+		memberRepository.save(member);
+	}
+
+	@Override
+	@Transactional
+	public void updatedPhoneNumber(UpdatePhoneNumberRequest request) {
+
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+
+		Member member = memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		// 이미 본인이 사용하는 번호와 동일하게 입력했을 경우 예외
+		if (member.getPhoneNumber().equals(request.newPhoneNumber())) {
+			throw new BusinessException(MemberError.SAME_PHONE_NUMBER);
+		}
+
+		// 다른 회원이 사용 중인 번호를 입력했을 경우 예외
+		if (memberRepository.existsByPhoneNumber(request.newPhoneNumber())) {
+			throw new BusinessException(MemberError.DUPLICATE_PHONE_NUMBER);
+		}
+
+		member.updatePhoneNumber(request.newPhoneNumber());
 		memberRepository.save(member);
 	}
 }

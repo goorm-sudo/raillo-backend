@@ -2,6 +2,7 @@ package com.sudo.railo.member.application;
 
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
+import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 
@@ -14,4 +15,6 @@ public interface MemberService {
 	MemberInfoResponse getMemberInfo();
 
 	void updatedEmail(UpdateEmailRequest request);
+
+	void updatedPhoneNumber(UpdatePhoneNumberRequest request);
 }
