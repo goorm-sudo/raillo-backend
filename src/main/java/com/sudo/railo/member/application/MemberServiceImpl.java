@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
+import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.domain.Member;
@@ -87,4 +88,23 @@ public class MemberServiceImpl implements MemberService {
 		return MemberInfoResponse.of(member.getName(), member.getPhoneNumber(), memberDetail);
 	}
 
+	@Override
+	@Transactional
+	public void updatedEmail(UpdateEmailRequest request) {
+
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+
+		Member member = memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		MemberDetail memberDetail = member.getMemberDetail();
+
+		// 중복 이메일 예외
+		if (memberDetail.getEmail().equals(request.newEmail())) {
+			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
+		}
+
+		memberDetail.updateEmail(request.newEmail());
+		memberRepository.save(member);
+	}
 }

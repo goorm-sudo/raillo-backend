@@ -42,4 +42,8 @@ public class MemberDetail {
 		return new MemberDetail(memberNo, membership, email, birthDate, gender, 0L, false, 0);
 	}
 
+	public void updateEmail(String newEmail) {
+		this.email = newEmail;
+	}
+
 }
