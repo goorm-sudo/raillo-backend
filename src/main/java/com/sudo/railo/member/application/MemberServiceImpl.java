@@ -10,6 +10,7 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
+import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
@@ -104,7 +105,7 @@ public class MemberServiceImpl implements MemberService {
 		if (memberDetail.getEmail().equals(request.newEmail())) {
 			throw new BusinessException(MemberError.SAME_EMAIL);
 		}
-		
+
 		// 다른 회원이 사용중인 이메일을 입력했을 경우 예외
 		if (memberRepository.existsByMemberDetailEmail(request.newEmail())) {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
@@ -134,6 +135,23 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePhoneNumber(request.newPhoneNumber());
+		memberRepository.save(member);
+	}
+
+	@Override
+	@Transactional
+	public void updatedPassword(UpdatePasswordRequest request) {
+
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+
+		Member member = memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		if (passwordEncoder.matches(request.newPassword(), member.getPassword())) {
+			throw new BusinessException(MemberError.SAME_PASSWORD);
+		}
+
+		member.updatePassword(passwordEncoder.encode(request.newPassword()));
 		memberRepository.save(member);
 	}
 }

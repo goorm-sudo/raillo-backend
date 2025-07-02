@@ -13,6 +13,7 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
+import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
@@ -71,5 +72,13 @@ public class MemberController implements MemberControllerDocs {
 		memberService.updatedPhoneNumber(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
+	}
+
+	@PutMapping("/members/password")
+	public SuccessResponse<?> updatedPassword(@RequestBody UpdatePasswordRequest request) {
+
+		memberService.updatedPassword(request);
+
+		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
 	}
 }
