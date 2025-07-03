@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,14 +79,16 @@ class MemberServiceImplTest {
 		);
 		memberRepository.save(anotherMember);
 
-	}
-
-	// 서비스 계층에서 SecurityUtil 을 사용하고 있기 때문에 직접 SecurityContext 를 set
-	@BeforeEach
-	void setUpSecurityContext() {
+		// 서비스 계층에서 SecurityUtil 을 사용하고 있기 때문에 직접 SecurityContext 를 set
 		UsernamePasswordAuthenticationToken authentication =
 			new UsernamePasswordAuthenticationToken("202507020001", "testPwd", List.of(() -> "MEMBER"));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+	}
+
+	@AfterEach
+	void tearDown() {
+		memberRepository.deleteAll();
 	}
 
 	@DisplayName("로그인 된 사용자의 이메일 변경 성공")
@@ -99,7 +102,9 @@ class MemberServiceImplTest {
 		memberService.updateEmail(request);
 
 		//then
-		assertThat(memberDetail.getEmail()).isEqualTo(request.newEmail());
+		Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		assertThat(result.getMemberDetail().getEmail()).isEqualTo(request.newEmail());
 	}
 
 	@DisplayName("이메일 변경 실패 - 현재 사용하는 이메일과 동일")
@@ -143,7 +148,9 @@ class MemberServiceImplTest {
 		memberService.updatePhoneNumber(request);
 
 		//then
-		assertThat(testMember.getPhoneNumber()).isEqualTo(request.newPhoneNumber());
+		Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		assertThat(result.getPhoneNumber()).isEqualTo(request.newPhoneNumber());
 	}
 
 	@DisplayName("휴대폰 번호 변경 실패 - 현재 사용하는 휴대폰 번호와 동일")
@@ -186,7 +193,9 @@ class MemberServiceImplTest {
 		memberService.updatePassword(request);
 
 		//then
-		assertThat(passwordEncoder.matches(request.newPassword(), testMember.getPassword())).isTrue();
+		Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		assertThat(passwordEncoder.matches(request.newPassword(), result.getPassword())).isTrue();
 	}
 
 	@DisplayName("비밀번호 변경 실패 - 현재 사용하는 비밀번호와 동일")
