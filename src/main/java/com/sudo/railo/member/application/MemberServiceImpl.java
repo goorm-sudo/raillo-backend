@@ -92,7 +92,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatedEmail(UpdateEmailRequest request) {
+	public void updateEmail(UpdateEmailRequest request) {
 
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 
@@ -116,7 +116,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatedPhoneNumber(UpdatePhoneNumberRequest request) {
+	public void updatePhoneNumber(UpdatePhoneNumberRequest request) {
 
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 
@@ -138,7 +138,7 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatedPassword(UpdatePasswordRequest request) {
+	public void updatePassword(UpdatePasswordRequest request) {
 
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 

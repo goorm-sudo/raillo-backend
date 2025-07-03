@@ -61,15 +61,15 @@ public class MemberController implements MemberControllerDocs {
 	@PutMapping("/members/email")
 	public SuccessResponse<?> updatedEmail(@RequestBody UpdateEmailRequest request) {
 
-		memberService.updatedEmail(request);
+		memberService.updateEmail(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
-	@PutMapping("/members/phonenumber")
+	@PutMapping("/members/phone-number")
 	public SuccessResponse<?> updatedPhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
 
-		memberService.updatedPhoneNumber(request);
+		memberService.updatePhoneNumber(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
 	}
@@ -77,7 +77,7 @@ public class MemberController implements MemberControllerDocs {
 	@PutMapping("/members/password")
 	public SuccessResponse<?> updatedPassword(@RequestBody UpdatePasswordRequest request) {
 
-		memberService.updatedPassword(request);
+		memberService.updatePassword(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
 	}
