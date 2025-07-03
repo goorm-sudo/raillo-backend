@@ -1,7 +1,6 @@
 package com.sudo.railo.member.application;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -91,13 +90,13 @@ class MemberServiceImplTest {
 
 	@DisplayName("로그인 된 사용자의 이메일 변경 성공")
 	@Test
-	void updatedEmailSuccess() {
+	void updateEmailSuccess() {
 
 		//given
 		UpdateEmailRequest request = new UpdateEmailRequest("updateMail@email.com");
 
 		//when
-		memberService.updatedEmail(request);
+		memberService.updateEmail(request);
 
 		//then
 		assertThat(memberDetail.getEmail()).isEqualTo(request.newEmail());
@@ -105,45 +104,43 @@ class MemberServiceImplTest {
 
 	@DisplayName("이메일 변경 실패 - 현재 사용하는 이메일과 동일")
 	@Test
-	void updatedEmailWithSameEmail() {
+	void updateEmailWithSameEmail() {
 
 		// given
 		String sameEmail = "test01@email.com";
 		UpdateEmailRequest request = new UpdateEmailRequest(sameEmail);
 
-		// when
-		BusinessException exception = assertThrows(BusinessException.class, () -> memberService.updatedEmail(request));
-
-		// then
-		assertThat(exception.getErrorCode()).isEqualTo(MemberError.SAME_EMAIL);
+		// when & then
+		assertThatThrownBy(() -> memberService.updateEmail(request))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(MemberError.SAME_EMAIL.getMessage());
 
 	}
 
 	@DisplayName("이메일 변경 실패 - 이미 사용중인 이메일")
 	@Test
-	void updatedEmailWithDuplicateEmail() {
+	void updateEmailWithDuplicateEmail() {
 
 		// given
 		String duplicateEmail = "test02@email.com";
 		UpdateEmailRequest request = new UpdateEmailRequest(duplicateEmail);
 
-		// when
-		BusinessException exception = assertThrows(BusinessException.class, () -> memberService.updatedEmail(request));
-
-		// then
-		assertThat(exception.getErrorCode()).isEqualTo(MemberError.DUPLICATE_EMAIL);
+		// when & then
+		assertThatThrownBy(() -> memberService.updateEmail(request))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(MemberError.DUPLICATE_EMAIL.getMessage());
 
 	}
 
 	@DisplayName("로그인 된 사용자의 휴대폰 번호 변경 성공")
 	@Test
-	void updatedPhoneNumberSuccess() {
+	void updatePhoneNumberSuccess() {
 
 		//given
 		UpdatePhoneNumberRequest request = new UpdatePhoneNumberRequest("01012341111");
 
 		//when
-		memberService.updatedPhoneNumber(request);
+		memberService.updatePhoneNumber(request);
 
 		//then
 		assertThat(testMember.getPhoneNumber()).isEqualTo(request.newPhoneNumber());
@@ -151,46 +148,42 @@ class MemberServiceImplTest {
 
 	@DisplayName("휴대폰 번호 변경 실패 - 현재 사용하는 휴대폰 번호와 동일")
 	@Test
-	void updatedEmailWithSamePhoneNumber() {
+	void updatePhoneNumberWithSamePhoneNumber() {
 
 		// given
 		String samePhoneNumber = "01012341234";
 		UpdatePhoneNumberRequest request = new UpdatePhoneNumberRequest(samePhoneNumber);
 
-		// when
-		BusinessException exception = assertThrows(BusinessException.class,
-			() -> memberService.updatedPhoneNumber(request));
-
-		// then
-		assertThat(exception.getErrorCode()).isEqualTo(MemberError.SAME_PHONE_NUMBER);
+		// when & then
+		assertThatThrownBy(() -> memberService.updatePhoneNumber(request))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(MemberError.SAME_PHONE_NUMBER.getMessage());
 
 	}
 
 	@DisplayName("휴대폰 번호 변경 실패 - 이미 사용중인 휴대폰 번호")
 	@Test
-	void updatedEmailWithDuplicatePhoneNumber() {
+	void updatePhoneNumberWithDuplicatePhoneNumber() {
 
 		// given
 		String duplicatePhoneNumber = "01012345678";
 		UpdatePhoneNumberRequest request = new UpdatePhoneNumberRequest(duplicatePhoneNumber);
 
-		// when
-		BusinessException exception = assertThrows(BusinessException.class,
-			() -> memberService.updatedPhoneNumber(request));
-
-		// then
-		assertThat(exception.getErrorCode()).isEqualTo(MemberError.DUPLICATE_PHONE_NUMBER);
+		// when & then
+		assertThatThrownBy(() -> memberService.updatePhoneNumber(request))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(MemberError.DUPLICATE_PHONE_NUMBER.getMessage());
 	}
 
 	@DisplayName("로그인 된 사용자의 비밀번호 변경 성공")
 	@Test
-	void updatedPasswordSuccess() {
+	void updatePasswordSuccess() {
 
 		//given
 		UpdatePasswordRequest request = new UpdatePasswordRequest("updatePwd");
 
 		//when
-		memberService.updatedPassword(request);
+		memberService.updatePassword(request);
 
 		//then
 		assertThat(passwordEncoder.matches(request.newPassword(), testMember.getPassword())).isTrue();
@@ -198,18 +191,16 @@ class MemberServiceImplTest {
 
 	@DisplayName("비밀번호 변경 실패 - 현재 사용하는 비밀번호와 동일")
 	@Test
-	void updatedEmailWithSamePassword() {
+	void updatePasswordWithSamePassword() {
 
 		// given
 		String samePassword = "testPwd";
 		UpdatePasswordRequest request = new UpdatePasswordRequest(samePassword);
 
-		// when
-		BusinessException exception = assertThrows(BusinessException.class,
-			() -> memberService.updatedPassword(request));
-
-		// then
-		assertThat(exception.getErrorCode()).isEqualTo(MemberError.SAME_PASSWORD);
+		// when & then
+		assertThatThrownBy(() -> memberService.updatePassword(request))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(MemberError.SAME_PASSWORD.getMessage());
 
 	}
 
