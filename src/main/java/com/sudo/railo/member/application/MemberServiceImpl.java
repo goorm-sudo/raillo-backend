@@ -94,10 +94,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public void updateEmail(UpdateEmailRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		MemberDetail memberDetail = member.getMemberDetail();
 
@@ -118,10 +115,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public void updatePhoneNumber(UpdatePhoneNumberRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		// 이미 본인이 사용하는 번호와 동일하게 입력했을 경우 예외
 		if (member.getPhoneNumber().equals(request.newPhoneNumber())) {
@@ -140,10 +134,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional
 	public void updatePassword(UpdatePasswordRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		if (passwordEncoder.matches(request.newPassword(), member.getPassword())) {
 			throw new BusinessException(MemberError.SAME_PASSWORD);
@@ -151,4 +142,11 @@ public class MemberServiceImpl implements MemberService {
 
 		member.updatePassword(passwordEncoder.encode(request.newPassword()));
 	}
+
+	private Member getCurrentMember() {
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+		return memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+	}
+
 }
