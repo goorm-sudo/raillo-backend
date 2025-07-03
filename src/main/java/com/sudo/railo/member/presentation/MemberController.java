@@ -59,7 +59,7 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/email")
-	public SuccessResponse<?> updatedEmail(@RequestBody UpdateEmailRequest request) {
+	public SuccessResponse<?> updateEmail(@RequestBody UpdateEmailRequest request) {
 
 		memberService.updateEmail(request);
 
@@ -67,7 +67,7 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatedPhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
+	public SuccessResponse<?> updatePhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
 
 		memberService.updatePhoneNumber(request);
 
@@ -75,7 +75,7 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/password")
-	public SuccessResponse<?> updatedPassword(@RequestBody UpdatePasswordRequest request) {
+	public SuccessResponse<?> updatePassword(@RequestBody UpdatePasswordRequest request) {
 
 		memberService.updatePassword(request);
 
