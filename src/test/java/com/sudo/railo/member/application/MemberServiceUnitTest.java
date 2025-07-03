@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,6 +85,12 @@ class MemberServiceUnitTest {
 			new UsernamePasswordAuthenticationToken("202507020001", "testPwd", List.of(() -> "MEMBER"));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
+	}
+
+	@AfterEach
+	void tearDown() {
+		Mockito.reset(memberRepository);
+		SecurityContextHolder.clearContext();
 	}
 
 	@DisplayName("이메일 변경 실패 - 현재 사용하는 이메일과 동일")

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
@@ -27,7 +27,6 @@ import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
 @SpringBootTest
-@Transactional
 class MemberServiceImplTest {
 
 	@Autowired
@@ -82,6 +81,12 @@ class MemberServiceImplTest {
 			new UsernamePasswordAuthenticationToken("202507020001", "testPwd", List.of(() -> "MEMBER"));
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
+	}
+
+	@AfterEach
+	void tearDown() {
+		memberRepository.deleteAll();
+		SecurityContextHolder.clearContext();
 	}
 
 	@DisplayName("로그인 된 사용자의 이메일 변경 성공")
