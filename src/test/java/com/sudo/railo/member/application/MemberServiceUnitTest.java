@@ -62,24 +62,6 @@ class MemberServiceUnitTest {
 			memberDetail
 		);
 
-		MemberDetail anotherMemberDetail = MemberDetail.create(
-			"202507020002",
-			Membership.BUSINESS,
-			"test02@email.com",
-			LocalDate.of(1990, 2, 2),
-			"M"
-		);
-
-		Member anotherMember = Member.create(
-			"유관순",
-			"01012345678",
-			passwordEncoder.encode("anotherPwd"),
-			Role.MEMBER,
-			anotherMemberDetail
-		);
-
-		Mockito.when(memberRepository.findByMemberNo(Mockito.anyString())).thenReturn(Optional.of(anotherMember));
-
 		// 서비스 계층에서 SecurityUtil 을 사용하고 있기 때문에 직접 SecurityContext 를 set
 		UsernamePasswordAuthenticationToken authentication =
 			new UsernamePasswordAuthenticationToken("202507020001", "testPwd", List.of(() -> "MEMBER"));
