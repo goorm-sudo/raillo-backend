@@ -112,7 +112,6 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		memberDetail.updateEmail(request.newEmail());
-		memberRepository.save(member);
 	}
 
 	@Override
@@ -135,7 +134,6 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePhoneNumber(request.newPhoneNumber());
-		memberRepository.save(member);
 	}
 
 	@Override
@@ -152,6 +150,5 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePassword(passwordEncoder.encode(request.newPassword()));
-		memberRepository.save(member);
 	}
 }
