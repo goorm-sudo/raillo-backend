@@ -59,25 +59,25 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/email")
-	public SuccessResponse<?> updatedEmail(@RequestBody UpdateEmailRequest request) {
+	public SuccessResponse<?> updateEmail(@RequestBody UpdateEmailRequest request) {
 
-		memberService.updatedEmail(request);
+		memberService.updateEmail(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
-	@PutMapping("/members/phonenumber")
-	public SuccessResponse<?> updatedPhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
+	@PutMapping("/members/phone-number")
+	public SuccessResponse<?> updatePhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
 
-		memberService.updatedPhoneNumber(request);
+		memberService.updatePhoneNumber(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
 	}
 
 	@PutMapping("/members/password")
-	public SuccessResponse<?> updatedPassword(@RequestBody UpdatePasswordRequest request) {
+	public SuccessResponse<?> updatePassword(@RequestBody UpdatePasswordRequest request) {
 
-		memberService.updatedPassword(request);
+		memberService.updatePassword(request);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
 	}

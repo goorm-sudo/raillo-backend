@@ -15,9 +15,10 @@ public interface MemberService {
 
 	MemberInfoResponse getMemberInfo();
 
-	void updatedEmail(UpdateEmailRequest request);
+	void updateEmail(UpdateEmailRequest request);
 
-	void updatedPhoneNumber(UpdatePhoneNumberRequest request);
+	void updatePhoneNumber(UpdatePhoneNumberRequest request);
 
-	void updatedPassword(UpdatePasswordRequest request);
+	void updatePassword(UpdatePasswordRequest request);
+
 }

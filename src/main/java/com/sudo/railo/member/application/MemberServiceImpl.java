@@ -92,12 +92,9 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatedEmail(UpdateEmailRequest request) {
+	public void updateEmail(UpdateEmailRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		MemberDetail memberDetail = member.getMemberDetail();
 
@@ -112,17 +109,13 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		memberDetail.updateEmail(request.newEmail());
-		memberRepository.save(member);
 	}
 
 	@Override
 	@Transactional
-	public void updatedPhoneNumber(UpdatePhoneNumberRequest request) {
+	public void updatePhoneNumber(UpdatePhoneNumberRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		// 이미 본인이 사용하는 번호와 동일하게 입력했을 경우 예외
 		if (member.getPhoneNumber().equals(request.newPhoneNumber())) {
@@ -135,23 +128,27 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePhoneNumber(request.newPhoneNumber());
-		memberRepository.save(member);
+
 	}
 
 	@Override
 	@Transactional
-	public void updatedPassword(UpdatePasswordRequest request) {
+	public void updatePassword(UpdatePasswordRequest request) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = getCurrentMember();
 
 		if (passwordEncoder.matches(request.newPassword(), member.getPassword())) {
 			throw new BusinessException(MemberError.SAME_PASSWORD);
 		}
 
 		member.updatePassword(passwordEncoder.encode(request.newPassword()));
-		memberRepository.save(member);
+
 	}
+
+	private Member getCurrentMember() {
+		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
+		return memberRepository.findByMemberNo(currentMemberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+	}
+
 }
