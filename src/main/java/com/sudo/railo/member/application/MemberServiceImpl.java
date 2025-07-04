@@ -128,6 +128,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePhoneNumber(request.newPhoneNumber());
+
 	}
 
 	@Override
@@ -141,6 +142,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		member.updatePassword(passwordEncoder.encode(request.newPassword()));
+
 	}
 
 	private Member getCurrentMember() {

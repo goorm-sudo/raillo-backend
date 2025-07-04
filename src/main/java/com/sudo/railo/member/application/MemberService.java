@@ -20,4 +20,5 @@ public interface MemberService {
 	void updatePhoneNumber(UpdatePhoneNumberRequest request);
 
 	void updatePassword(UpdatePasswordRequest request);
+
 }

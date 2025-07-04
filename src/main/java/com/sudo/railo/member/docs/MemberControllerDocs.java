@@ -53,6 +53,7 @@ public interface MemberControllerDocs {
 	})
 	SuccessResponse<?> updateEmail(UpdateEmailRequest request);
 
+
 	@Operation(method = "PUT", summary = "휴대폰 번호 변경", description = "요청으로 변경할 휴대폰 번호를 받아 회원 정보의 휴대폰 번호를 새로운 번호로 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
 	@ApiResponses(value = {
@@ -62,6 +63,7 @@ public interface MemberControllerDocs {
 	})
 	SuccessResponse<?> updatePhoneNumber(UpdatePhoneNumberRequest request);
 
+  
 	@Operation(method = "PUT", summary = "비밀번호 변경", description = "요청으로 변경할 비밀번호를 받아 회원 정보의 비밀번호를 새로운 비밀번호로 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
 	@ApiResponses(value = {
@@ -69,4 +71,5 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "409", description = "현재 사용하는 비밀번호와 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
 	SuccessResponse<?> updatePassword(UpdatePasswordRequest request);
+
 }
