@@ -4,6 +4,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -59,6 +60,9 @@ public class SecurityConfig {
 			// HTTP 요청에 대한 접근 권한 설정
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
+					.requestMatchers(HttpMethod.GET, "/auth/emails/verify").permitAll()
+					.requestMatchers(HttpMethod.POST, "/auth/emails/verify").permitAll()
+					.requestMatchers("/api/v1/guest/register", "/api/v1/train-schedule/**").permitAll()
 					.requestMatchers("/api/v1/guest/register", "/api/v1/trains/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.requestMatchers("/actuator/**").permitAll()
