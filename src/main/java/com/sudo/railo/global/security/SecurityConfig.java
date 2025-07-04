@@ -59,7 +59,7 @@ public class SecurityConfig {
 			// HTTP 요청에 대한 접근 권한 설정
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
-					.requestMatchers("/api/v1/guest/register", "/api/v1/train-search/**").permitAll()
+					.requestMatchers("/api/v1/guest/register", "/api/v1/trains/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.requestMatchers("/actuator/**").permitAll()
 					.anyRequest().authenticated();

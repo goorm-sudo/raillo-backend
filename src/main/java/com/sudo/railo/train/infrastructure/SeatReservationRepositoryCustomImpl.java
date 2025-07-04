@@ -100,4 +100,26 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 
 		return count != null ? count.intValue() : 0;
 	}
+
+	/**
+	 * 특정 좌석의 예약 가능 여부 확인
+	 * - 해당 구간에서 좌석이 이미 점유되어 있는지 확인
+	 */
+	@Override
+	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
+		Long arrivalStationId) {
+		QSeatReservation sr = QSeatReservation.seatReservation;
+
+		Long count = queryFactory.select(sr.count())
+			.from(sr)
+			.where(sr.trainSchedule.id.eq(trainScheduleId), sr.seat.id.eq(seatId),
+				// 점유 상태인 예약들만 확인
+				sr.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), sr.isStanding.isFalse(),
+
+				// 구간 겹침 확인
+				sr.departureStation.id.lt(arrivalStationId).and(sr.arrivalStation.id.gt(departureStationId)))
+			.fetchOne();
+
+		return count == null || count == 0;
+	}
 }

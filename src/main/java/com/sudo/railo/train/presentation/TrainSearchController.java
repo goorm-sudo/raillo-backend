@@ -14,9 +14,11 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.train.application.TrainScheduleService;
 import com.sudo.railo.train.application.TrainSearchApplicationService;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
+import com.sudo.railo.train.application.dto.request.TrainCarSeatDetailRequest;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.TrainCarListResponse;
+import com.sudo.railo.train.application.dto.response.TrainCarSeatDetailResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchSuccess;
 
@@ -28,9 +30,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/v1/train-search")
+@RequestMapping("/api/v1/trains")
 @RequiredArgsConstructor
-@Tag(name = "열차 스케줄", description = "열차 스케줄 조회 API")
+@Tag(name = "열차 조회", description = "열차 스케줄, 객차, 좌석 정보 조회 API")
 @Slf4j
 public class TrainSearchController {
 
@@ -94,5 +96,24 @@ public class TrainSearchController {
 			response.carInfos().size(), response.recommendedCarNumber());
 
 		return SuccessResponse.of(TrainSearchSuccess.TRAIN_CAR_LIST_SUCCESS, response);
+	}
+
+	@PostMapping("/seats")
+	@Operation(
+		summary = "열차 객차 좌석 상세 조회",
+		description = "선택한 객차의 모든 좌석 정보를 상세 조회합니다. 좌석 선택 화면에서 사용합니다."
+	)
+	public SuccessResponse<TrainCarSeatDetailResponse> getTrainCarSeatDetail(
+		@Valid @RequestBody TrainCarSeatDetailRequest request) {
+		log.info("열차 객차 좌석 상세 조회 요청: trainCarId={}, trainScheduleId={}, {}역 -> {}역",
+			request.trainCarId(), request.trainScheduleId(),
+			request.departureStationId(), request.arrivalStationId());
+
+		TrainCarSeatDetailResponse response = trainSearchApplicationService.getTrainCarSeatDetail(request);
+
+		log.info("열차 객차 좌석 상세 조회 완료: 객차={}, 전체좌석={}, 잔여좌석={}",
+			response.carNumber(), response.totalSeatCount(), response.remainingSeatCount());
+
+		return SuccessResponse.of(TrainSearchSuccess.TRAIN_CAR_SEAT_DETAIL_SUCCESS, response);
 	}
 }
