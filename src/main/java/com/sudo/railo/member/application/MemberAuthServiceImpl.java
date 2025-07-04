@@ -2,6 +2,7 @@ package com.sudo.railo.member.application;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -18,10 +19,13 @@ import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
+import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
+import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Membership;
@@ -38,6 +42,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberNoGenerator memberNoGenerator;
+	private final EmailAuthService emailAuthService;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final TokenProvider tokenProvider;
 	private final RedisUtil redisUtil;
@@ -112,4 +117,30 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		return tokenProvider.reissueAccessToken(refreshToken);
 	}
 
+	/* 이메일 인증 관련 */
+	@Override
+	public void sendAuthCode(SendCodeRequest request) {
+		String code = createAuthCode();
+		emailAuthService.sendEmail(request.email(), code);
+		// redis 에 유효시간 설정해서 인증코드 저장
+		redisUtil.saveAuthCode(request.email(), code);
+	}
+
+	@Override
+	public VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request) {
+		// redis 에서 저장해둔 인증 코드 찾아옴
+		String findCode = redisUtil.getAuthCode(request.email());
+		boolean isVerified = request.authCode().equals(findCode);
+
+		if (isVerified) {
+			redisUtil.deleteAuthCode(request.email());
+		}
+
+		return new VerifyCodeResponse(isVerified);
+	}
+
+	private String createAuthCode() {
+		Random random = new Random();
+		return String.format("%06d", random.nextInt(1000000));
+	}
 }

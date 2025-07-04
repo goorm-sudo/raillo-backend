@@ -1,5 +1,7 @@
 package com.sudo.railo.member.presentation;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,10 +11,13 @@ import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
+import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
+import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.docs.AuthControllerDocs;
 import com.sudo.railo.member.success.AuthSuccess;
 
@@ -53,7 +58,7 @@ public class AuthController implements AuthControllerDocs {
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
-	
+
 	@PostMapping("/reissue")
 	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request) {
 
@@ -62,6 +67,23 @@ public class AuthController implements AuthControllerDocs {
 		ReissueTokenResponse tokenResponse = memberAuthService.reissueAccessToken(refreshToken);
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
+	}
+
+	/* 이메일 인증 */
+	@PostMapping("/emails/verify")
+	public SuccessResponse<?> sendAuthCode(@RequestBody @Valid SendCodeRequest request) {
+
+		memberAuthService.sendAuthCode(request);
+
+		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS);
+	}
+
+	@GetMapping("/emails/verify")
+	public ResponseEntity<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
+
+		VerifyCodeResponse response = memberAuthService.verifyAuthCode(request);
+
+		return ResponseEntity.ok(response);
 	}
 
 }
