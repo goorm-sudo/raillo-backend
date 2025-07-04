@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "열차 검색 응답")
 public record TrainSearchResponse(
+
 	@Schema(description = "열차 스케줄 ID", example = "26")
 	Long trainScheduleId,
 

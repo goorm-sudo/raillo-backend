@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "열차 편성 정보")
 public record TrainCompositionInfo(
+
 	@Schema(description = "총 객차 수", example = "8")
 	int totalCars,
 

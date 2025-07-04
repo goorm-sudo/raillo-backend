@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(description = "열차 객차 목록 조회 응답")
 public record TrainCarListResponse(
+
 	@Schema(description = "AI가 추천하는 최적 객차 번호 (승객수, 위치 고려)", example = "14")
 	String recommendedCarNumber,
 

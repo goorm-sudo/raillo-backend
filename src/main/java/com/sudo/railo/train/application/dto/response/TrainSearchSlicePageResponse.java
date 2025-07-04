@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "열차 검색 페이징 응답")
 public record TrainSearchSlicePageResponse(
+
 	@Schema(description = "열차 목록", example = "[{...}]")
 	List<TrainSearchResponse> content,
 
