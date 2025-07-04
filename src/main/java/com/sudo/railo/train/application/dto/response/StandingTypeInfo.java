@@ -3,6 +3,7 @@ package com.sudo.railo.train.application.dto.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record StandingTypeInfo(
+
 	@Schema(description = "입석 가능 인원", example = "25")
 	int availableStanding,
 

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "정차역 정보")
 public record StationStopInfo(
+
 	@Schema(description = "역 ID")
 	Long stationId,
 
