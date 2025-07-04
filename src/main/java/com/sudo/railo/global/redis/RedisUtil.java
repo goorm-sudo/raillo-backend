@@ -17,6 +17,8 @@ public class RedisUtil {
 	private final RedisTemplate<String, Object> objectRedisTemplate;
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
+	private static final int AUTH_CODE_EXPIRATION_MINUTES = 5;
+
 	public void save(String key, String value) {
 		stringRedisTemplate.opsForValue().set(key, value);
 	}
@@ -67,6 +69,22 @@ public class RedisUtil {
 	public LogoutRedis getLogoutToken(String accessToken) {
 		Object value = objectRedisTemplate.opsForValue().get(accessToken);
 		return (LogoutRedis)value;
+	}
+
+	/* 이메일 인증 관련 */
+	public void saveAuthCode(String email, String authCode) {
+		String key = "authEmail:" + email;
+		stringRedisTemplate.opsForValue().set(key, authCode, AUTH_CODE_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+	}
+
+	public String getAuthCode(String email) {
+		String key = "authEmail:" + email;
+		return stringRedisTemplate.opsForValue().get(key);
+	}
+
+	public void deleteAuthCode(String email) {
+		String key = "authEmail:" + email;
+		stringRedisTemplate.delete(key);
 	}
 
 }
