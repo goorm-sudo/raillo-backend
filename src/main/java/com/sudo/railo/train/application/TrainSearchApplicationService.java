@@ -8,8 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
+import com.sudo.railo.train.application.dto.request.TrainCarSeatDetailRequest;
 import com.sudo.railo.train.application.dto.response.TrainCarInfo;
 import com.sudo.railo.train.application.dto.response.TrainCarListResponse;
+import com.sudo.railo.train.application.dto.response.TrainCarSeatDetailResponse;
 import com.sudo.railo.train.exception.TrainErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -22,12 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 public class TrainSearchApplicationService {
 
 	private final TrainScheduleService trainScheduleService;
-	private final TrainCarService trainCarService;
+	private final TrainSeatQueryService trainCarService;
 
 	/**
 	 * 열차 객차 목록 조회 (잔여 좌석이 있는 객차만)
-	 * - TrainScheduleService: 열차 기본 정보 조회
-	 * - TrainCarService: 객차 목록 조회
 	 */
 	public TrainCarListResponse getAvailableTrainCars(TrainCarListRequest request) {
 		log.info("열차 객차 목록 조회: trainScheduleId={}, {}역 -> {}역, 승객={}명",
@@ -60,6 +60,17 @@ public class TrainSearchApplicationService {
 			scheduleInfo.trainNumber(), // TrainScheduleService에서 조회
 			availableCars
 		);
+	}
+
+	/**
+	 * 열차 객차 좌석 상세 조회
+	 */
+	public TrainCarSeatDetailResponse getTrainCarSeatDetail(TrainCarSeatDetailRequest request) {
+		log.info("열차 객차 좌석 상세 조회: trainCarId={}, trainScheduleId={}, {}역 -> {}역",
+			request.trainCarId(), request.trainScheduleId(),
+			request.departureStationId(), request.arrivalStationId());
+
+		return trainCarService.getTrainCarSeatDetail(request);
 	}
 
 	// ===== Private Helper Methods =====
