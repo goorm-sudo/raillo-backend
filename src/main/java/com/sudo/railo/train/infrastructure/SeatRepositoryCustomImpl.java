@@ -13,11 +13,9 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.SeatStatus;
-import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.application.TrainCarSeatInfo;
 import com.sudo.railo.train.application.dto.projection.QSeatProjection;
 import com.sudo.railo.train.application.dto.projection.SeatProjection;
-import com.sudo.railo.train.exception.TrainErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,11 +45,6 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 			.from(trainCar)
 			.where(trainCar.id.eq(trainCarId))
 			.fetchOne();
-
-		if (carInfo == null) {
-			log.warn("존재하지 않는 객차: trainCarId={}", trainCarId);
-			throw new BusinessException(TrainErrorCode.TRAIN_CAR_NOT_FOUND);
-		}
 
 		// 2. 좌석별 상세 정보 조회 (예약 상태 포함)
 		List<SeatProjection> seatProjections = queryFactory

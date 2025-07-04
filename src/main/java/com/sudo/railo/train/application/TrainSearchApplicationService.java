@@ -5,14 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
 import com.sudo.railo.train.application.dto.request.TrainCarSeatDetailRequest;
 import com.sudo.railo.train.application.dto.response.TrainCarInfo;
 import com.sudo.railo.train.application.dto.response.TrainCarListResponse;
 import com.sudo.railo.train.application.dto.response.TrainCarSeatDetailResponse;
-import com.sudo.railo.train.exception.TrainErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,11 +39,6 @@ public class TrainSearchApplicationService {
 		List<TrainCarInfo> availableCars = trainCarService.getAvailableTrainCars(
 			request.trainScheduleId(), request.departureStationId(), request.arrivalStationId());
 
-		if (availableCars.isEmpty()) {
-			log.warn("잔여 좌석이 있는 객차가 없음: trainScheduleId={}", request.trainScheduleId());
-			throw new BusinessException(TrainErrorCode.NO_AVAILABLE_CARS);
-		}
-
 		// 3. 승객 수에 맞는 추천 객차 선택 (Application Service 책임)
 		String recommendedCarNumber = selectRecommendedCar(availableCars, request.passengerCount());
 
@@ -56,8 +49,8 @@ public class TrainSearchApplicationService {
 		return TrainCarListResponse.of(
 			recommendedCarNumber,
 			availableCars.size(),
-			scheduleInfo.trainClassificationCode(), // TrainScheduleService에서 조회
-			scheduleInfo.trainNumber(), // TrainScheduleService에서 조회
+			scheduleInfo.trainClassificationCode(),
+			scheduleInfo.trainNumber(),
 			availableCars
 		);
 	}
