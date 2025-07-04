@@ -5,6 +5,7 @@ import com.sudo.railo.train.domain.type.CarType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record TrainCarInfo(
+
 	@Schema(description = "객차 고유 ID", example = "43")
 	Long id,
 

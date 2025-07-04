@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "좌석 유형별 정보")
 public record SeatTypeInfo(
+
 	@Schema(description = "잔여 좌석 수", example = "45")
 	int availableSeats,
 
