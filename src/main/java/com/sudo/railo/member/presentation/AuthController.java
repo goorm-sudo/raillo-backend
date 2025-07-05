@@ -1,7 +1,6 @@
 package com.sudo.railo.member.presentation;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,15 +69,18 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	/* 이메일 인증 */
-	@PostMapping("/emails/verify")
+	@PostMapping("/emails")
 	public SuccessResponse<?> sendAuthCode(@RequestBody @Valid SendCodeRequest request) {
 
-		memberAuthService.sendAuthCode(request);
+		String email = request.email();
+		memberAuthService.sendAuthCode(email);
+
+		// memberAuthService.sendAuthCode(request);
 
 		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS);
 	}
 
-	@GetMapping("/emails/verify")
+	@PostMapping("/emails/verify")
 	public ResponseEntity<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
 
 		VerifyCodeResponse response = memberAuthService.verifyAuthCode(request);

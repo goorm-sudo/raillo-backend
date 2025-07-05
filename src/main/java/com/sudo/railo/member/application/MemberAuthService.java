@@ -1,7 +1,6 @@
 package com.sudo.railo.member.application;
 
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
-import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
@@ -19,7 +18,7 @@ public interface MemberAuthService {
 
 	ReissueTokenResponse reissueAccessToken(String refreshToken);
 
-	void sendAuthCode(SendCodeRequest request);
+	void sendAuthCode(String email);
 
 	VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request);
 
