@@ -60,8 +60,7 @@ public class SecurityConfig {
 			// HTTP 요청에 대한 접근 권한 설정
 			.authorizeHttpRequests(auth -> {
 				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
-					.requestMatchers(HttpMethod.GET, "/auth/emails/verify").permitAll()
-					.requestMatchers(HttpMethod.POST, "/auth/emails/verify").permitAll()
+					.requestMatchers(HttpMethod.POST, "/auth/emails/**").permitAll()
 					.requestMatchers("/api/v1/guest/register", "/api/v1/train-schedule/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.requestMatchers("/actuator/**").permitAll()
