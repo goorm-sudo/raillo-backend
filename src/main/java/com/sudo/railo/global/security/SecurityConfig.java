@@ -61,6 +61,7 @@ public class SecurityConfig {
 				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
 					.requestMatchers("/api/v1/guest/register", "/api/v1/train-schedule/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+					.requestMatchers("/actuator/**").permitAll()
 					.anyRequest().authenticated();
 			})
 			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, redisUtil),
