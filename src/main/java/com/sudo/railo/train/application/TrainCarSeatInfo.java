@@ -20,14 +20,10 @@ public record TrainCarSeatInfo(
 	 * 좌석 배치 타입 반환 (2+2=2, 2+1=3)
 	 */
 	public int getLayoutType() {
-		if (seatArrangement == null) {
-			return 2; // 기본값
-		}
-
-		if (seatArrangement.contains("2+1")) {
-			return 3;
+		if (seatArrangement == null || seatArrangement.contains("2+2")) {
+			return 2;
 		} else {
-			return 2; // 2+2
+			return 3;
 		}
 	}
 }
