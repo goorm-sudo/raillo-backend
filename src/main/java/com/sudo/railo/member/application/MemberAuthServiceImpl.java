@@ -19,6 +19,7 @@ import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
+import com.sudo.railo.member.application.dto.request.SendCodeResponse;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
@@ -119,17 +120,19 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	/* 이메일 인증 관련 */
 	@Override
 	@Transactional
-	public void sendAuthCode(String email) {
+	public SendCodeResponse sendAuthCode(String email) {
 		String code = createAuthCode();
 		emailAuthService.sendEmail(email, code);
 		// redis 에 유효시간 설정해서 인증코드 저장
 		redisUtil.saveAuthCode(email, code);
+
+		return new SendCodeResponse(email);
 	}
 
 	@Override
 	@Transactional
 	public VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request) {
-		// redis 에서 저장해둔 인증 코드 찾아옴
+		// redis 에서 저장해둔 인증 코드 get
 		String findCode = redisUtil.getAuthCode(request.email());
 		boolean isVerified = request.authCode().equals(findCode);
 

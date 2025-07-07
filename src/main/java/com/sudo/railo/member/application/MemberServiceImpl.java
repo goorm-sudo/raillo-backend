@@ -145,6 +145,16 @@ public class MemberServiceImpl implements MemberService {
 
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public String getMemberEmail(String memberNo) {
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		MemberDetail memberDetail = member.getMemberDetail();
+
+		return memberDetail.getEmail();
+	}
+
 	private Member getCurrentMember() {
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 		return memberRepository.findByMemberNo(currentMemberNo)
