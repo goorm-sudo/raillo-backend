@@ -21,4 +21,6 @@ public interface MemberService {
 
 	void updatePassword(UpdatePasswordRequest request);
 
+	String getMemberEmail(String memberNo);
+
 }
