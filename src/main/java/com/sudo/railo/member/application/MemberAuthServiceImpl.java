@@ -119,7 +119,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
 	/* 이메일 인증 관련 */
 	@Override
-	@Transactional
 	public SendCodeResponse sendAuthCode(String email) {
 		String code = createAuthCode();
 		emailAuthService.sendEmail(email, code);
@@ -130,7 +129,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	}
 
 	@Override
-	@Transactional
 	public VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request) {
 		// redis 에서 저장해둔 인증 코드 get
 		String findCode = redisUtil.getAuthCode(request.email());
