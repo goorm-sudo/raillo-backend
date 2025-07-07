@@ -32,15 +32,21 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 		QSeat s = QSeat.seat;
 		QTrainCar tc = QTrainCar.trainCar;
 
-		return queryFactory.select(Projections.constructor(SeatReservationInfo.class, reservation.seat.id, tc.carType,
-				reservation.departureStation.id, reservation.arrivalStation.id))
+		return queryFactory
+			.select(Projections.constructor(
+				SeatReservationInfo.class,
+				reservation.seat.id,
+				tc.carType,
+				reservation.departureStation.id,
+				reservation.arrivalStation.id
+			))
 			.from(reservation)
-			.join(s)
-			.on(s.id.eq(reservation.seat.id))
-			.join(tc)
-			.on(tc.id.eq(s.trainCar.id))
-			.where(reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), reservation.isStanding.isFalse(),
+			.join(s).on(s.id.eq(reservation.seat.id))
+			.join(tc).on(tc.id.eq(s.trainCar.id))
+			.where(
+				reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
+				reservation.isStanding.isFalse(),
 
 				// 기존출발 < 검색도착 AND 기존도착 > 검색출발
 				reservation.departureStation.id.lt(arrivalStationId)               // 예약출발 < 검색도착 (less than)
@@ -79,8 +85,10 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.join(searchArrivalStop)
 			.on(searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
-			.where(reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), reservation.isStanding.isTrue(),
+			.where(
+				reservation.trainSchedule.id.eq(trainScheduleId),
+				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
+				reservation.isStanding.isTrue(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
 				// NOT(end1 <= start2 OR start1 >= end2) = NOT(안겹침)
@@ -91,5 +99,27 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.fetchOne();
 
 		return count != null ? count.intValue() : 0;
+	}
+
+	/**
+	 * 특정 좌석의 예약 가능 여부 확인
+	 * - 해당 구간에서 좌석이 이미 점유되어 있는지 확인
+	 */
+	@Override
+	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
+		Long arrivalStationId) {
+		QSeatReservation sr = QSeatReservation.seatReservation;
+
+		Long count = queryFactory.select(sr.count())
+			.from(sr)
+			.where(sr.trainSchedule.id.eq(trainScheduleId), sr.seat.id.eq(seatId),
+				// 점유 상태인 예약들만 확인
+				sr.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), sr.isStanding.isFalse(),
+
+				// 구간 겹침 확인
+				sr.departureStation.id.lt(arrivalStationId).and(sr.arrivalStation.id.gt(departureStationId)))
+			.fetchOne();
+
+		return count == null || count == 0;
 	}
 }

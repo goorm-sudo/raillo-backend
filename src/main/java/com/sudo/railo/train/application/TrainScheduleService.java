@@ -18,6 +18,7 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
+import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.SeatTypeInfo;
@@ -26,6 +27,7 @@ import com.sudo.railo.train.application.dto.response.TrainSearchResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 import com.sudo.railo.train.application.validator.TrainSearchValidator;
 import com.sudo.railo.train.domain.StationFare;
+import com.sudo.railo.train.domain.TrainSchedule;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
@@ -53,6 +55,10 @@ public class TrainScheduleService {
 	private final StationRepository stationRepository;
 	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 
+	/**
+	 * 운행 캘린더 조회
+	 * @return
+	 */
 	public List<OperationCalendarItem> getOperationCalendar() {
 		LocalDate startDate = LocalDate.now();
 		LocalDate endDate = startDate.plusMonths(1);
@@ -137,6 +143,21 @@ public class TrainScheduleService {
 		log.info("Slice 기반 열차 조회 완료: {}건 조회, hasNext: {}", trainSearchResults.size(), trainSlice.hasNext());
 
 		return createTrainSearchPageResponse(trainSearchResults, trainSlice);
+	}
+
+	/**
+	 * 개별 열차 스케줄 기본 정보 조회
+	 */
+	public TrainScheduleBasicInfo getTrainScheduleBasicInfo(Long trainScheduleId) {
+		TrainSchedule trainSchedule = trainScheduleRepository.findById(trainScheduleId)
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.TRAIN_SCHEDULE_DETAIL_NOT_FOUND));
+
+		return TrainScheduleBasicInfo.of(
+			trainSchedule.getId(),
+			trainSchedule.getTrain().getTrainType().getDescription(),
+			String.format("%03d", trainSchedule.getTrain().getTrainNumber()),
+			trainSchedule.getTrain().getTrainName()
+		);
 	}
 
 	// ============================================
