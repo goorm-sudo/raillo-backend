@@ -1,5 +1,6 @@
 package com.sudo.railo.member.application;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -19,9 +20,12 @@ import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
+import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
+import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Membership;
@@ -38,6 +42,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberNoGenerator memberNoGenerator;
+	private final EmailAuthService emailAuthService;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final TokenProvider tokenProvider;
 	private final RedisUtil redisUtil;
@@ -112,4 +117,32 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		return tokenProvider.reissueAccessToken(refreshToken);
 	}
 
+	/* 이메일 인증 관련 */
+	@Override
+	public SendCodeResponse sendAuthCode(String email) {
+		String code = createAuthCode();
+		emailAuthService.sendEmail(email, code);
+		// redis 에 유효시간 설정해서 인증코드 저장
+		redisUtil.saveAuthCode(email, code);
+
+		return new SendCodeResponse(email);
+	}
+
+	@Override
+	public VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request) {
+		// redis 에서 저장해둔 인증 코드 get
+		String findCode = redisUtil.getAuthCode(request.email());
+		boolean isVerified = request.authCode().equals(findCode);
+
+		if (isVerified) {
+			redisUtil.deleteAuthCode(request.email());
+		}
+
+		return new VerifyCodeResponse(isVerified);
+	}
+
+	private String createAuthCode() {
+		SecureRandom random = new SecureRandom();
+		return String.format("%06d", random.nextInt(1000000));
+	}
 }
