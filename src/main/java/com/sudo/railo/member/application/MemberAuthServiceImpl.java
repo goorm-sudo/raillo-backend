@@ -1,8 +1,8 @@
 package com.sudo.railo.member.application;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -142,7 +142,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	}
 
 	private String createAuthCode() {
-		Random random = new Random();
+		SecureRandom random = new SecureRandom();
 		return String.format("%06d", random.nextInt(1000000));
 	}
 }
