@@ -11,6 +11,7 @@ import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.MemberService;
+import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
@@ -20,6 +21,7 @@ import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
+import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.docs.AuthControllerDocs;
 import com.sudo.railo.member.success.AuthSuccess;
 
@@ -104,6 +106,23 @@ public class AuthController implements AuthControllerDocs {
 		VerifyCodeResponse response = memberAuthService.verifyAuthCode(request);
 
 		return ResponseEntity.ok(response);
+	}
+
+	/* 회원 번호 찾기 with 이메일 인증 */
+	@PostMapping("/member-no")
+	public SuccessResponse<SendCodeResponse> requestFindMemberNo(@RequestBody @Valid FindMemberNoRequest request) {
+
+		SendCodeResponse response = memberService.requestFindMemberNo(request);
+
+		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
+	}
+
+	@PostMapping("/member-no/verify")
+	public SuccessResponse<VerifyMemberNoResponse> verifyFindMemberNo(@RequestBody @Valid VerifyCodeRequest request) {
+
+		VerifyMemberNoResponse response = memberService.verifyFindMemberNo(request);
+
+		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
 	}
 
 }
