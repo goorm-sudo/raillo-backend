@@ -21,7 +21,6 @@ import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
-import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
@@ -194,7 +193,7 @@ public class MemberServiceImpl implements MemberService {
 	@Override
 	@Transactional(readOnly = true)
 	public SendCodeResponse requestFindPassword(FindPasswordRequest request) {
-		
+
 		Member member = memberRepository.findByMemberNo(request.memberNo())
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
@@ -226,9 +225,9 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {
-		VerifyCodeResponse verifyCodeResponse = memberAuthService.verifyAuthCode(request);
+		Boolean isVerified = memberAuthService.verifyAuthCode(request);
 
-		if (!verifyCodeResponse.isVerified()) { // 인증 실패 시
+		if (!isVerified) { // 인증 실패 시
 			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
 		}
 
