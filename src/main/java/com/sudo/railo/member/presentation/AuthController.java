@@ -86,7 +86,7 @@ public class AuthController implements AuthControllerDocs {
 
 	/* 이메일 인증 (인증된 사용자) */
 	@PostMapping("/members/emails")
-	public SuccessResponse<?> sendAuthCodeWithMember(
+	public SuccessResponse<SendCodeResponse> sendAuthCodeWithMember(
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		log.info("memberNo: {}", memberNo);
