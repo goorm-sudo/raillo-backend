@@ -25,7 +25,6 @@ import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
-import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Membership;
@@ -129,7 +128,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	}
 
 	@Override
-	public VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request) {
+	public boolean verifyAuthCode(VerifyCodeRequest request) {
 		// redis 에서 저장해둔 인증 코드 get
 		String findCode = redisUtil.getAuthCode(request.email());
 		boolean isVerified = request.authCode().equals(findCode);
@@ -138,7 +137,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 			redisUtil.deleteAuthCode(request.email());
 		}
 
-		return new VerifyCodeResponse(isVerified);
+		return isVerified;
 	}
 
 	private String createAuthCode() {

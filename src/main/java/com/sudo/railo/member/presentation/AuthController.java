@@ -105,7 +105,8 @@ public class AuthController implements AuthControllerDocs {
 	@PostMapping("/emails/verify")
 	public ResponseEntity<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
 
-		VerifyCodeResponse response = memberAuthService.verifyAuthCode(request);
+		boolean isVerified = memberAuthService.verifyAuthCode(request);
+		VerifyCodeResponse response = new VerifyCodeResponse(isVerified);
 
 		return ResponseEntity.ok(response);
 	}

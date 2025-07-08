@@ -7,7 +7,6 @@ import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
-import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 
 public interface MemberAuthService {
 
@@ -21,6 +20,6 @@ public interface MemberAuthService {
 
 	SendCodeResponse sendAuthCode(String email);
 
-	VerifyCodeResponse verifyAuthCode(VerifyCodeRequest request);
+	boolean verifyAuthCode(VerifyCodeRequest request);
 
 }
