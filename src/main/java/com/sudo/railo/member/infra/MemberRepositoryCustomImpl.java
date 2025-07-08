@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.QMember;
 import com.sudo.railo.member.domain.QMemberDetail;
+import com.sudo.railo.member.domain.Role;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,5 +26,20 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 			.where(member.memberDetail.memberNo.eq(memberNo))
 			.fetchOne();
 		return Optional.ofNullable(result);
+	}
+
+	@Override
+	public Optional<Member> findByNameAndPhoneNumberAndRole(String name, String phoneNumber) {
+
+		QMember member = QMember.member;
+
+		return Optional.ofNullable(queryFactory
+			.selectFrom(member)
+			.where(
+				member.name.eq(name),
+				member.phoneNumber.eq(phoneNumber),
+				member.role.eq(Role.MEMBER)
+			)
+			.fetchOne());
 	}
 }

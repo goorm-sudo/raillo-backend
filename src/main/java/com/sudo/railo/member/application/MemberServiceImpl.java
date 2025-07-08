@@ -7,16 +7,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.util.SecurityUtil;
+import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
+import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
+import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Role;
+import com.sudo.railo.member.exception.AuthError;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
@@ -31,6 +38,7 @@ public class MemberServiceImpl implements MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberAuthService memberAuthService;
+	private final RedisUtil redisUtil;
 
 	@Override
 	@Transactional
@@ -155,10 +163,52 @@ public class MemberServiceImpl implements MemberService {
 		return memberDetail.getEmail();
 	}
 
+	/* 회원 번호 찾기 */
+	@Override
+	@Transactional(readOnly = true)
+	public SendCodeResponse requestFindMemberNo(FindMemberNoRequest request) {
+
+		Member member = memberRepository.findByNameAndPhoneNumberAndRole(request.name(), request.phoneNumber())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		String memberEmail = member.getMemberDetail().getEmail();
+		String memberNo = member.getMemberDetail().getMemberNo();
+
+		sendCodeAndSaveMemberNo(memberEmail, memberNo);
+
+		return new SendCodeResponse(memberEmail);
+	}
+
+	@Override
+	public VerifyMemberNoResponse verifyFindMemberNo(VerifyCodeRequest request) {
+
+		String memberNo = verifyCodeAndGetMemberNo(request);
+
+		return new VerifyMemberNoResponse(memberNo);
+	}
+
 	private Member getCurrentMember() {
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 		return memberRepository.findByMemberNo(currentMemberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+	}
+
+	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {
+		VerifyCodeResponse verifyCodeResponse = memberAuthService.verifyAuthCode(request);
+
+		if (!verifyCodeResponse.isVerified()) { // 인증 실패 시
+			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
+		}
+
+		String memberNo = redisUtil.getMemberNo(request.email());
+		redisUtil.deleteMemberNo(request.email());
+
+		return memberNo;
+	}
+
+	private void sendCodeAndSaveMemberNo(String email, String memberNo) {
+		redisUtil.saveMemberNo(email, memberNo); // 레디스에 이메일 검증 후 보낼 회원번호 저장
+		memberAuthService.sendAuthCode(email); // 찾아온 이메일로 인증 코드 전송
 	}
 
 }

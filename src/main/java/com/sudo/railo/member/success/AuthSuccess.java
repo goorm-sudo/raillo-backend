@@ -17,7 +17,8 @@ public enum AuthSuccess implements SuccessCode {
 	REISSUE_TOKEN_SUCCESS(HttpStatus.OK, "AccessToken 이 성공적으로 발급 되었습니다."),
 
 	// 이메일 인증 관련
-	SEND_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 전송을 성공했습니다.");
+	SEND_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 전송을 성공했습니다."),
+	VERIFY_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 검증에 성공했습니다.");
 
 	private final HttpStatus status;
 	private final String message;
