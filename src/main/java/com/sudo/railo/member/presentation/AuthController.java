@@ -12,6 +12,7 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
+import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
@@ -19,6 +20,7 @@ import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
+import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
@@ -121,6 +123,23 @@ public class AuthController implements AuthControllerDocs {
 	public SuccessResponse<VerifyMemberNoResponse> verifyFindMemberNo(@RequestBody @Valid VerifyCodeRequest request) {
 
 		VerifyMemberNoResponse response = memberService.verifyFindMemberNo(request);
+
+		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
+	}
+
+	/* 비밀번호 찾기 with 이메일 인증 */
+	@PostMapping("/password")
+	public SuccessResponse<SendCodeResponse> requestFindPassword(@RequestBody @Valid FindPasswordRequest request) {
+
+		SendCodeResponse response = memberService.requestFindPassword(request);
+
+		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
+	}
+
+	@PostMapping("/password/verify")
+	public SuccessResponse<TemporaryTokenResponse> verifyFindPassword(@RequestBody @Valid VerifyCodeRequest request) {
+
+		TemporaryTokenResponse response = memberService.verifyFindPassword(request);
 
 		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
 	}
