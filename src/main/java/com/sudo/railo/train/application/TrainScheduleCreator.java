@@ -1,8 +1,11 @@
 package com.sudo.railo.train.application;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
+import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
@@ -32,6 +36,36 @@ public class TrainScheduleCreator {
 	private final TrainScheduleRepository trainScheduleRepository;
 
 	@Transactional
+	public void createStations() {
+		List<Sheet> sheets = parser.getSheets();
+		Set<String> stationNames = new LinkedHashSet<>();
+
+		for (Sheet sheet : sheets) {
+			List<CellAddress> addresses = getFirstCellAddresses(sheet);
+			for (CellAddress address : addresses) {
+				stationNames.addAll(parser.parseStationNames(sheet, address));
+			}
+		}
+
+		stationService.createStations(stationNames);
+	}
+
+	@Transactional
+	public void createTrains() {
+		List<Sheet> sheets = parser.getSheets();
+		List<TrainData> trainData = new ArrayList<>();
+
+		for (Sheet sheet : sheets) {
+			List<CellAddress> addresses = getFirstCellAddresses(sheet);
+			for (CellAddress address : addresses) {
+				trainData.addAll(parser.parseTrain(sheet, address));
+			}
+		}
+
+		trainService.createTrains(trainData);
+	}
+
+	@Transactional
 	public void createTrainSchedule() {
 		LocalDate localDate = trainScheduleRepository.findLastOperationDate()
 			.map(date -> date.plusDays(1))
@@ -47,37 +81,36 @@ public class TrainScheduleCreator {
 			return;
 		}
 
-		log.info("[{}] 운행 스케줄 생성 시작", localDate);
-
 		List<Sheet> sheets = parser.getSheets();
-		sheets.forEach(sheet -> {
-			// 하행
-			CellAddress downTrainAddress = parser.getFirstCellAddress(sheet, 0);
-			parseAndPersistTrainSchedule(sheet, downTrainAddress, localDate);
+		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
 
-			// 상행
-			CellAddress upTrainAddress = parser.getFirstCellAddress(sheet, downTrainAddress.getColumn() + 1);
-			parseAndPersistTrainSchedule(sheet, upTrainAddress, localDate);
-		});
+		for (Sheet sheet : sheets) {
+			List<CellAddress> addresses = getFirstCellAddresses(sheet);
+			for (CellAddress address : addresses) {
+				trainScheduleData.addAll(parser.parseTrainSchedule(sheet, address, localDate));
+			}
+		}
 
-		log.info("[{}] 운행 스케줄 생성 완료", localDate);
-	}
+		// 역, 열차 조회
+		Map<String, Station> stationMap = stationService.getStationMap();
+		Map<Integer, Train> trainMap = trainService.getTrainMap();
 
-	private void parseAndPersistTrainSchedule(Sheet sheet, CellAddress address, LocalDate localDate) {
-		List<String> stationNames = parser.getStationNames(sheet, address);
-		Map<String, Station> stationMap = stationService.findOrCreateStation(stationNames);
-
-		List<TrainScheduleData> trainScheduleData = parser.getTrainScheduleData(sheet, address, localDate);
-		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainScheduleData.stream()
-			.map(TrainScheduleData::getTrainData)
-			.toList());
-
+		// 스케줄 생성
 		List<TrainSchedule> trainSchedules = trainScheduleData.stream()
 			.map(data -> createTrainSchedule(data, trainMap, stationMap))
 			.toList();
 
 		trainScheduleRepository.saveAll(trainSchedules);
-		log.info("[{}] {}개의 운행 스케줄 저장 완료", sheet.getSheetName(), trainSchedules.size());
+		log.info("[{}] {}개의 운행 스케줄 저장 완료", localDate, trainSchedules.size());
+	}
+
+	/**
+	 * 하행과 상행 파싱 시작 지점 반환
+	 */
+	private List<CellAddress> getFirstCellAddresses(Sheet sheet) {
+		CellAddress downTrainAddress = parser.getFirstCellAddress(sheet, 0); // 하행
+		CellAddress upTrainAddress = parser.getFirstCellAddress(sheet, downTrainAddress.getColumn() + 1); // 상행
+		return List.of(downTrainAddress, upTrainAddress);
 	}
 
 	private TrainSchedule createTrainSchedule(TrainScheduleData data, Map<Integer, Train> trainMap,
