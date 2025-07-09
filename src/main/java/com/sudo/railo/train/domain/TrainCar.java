@@ -24,6 +24,7 @@ import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -45,6 +46,7 @@ public class TrainCar {
 	@Comment("2+2, 2+1")
 	private String seatArrangement;
 
+	@Setter
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_id")
 	private Train train;
@@ -65,27 +67,31 @@ public class TrainCar {
 	}
 
 	/* 정적 팩토리 메서드 */
-	public static TrainCar create(int carNumber, SeatLayout layout, CarSpec cars) {
-		int totalSeats = cars.row() * layout.columns().size();
-		TrainCar trainCar = new TrainCar(carNumber, cars.carType(), totalSeats, layout.seatArrangement());
+	public static TrainCar create(int carNumber, CarSpec spec, SeatLayout layout) {
+		int totalSeats = spec.row() * layout.columns().size();
+		return new TrainCar(carNumber, spec.carType(), totalSeats, layout.seatArrangement());
+	}
 
-		for (int i = 1; i <= cars.row(); i++) {
+	/**
+	 * 객차의 좌석 생성
+	 */
+	public List<Seat> generateSeats(CarSpec spec, SeatLayout layout) {
+		List<Seat> seats = new ArrayList<>();
+
+		// 좌석 행 (1, 2, 3, 4)
+		for (int row = 1; row <= spec.row(); row++) {
+
+			// 좌석 열 문자 (A, B, C, D)
 			for (SeatColumn column : layout.columns()) {
-				Seat seat = Seat.create(i, column.name(), column.seatType());
-				trainCar.addSeat(seat);
+
+				// 좌석 생성
+				Seat seat = Seat.create(row, column.name(), column.seatType());
+				seats.add(seat);
+
+				// 연관 관계 설정
+				seat.setTrainCar(this);
 			}
 		}
-		return trainCar;
-	}
-
-	/* 연관관계 편의 메서드 */
-	public void setTrain(Train train) {
-		this.train = train;
-		train.getTrainCars().add(this);
-	}
-
-	public void addSeat(Seat seat) {
-		seats.add(seat);
-		seat.setTrainCar(this);
+		return seats;
 	}
 }

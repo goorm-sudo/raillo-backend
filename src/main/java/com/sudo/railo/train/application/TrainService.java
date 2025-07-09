@@ -2,6 +2,7 @@ package com.sudo.railo.train.application;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -10,46 +11,60 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.config.TrainTemplateProperties;
 import com.sudo.railo.train.domain.Train;
+import com.sudo.railo.train.infrastructure.TrainJdbcRepository;
 import com.sudo.railo.train.infrastructure.TrainRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TrainService {
 
 	private final TrainTemplateProperties properties;
 	private final TrainRepository trainRepository;
+	private final TrainJdbcRepository trainJdbcRepository;
+	private final TrainCarService trainCarService;
 
+	@Transactional(readOnly = true)
+	public Map<Integer, Train> getTrainMap() {
+		return trainRepository.findAllWithCars().stream()
+			.collect(Collectors.toMap(Train::getTrainNumber, Function.identity()));
+	}
+
+	/**
+	 * 열차 생성
+	 */
 	@Transactional
-	public Map<Integer, Train> findOrCreateTrains(List<TrainData> trainData) {
-		Map<Integer, Train> trainMap = findExistingTrains(trainData);
-		List<Train> newTrains = createTrains(trainData, trainMap);
+	public void createTrains(List<TrainData> trainData) {
+		Map<Integer, Train> trainMap = getTrainMap();
 
-		if (!newTrains.isEmpty()) {
-			trainRepository.saveAll(newTrains);
-			newTrains.forEach(train -> trainMap.put(train.getTrainNumber(), train));
-		}
-		return trainMap;
-	}
-
-	private Map<Integer, Train> findExistingTrains(List<TrainData> trainData) {
-		List<Integer> trainNumbers = trainData.stream()
-			.map(TrainData::getTrainNumber)
-			.toList();
-		return trainRepository.findByTrainNumberIn(trainNumbers).stream()
-			.collect(Collectors.toMap(Train::getTrainNumber, train -> train));
-	}
-
-	private List<Train> createTrains(List<TrainData> trainData, Map<Integer, Train> existing) {
-		return trainData.stream()
-			.filter(data -> !existing.containsKey(data.getTrainNumber()))
+		// 열차 생성
+		List<Train> trains = trainData.stream()
+			.filter(data -> !trainMap.containsKey(data.getTrainNumber()))
 			.map(data -> Train.create(
 				data.getTrainNumber(),
 				data.getTrainType(),
 				data.getTrainName(),
-				properties.getLayouts(),
-				properties.getTemplates().get(data.getTrainType())
+				properties.getTemplates().get(data.getTrainType()).cars().size()
 			)).toList();
+
+		if (!trains.isEmpty()) {
+			trainJdbcRepository.bulkInsertTrains(trains);
+			log.info("{}개의 열차 저장 완료", trains.size());
+
+			// 객차 생성
+			trainCarService.createTrainCars(fetchTrains(trains));
+		}
+	}
+
+	/**
+	 * 열차 ID를 가져오기 위한 메서드
+	 */
+	private List<Train> fetchTrains(List<Train> trains) {
+		return trainRepository.findByTrainNumberIn(trains.stream()
+			.map(Train::getTrainNumber)
+			.toList());
 	}
 }

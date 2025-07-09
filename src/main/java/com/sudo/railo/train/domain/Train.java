@@ -62,38 +62,29 @@ public class Train {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static Train create(int trainNumber, TrainType trainType, String trainName,
-		Map<CarType, SeatLayout> layouts, TrainTemplate template) {
+	public static Train create(int trainNumber, TrainType trainType, String trainName, int totalCars) {
+		return new Train(trainNumber, trainType, trainName, totalCars);
+	}
 
-		Train train = new Train(trainNumber, trainType, trainName, template.cars().size());
+	/**
+	 * 열차의 객차 생성
+	 */
+	public List<TrainCar> generateTrainCars(Map<CarType, SeatLayout> layouts, TrainTemplate template) {
+		List<TrainCar> trainCars = new ArrayList<>();
 		for (int i = 0; i < template.cars().size(); i++) {
 			int carNumber = i + 1;
+
 			CarSpec spec = template.cars().get(i);
 			SeatLayout layout = layouts.get(spec.carType());
 
-			TrainCar trainCar = TrainCar.create(carNumber, layout, spec);
-			train.addTrainCar(trainCar);
+			// 객차 생성
+			TrainCar trainCar = TrainCar.create(carNumber, spec, layout);
+			trainCars.add(trainCar);
+
+			// 연관 관계 설정
+			trainCar.setTrain(this);
 		}
-		return train;
-	}
-
-	/* 연관 관계 편의 메서드 */
-
-	/**
-	 * TrainCar 추가
-	 * 읽기 전용(mappedBy 쪽)에서 편의 메서드(연관관계 편의 메서드)로 관계 설정(Train이 TrainCar를 소유)
-	 */
-	public void addTrainCar(TrainCar trainCar) {
-		trainCars.add(trainCar);        // Train -> TrainCar 연결 (객체그래프)
-		trainCar.setTrain(this);        // TrainCar -> Train 연결 (양방향, 외래키 설정)
-	}
-
-	/**
-	 * TrainCar 제거
-	 */
-	public void removeTrainCar(TrainCar trainCar) {
-		trainCars.remove(trainCar);
-		trainCar.setTrain(null);
+		return trainCars;
 	}
 
 	/* 조회 로직 */
