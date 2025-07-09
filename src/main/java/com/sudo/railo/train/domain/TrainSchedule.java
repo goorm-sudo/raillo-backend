@@ -138,10 +138,9 @@ public class TrainSchedule {
 		LocalTime arrivalTime,
 		Train train,
 		Station departureStation,
-		Station arrivalStation,
-		List<ScheduleStop> scheduleStops) {
+		Station arrivalStation) {
 
-		TrainSchedule trainSchedule = new TrainSchedule(
+		return new TrainSchedule(
 			scheduleName,
 			operationDate,
 			departureTime,
@@ -150,8 +149,6 @@ public class TrainSchedule {
 			departureStation,
 			arrivalStation
 		);
-		scheduleStops.forEach(trainSchedule::addScheduleStop);
-		return trainSchedule;
 	}
 
 	/** 초기 좌석 수 설정 */
@@ -160,24 +157,6 @@ public class TrainSchedule {
 			int totalSeats = train.getTotalSeatsByType(carType);
 			availableSeatsMap.put(carType, totalSeats);
 		}
-	}
-
-	/* 연관관계 편의 메서드 */
-	public void setTrain(Train train) {
-		this.train = train;
-	}
-
-	public void setDepartureStation(Station departureStation) {
-		this.departureStation = departureStation;
-	}
-
-	public void setArrivalStation(Station arrivalStation) {
-		this.arrivalStation = arrivalStation;
-	}
-
-	public void addScheduleStop(ScheduleStop scheduleStop) {
-		scheduleStops.add(scheduleStop);
-		scheduleStop.setTrainSchedule(this);
 	}
 
 	/* 비즈니스 메서드 */
