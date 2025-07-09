@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.config.TrainTemplateProperties;
 import com.sudo.railo.train.domain.Train;
-import com.sudo.railo.train.infrastructure.TrainJdbcRepository;
 import com.sudo.railo.train.infrastructure.TrainRepository;
+import com.sudo.railo.train.infrastructure.jdbc.TrainJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

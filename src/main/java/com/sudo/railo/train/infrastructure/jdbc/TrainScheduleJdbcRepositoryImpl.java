@@ -1,4 +1,4 @@
-package com.sudo.railo.train.infrastructure;
+package com.sudo.railo.train.infrastructure.jdbc;
 
 import java.sql.Date;
 import java.sql.Time;

@@ -12,7 +12,7 @@ import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.TrainSchedule;
-import com.sudo.railo.train.infrastructure.ScheduleStopJdbcRepository;
+import com.sudo.railo.train.infrastructure.jdbc.ScheduleStopJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
