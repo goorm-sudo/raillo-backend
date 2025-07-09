@@ -1,9 +1,7 @@
-package com.sudo.railo.train.infrastructure.scheduler;
+package com.sudo.railo.train.application;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import com.sudo.railo.train.application.TrainScheduleCreator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
