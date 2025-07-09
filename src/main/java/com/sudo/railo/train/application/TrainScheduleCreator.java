@@ -108,8 +108,11 @@ public class TrainScheduleCreator {
 		List<TrainScheduleData> scheduleData = new ArrayList<>();
 		List<Sheet> sheets = parser.getSheets();
 
+		// 운행 스케줄이 존재하는 날짜 조회
+		Set<LocalDate> existingDates = trainScheduleRepository.findExistingOperationDatesIn(dates);
+
 		dates.forEach(date -> {
-			if (trainScheduleRepository.existsByOperationDate(date)) {
+			if (existingDates.contains(date)) {
 				log.info("[{}] 이미 운행 스케줄이 존재합니다.", date);
 				return;
 			}
