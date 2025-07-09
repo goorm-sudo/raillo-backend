@@ -40,6 +40,8 @@ public class TrainCar {
 
 	@Enumerated(EnumType.STRING)
 	private CarType carType;
+	
+	private int seatRowCount;
 
 	private int totalSeats;
 
@@ -59,17 +61,19 @@ public class TrainCar {
 	/**
 	 * private 생성자
 	 */
-	private TrainCar(int carNumber, CarType carType, int totalSeats, String seatArrangement) {
+	private TrainCar(int carNumber, CarType carType, int seatRowCount, int totalSeats, String seatArrangement) {
 		this.carNumber = carNumber;
 		this.carType = carType;
+		this.seatRowCount = seatRowCount;
 		this.totalSeats = totalSeats;
 		this.seatArrangement = seatArrangement;
 	}
 
 	/* 정적 팩토리 메서드 */
 	public static TrainCar create(int carNumber, CarSpec spec, SeatLayout layout) {
-		int totalSeats = spec.row() * layout.columns().size();
-		return new TrainCar(carNumber, spec.carType(), totalSeats, layout.seatArrangement());
+		int seatRowCount = spec.row();
+		int totalSeats = seatRowCount * layout.columns().size();
+		return new TrainCar(carNumber, spec.carType(), seatRowCount, totalSeats, layout.seatArrangement());
 	}
 
 	/**

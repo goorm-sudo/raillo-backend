@@ -31,7 +31,7 @@ public class TrainJdbcRepositoryImpl implements TrainJdbcRepository {
 
 	@Override
 	public void bulkInsertTrainCars(List<TrainCar> trainCars) {
-		String sql = "INSERT INTO train_car (car_number, car_type, total_seats, seat_arrangement, train_id) VALUES (?, ?, ?, ?, ?)";
+		String sql = "INSERT INTO train_car (car_number, car_type, seat_row_count, total_seats, seat_arrangement, train_id) VALUES (?, ?, ?, ?, ?, ?)";
 		int batchSize = 2000;
 
 		for (int i = 0; i < trainCars.size(); i += batchSize) {
@@ -41,9 +41,10 @@ public class TrainJdbcRepositoryImpl implements TrainJdbcRepository {
 			jdbcTemplate.batchUpdate(sql, batchList, batchList.size(), (ps, trainCar) -> {
 				ps.setInt(1, trainCar.getCarNumber());
 				ps.setString(2, trainCar.getCarType().name());
-				ps.setInt(3, trainCar.getTotalSeats());
-				ps.setString(4, trainCar.getSeatArrangement());
-				ps.setLong(5, trainCar.getTrain().getId());
+				ps.setInt(3, trainCar.getSeatRowCount());
+				ps.setInt(4, trainCar.getTotalSeats());
+				ps.setString(5, trainCar.getSeatArrangement());
+				ps.setLong(6, trainCar.getTrain().getId());
 			});
 		}
 	}
