@@ -87,7 +87,7 @@ public class TrainSchedule {
 	private Station arrivalStation;
 
 	// 좌석 타입별 잔여 좌석 수 (Map 형태로 저장)
-	@ElementCollection(fetch = FetchType.EAGER)
+	@ElementCollection
 	@CollectionTable(name = "schedule_available_seats",
 		joinColumns = @JoinColumn(name = "train_schedule_id"))
 	@MapKeyColumn(name = "car_type")
