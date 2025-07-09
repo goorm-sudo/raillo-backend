@@ -116,14 +116,14 @@ public class TrainScheduleParser extends ExcelParser {
 	/**
 	 * 운행 스케줄 파싱
 	 */
-	public List<TrainScheduleData> parseTrainSchedule(Sheet sheet, CellAddress address, LocalDate localDate) {
+	public List<TrainScheduleData> parseTrainSchedule(Sheet sheet, CellAddress address, LocalDate date) {
 		String sheetName = sheet.getSheetName();
 		int stationIdx = getStationIdx(address);
 		List<String> stationNames = parseStationNames(sheet, address);
 		int operationDateIdx = getOperationDateIdx(stationIdx, stationNames.size());
 
 		// 생성 날짜 요일 (월, 화, 수 ...)
-		String dayOfWeek = localDate.getDayOfWeek()
+		String dayOfWeek = date.getDayOfWeek()
 			.getDisplayName(TextStyle.SHORT, Locale.KOREAN);
 
 		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
@@ -156,7 +156,7 @@ public class TrainScheduleParser extends ExcelParser {
 					trainData.getTrainNumber(), sheetName);
 
 				// 스케줄 추가
-				trainScheduleData.add(TrainScheduleData.of(scheduleName, localDate, scheduleStopData, trainData));
+				trainScheduleData.add(TrainScheduleData.of(scheduleName, date, scheduleStopData, trainData));
 
 			} catch (Exception ex) {
 				// 스케줄 파싱에 실패해도 계속 진행

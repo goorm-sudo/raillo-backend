@@ -15,10 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
 import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
-import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.TrainSchedule;
+import com.sudo.railo.train.infrastructure.TrainScheduleJdbcRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 import com.sudo.railo.train.infrastructure.excel.TrainScheduleParser;
 
@@ -33,7 +33,9 @@ public class TrainScheduleCreator {
 	private final TrainScheduleParser parser;
 	private final StationService stationService;
 	private final TrainService trainService;
+	private final ScheduleStopService scheduleStopService;
 	private final TrainScheduleRepository trainScheduleRepository;
+	private final TrainScheduleJdbcRepository trainScheduleJdbcRepository;
 
 	@Transactional
 	public void createStations() {
@@ -71,37 +73,66 @@ public class TrainScheduleCreator {
 			.map(date -> date.plusDays(1))
 			.orElse(LocalDate.now());
 
-		createTrainSchedule(localDate);
+		createTrainSchedule(List.of(localDate));
 	}
 
 	@Transactional
-	public void createTrainSchedule(LocalDate localDate) {
-		if (trainScheduleRepository.existsByOperationDate(localDate)) {
-			log.info("[{}] 이미 운행 스케줄이 존재합니다.", localDate);
-			return;
-		}
-
-		List<Sheet> sheets = parser.getSheets();
-		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
-
-		for (Sheet sheet : sheets) {
-			List<CellAddress> addresses = getFirstCellAddresses(sheet);
-			for (CellAddress address : addresses) {
-				trainScheduleData.addAll(parser.parseTrainSchedule(sheet, address, localDate));
-			}
-		}
-
-		// 역, 열차 조회
+	public void createTrainSchedule(List<LocalDate> dates) {
+		List<TrainScheduleData> scheduleData = parseSchedules(dates);
 		Map<String, Station> stationMap = stationService.getStationMap();
 		Map<Integer, Train> trainMap = trainService.getTrainMap();
 
 		// 스케줄 생성
-		List<TrainSchedule> trainSchedules = trainScheduleData.stream()
+		List<TrainSchedule> trainSchedules = scheduleData.stream()
 			.map(data -> createTrainSchedule(data, trainMap, stationMap))
 			.toList();
 
-		trainScheduleRepository.saveAll(trainSchedules);
-		log.info("[{}] {}개의 운행 스케줄 저장 완료", localDate, trainSchedules.size());
+		if (!trainSchedules.isEmpty()) {
+			// 스케줄 저장
+			trainScheduleJdbcRepository.bulkInsert(trainSchedules);
+			log.info("{}개의 운행 스케줄 저장 완료", trainSchedules.size());
+
+			// 정차역 생성
+			scheduleStopService.createScheduleStops(
+				fetchTrainSchedules(trainSchedules, dates),
+				scheduleData,
+				stationMap
+			);
+		}
+	}
+
+	/**
+	 * 스케줄 파싱
+	 */
+	private List<TrainScheduleData> parseSchedules(List<LocalDate> dates) {
+		List<TrainScheduleData> scheduleData = new ArrayList<>();
+		List<Sheet> sheets = parser.getSheets();
+
+		dates.forEach(date -> {
+			if (trainScheduleRepository.existsByOperationDate(date)) {
+				log.info("[{}] 이미 운행 스케줄이 존재합니다.", date);
+				return;
+			}
+
+			for (Sheet sheet : sheets) {
+				List<CellAddress> addresses = getFirstCellAddresses(sheet);
+				for (CellAddress address : addresses) {
+					scheduleData.addAll(parser.parseTrainSchedule(sheet, address, date));
+				}
+			}
+		});
+		return scheduleData;
+	}
+
+	/**
+	 * 스케줄 ID를 가져오기 위한 메서드
+	 */
+	private List<TrainSchedule> fetchTrainSchedules(List<TrainSchedule> schedules, List<LocalDate> dates) {
+		List<String> scheduleNames = schedules.stream()
+			.map(TrainSchedule::getScheduleName)
+			.toList();
+
+		return trainScheduleRepository.findByScheduleNameInAndOperationDateIn(scheduleNames, dates);
 	}
 
 	/**
@@ -119,14 +150,6 @@ public class TrainScheduleCreator {
 		ScheduleStopData firstStop = data.getFirstStop();
 		ScheduleStopData lastStop = data.getLastStop();
 
-		List<ScheduleStop> scheduleStops = data.getScheduleStopData().stream()
-			.map(scheduleStopData -> ScheduleStop.create(
-				scheduleStopData.getStopOrder(),
-				scheduleStopData.getArrivalTime(),
-				scheduleStopData.getDepartureTime(),
-				stationMap.get(scheduleStopData.getStationName())
-			)).toList();
-
 		return TrainSchedule.create(
 			data.getScheduleName(),
 			data.getOperationDate(),
@@ -134,8 +157,7 @@ public class TrainScheduleCreator {
 			lastStop.getArrivalTime(),
 			train,
 			stationMap.get(firstStop.getStationName()),
-			stationMap.get(lastStop.getStationName()),
-			scheduleStops
+			stationMap.get(lastStop.getStationName())
 		);
 	}
 }

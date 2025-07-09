@@ -31,22 +31,18 @@ public class TrainScheduleData {
 	public static TrainScheduleData of(String scheduleName, LocalDate operationDate,
 		List<ScheduleStopData> scheduleStopData, TrainData trainData) {
 
+		if (CollectionUtils.isEmpty(scheduleStopData)) {
+			throw new IllegalStateException("스케줄 정차역 정보가 비어 있습니다.");
+		}
+
 		return new TrainScheduleData(scheduleName, operationDate, scheduleStopData, trainData);
 	}
 
 	public ScheduleStopData getFirstStop() {
-		validateScheduleStopData();
 		return scheduleStopData.get(0);
 	}
 
 	public ScheduleStopData getLastStop() {
-		validateScheduleStopData();
 		return scheduleStopData.get(scheduleStopData.size() - 1);
-	}
-
-	private void validateScheduleStopData() {
-		if (CollectionUtils.isEmpty(scheduleStopData)) {
-			throw new IllegalStateException("스케줄 정차역 정보가 비어 있습니다.");
-		}
 	}
 }
