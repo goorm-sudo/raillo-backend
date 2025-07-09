@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.domain.Station;
-import com.sudo.railo.train.infrastructure.StationJdbcRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
+import com.sudo.railo.train.infrastructure.jdbc.StationJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -8,7 +8,7 @@ import com.sudo.railo.train.config.TrainTemplateProperties;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.TrainCar;
 import com.sudo.railo.train.infrastructure.TrainCarRepository;
-import com.sudo.railo.train.infrastructure.TrainJdbcRepository;
+import com.sudo.railo.train.infrastructure.jdbc.TrainJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
