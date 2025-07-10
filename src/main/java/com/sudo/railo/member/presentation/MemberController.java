@@ -13,9 +13,9 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
+import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
-import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.docs.MemberControllerDocs;
@@ -61,11 +61,12 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/email")
-	public SuccessResponse<?> updateEmail(@RequestBody @Valid VerifyCodeRequest request) {
+	public SuccessResponse<?> updateEmail(@RequestBody @Valid UpdateEmailRequest request) {
 
-		memberAuthService.verifyAuthCode(request);
+		String newEmail = request.newEmail();
+		String authCode = request.authCode();
 
-		String newEmail = request.email();
+		memberAuthService.verifyAuthCode(newEmail, authCode);
 		memberService.updateEmail(newEmail);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);

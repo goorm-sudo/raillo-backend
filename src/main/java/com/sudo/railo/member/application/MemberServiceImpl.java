@@ -224,7 +224,10 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {
-		boolean isVerified = memberAuthService.verifyAuthCode(request);
+
+		String email = request.email();
+		String authCode = request.authCode();
+		boolean isVerified = memberAuthService.verifyAuthCode(email, authCode);
 
 		if (!isVerified) { // 인증 실패 시
 			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
