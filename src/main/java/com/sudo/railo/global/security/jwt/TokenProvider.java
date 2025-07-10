@@ -129,6 +129,7 @@ public class TokenProvider {
 		return Jwts.builder()
 			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)
 			.setSubject(memberNo)
+			.claim("tokenType", "TEMPORARY_TOKEN")
 			.setExpiration(temporaryTokenExpiresIn)
 			.signWith(key, SignatureAlgorithm.HS512)
 			.compact();
@@ -196,7 +197,7 @@ public class TokenProvider {
 	}
 
 	// AccessToken에서 클레임을 추출하는 메서드
-	private Claims parseClaims(String accessToken) {
+	protected Claims parseClaims(String accessToken) {
 		try {
 			return Jwts.parserBuilder()
 				.setSigningKey(key)

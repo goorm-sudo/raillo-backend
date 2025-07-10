@@ -12,6 +12,7 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.TokenError;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +34,17 @@ public class JwtFilter extends OncePerRequestFilter {
 		HttpServletResponse response,
 		FilterChain filterChain
 	) throws ServletException, IOException {
-		
+
 		String jwt = tokenExtractor.resolveToken(request);
 
 		if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+
+			String tokenType = getTokenType(jwt);
+			String requestUri = request.getRequestURI();
+
+			if (!requestUri.equals("/api/v1/members/password") && "TEMPORARY_TOKEN".equals(tokenType)) {
+				throw new BusinessException(TokenError.INVALID_TEMPORARY_TOKEN_USAGE);
+			}
 
 			// 블랙리스트 형식으로 redis 에 해당 accessToken logout 여부 확인
 			Object isLogout = redisUtil.getLogoutToken(jwt);
@@ -51,6 +59,11 @@ public class JwtFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
+	}
+
+	private String getTokenType(String jwt) {
+		Claims claims = tokenProvider.parseClaims(jwt);
+		return claims.get("tokenType", String.class);
 	}
 
 }
