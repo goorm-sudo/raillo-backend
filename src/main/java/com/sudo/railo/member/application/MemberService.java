@@ -3,7 +3,6 @@ package com.sudo.railo.member.application;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
@@ -21,7 +20,7 @@ public interface MemberService {
 
 	MemberInfoResponse getMemberInfo();
 
-	void updateEmail(UpdateEmailRequest request);
+	void updateEmail(String newEmail);
 
 	void updatePhoneNumber(UpdatePhoneNumberRequest request);
 
