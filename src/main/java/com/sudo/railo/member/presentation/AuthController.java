@@ -104,7 +104,10 @@ public class AuthController implements AuthControllerDocs {
 	@PostMapping("/emails/verify")
 	public SuccessResponse<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
 
-		boolean isVerified = memberAuthService.verifyAuthCode(request);
+		String email = request.email();
+		String authCode = request.authCode();
+
+		boolean isVerified = memberAuthService.verifyAuthCode(email, authCode);
 		VerifyCodeResponse response = new VerifyCodeResponse(isVerified);
 
 		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS_FINISH, response);
