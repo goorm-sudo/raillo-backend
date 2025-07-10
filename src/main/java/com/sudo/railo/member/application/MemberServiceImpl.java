@@ -171,7 +171,7 @@ public class MemberServiceImpl implements MemberService {
 	@Transactional(readOnly = true)
 	public SendCodeResponse requestFindMemberNo(FindMemberNoRequest request) {
 
-		Member member = memberRepository.findByNameAndPhoneNumberAndRole(request.name(), request.phoneNumber())
+		Member member = memberRepository.findMemberByNameAndPhoneNumber(request.name(), request.phoneNumber())
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		String memberEmail = member.getMemberDetail().getEmail();
