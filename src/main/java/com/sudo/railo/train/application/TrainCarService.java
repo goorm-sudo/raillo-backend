@@ -36,7 +36,7 @@ public class TrainCarService {
 			.toList();
 
 		// 객차 저장
-		trainJdbcRepository.bulkInsertTrainCars(trainCars);
+		trainJdbcRepository.saveAllTrainCars(trainCars);
 		log.info("{}개의 객차 저장 완료", trainCars.size());
 
 		// 좌석 생성

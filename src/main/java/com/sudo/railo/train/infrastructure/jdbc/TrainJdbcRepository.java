@@ -8,9 +8,9 @@ import com.sudo.railo.train.domain.TrainCar;
 
 public interface TrainJdbcRepository {
 
-	void bulkInsertTrains(List<Train> trains);
+	void saveAllTrains(List<Train> trains);
 
-	void bulkInsertTrainCars(List<TrainCar> trainCars);
+	void saveAllTrainCars(List<TrainCar> trainCars);
 
-	void bulkInsertSeats(List<Seat> seats);
+	void saveAllSeats(List<Seat> seats);
 }

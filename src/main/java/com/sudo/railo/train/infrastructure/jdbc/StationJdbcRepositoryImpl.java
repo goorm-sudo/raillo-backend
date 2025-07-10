@@ -16,7 +16,7 @@ public class StationJdbcRepositoryImpl implements StationJdbcRepository {
 	private final JdbcTemplate jdbcTemplate;
 
 	@Override
-	public void bulkInsertStations(List<Station> stations) {
+	public void saveAll(List<Station> stations) {
 		String sql = "INSERT INTO station (station_name) VALUES (?)";
 
 		jdbcTemplate.batchUpdate(sql, stations, stations.size(), (ps, station) ->

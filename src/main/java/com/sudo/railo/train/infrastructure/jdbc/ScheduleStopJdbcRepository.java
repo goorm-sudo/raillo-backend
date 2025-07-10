@@ -6,5 +6,5 @@ import com.sudo.railo.train.domain.ScheduleStop;
 
 public interface ScheduleStopJdbcRepository {
 
-	void bulkInsert(List<ScheduleStop> scheduleStops);
+	void saveAll(List<ScheduleStop> scheduleStops);
 }

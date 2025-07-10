@@ -30,9 +30,12 @@ public class StationService {
 			.collect(Collectors.toMap(Station::getStationName, Function.identity()));
 	}
 
+	/**
+	 * 역 조회 및 저장
+	 */
 	@Transactional
-	public void createStations(Set<String> stationNames) {
-		Map<String, Station> stationMap = getStationMap();
+	public Map<String, Station> findOrCreateStations(Set<String> stationNames) {
+		Map<String, Station> stationMap = findExistingStations(stationNames);
 
 		// 역 생성
 		List<Station> stations = stationNames.stream()
@@ -41,8 +44,19 @@ public class StationService {
 			.toList();
 
 		if (!stations.isEmpty()) {
-			stationJdbcRepository.bulkInsertStations(stations);
+			stationJdbcRepository.saveAll(stations);
 			log.info("{}개의 역 저장 완료", stations.size());
 		}
+
+		// 역 ID가 없어서 다시 조회
+		return getStationMap();
+	}
+
+	/**
+	 * 이미 존재하는 역 조회
+	 */
+	private Map<String, Station> findExistingStations(Set<String> stationNames) {
+		return stationRepository.findByStationNameIn(stationNames).stream()
+			.collect(Collectors.toMap(Station::getStationName, Function.identity()));
 	}
 }
