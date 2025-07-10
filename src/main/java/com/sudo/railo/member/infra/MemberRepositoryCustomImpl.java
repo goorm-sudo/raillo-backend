@@ -29,7 +29,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
 	}
 
 	@Override
-	public Optional<Member> findByNameAndPhoneNumberAndRole(String name, String phoneNumber) {
+	public Optional<Member> findMemberByNameAndPhoneNumber(String name, String phoneNumber) {
 
 		QMember member = QMember.member;
 

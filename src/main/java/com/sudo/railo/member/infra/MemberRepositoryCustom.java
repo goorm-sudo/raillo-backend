@@ -7,5 +7,5 @@ import com.sudo.railo.member.domain.Member;
 public interface MemberRepositoryCustom {
 	Optional<Member> findByMemberNo(String memberNo);
 
-	Optional<Member> findByNameAndPhoneNumberAndRole(String name, String phoneNumber);
+	Optional<Member> findMemberByNameAndPhoneNumber(String name, String phoneNumber);
 }
