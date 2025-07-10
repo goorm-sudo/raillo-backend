@@ -1,6 +1,5 @@
 package com.sudo.railo.train.application.dto.excel;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.util.CollectionUtils;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class TrainScheduleData {
 
 	private String scheduleName;
-	private LocalDate operationDate;
+	private int operatingDay;
 	private List<ScheduleStopData> scheduleStopData;
 	private TrainData trainData;
 
@@ -24,18 +23,18 @@ public class TrainScheduleData {
 	 * 정적 팩토리 메서드
 	 *
 	 * @param scheduleName 스케줄 이름
-	 * @param operationDate 운행일
+	 * @param operatingDay 운행일
 	 * @param scheduleStopData 정차역 목록
 	 * @param trainData 열차 데이터
 	 */
-	public static TrainScheduleData of(String scheduleName, LocalDate operationDate,
+	public static TrainScheduleData of(String scheduleName, int operatingDay,
 		List<ScheduleStopData> scheduleStopData, TrainData trainData) {
 
 		if (CollectionUtils.isEmpty(scheduleStopData)) {
 			throw new IllegalStateException("스케줄 정차역 정보가 비어 있습니다.");
 		}
 
-		return new TrainScheduleData(scheduleName, operationDate, scheduleStopData, trainData);
+		return new TrainScheduleData(scheduleName, operatingDay, scheduleStopData, trainData);
 	}
 
 	public ScheduleStopData getFirstStop() {

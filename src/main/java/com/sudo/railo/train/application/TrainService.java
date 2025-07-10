@@ -34,11 +34,11 @@ public class TrainService {
 	}
 
 	/**
-	 * 열차 생성
+	 * 열차 조회 및 저장
 	 */
 	@Transactional
-	public void createTrains(List<TrainData> trainData) {
-		Map<Integer, Train> trainMap = getTrainMap();
+	public Map<Integer, Train> findOrCreateTrains(List<TrainData> trainData) {
+		Map<Integer, Train> trainMap = findExistingTrains();
 
 		// 열차 생성
 		List<Train> trains = trainData.stream()
@@ -51,12 +51,23 @@ public class TrainService {
 			)).toList();
 
 		if (!trains.isEmpty()) {
-			trainJdbcRepository.bulkInsertTrains(trains);
+			trainJdbcRepository.saveAllTrains(trains);
 			log.info("{}개의 열차 저장 완료", trains.size());
 
 			// 객차 생성
 			trainCarService.createTrainCars(fetchTrains(trains));
 		}
+
+		// 열차 ID가 없어서 다시 조회
+		return getTrainMap();
+	}
+
+	/**
+	 * 이미 존재하는 열차 조회
+	 */
+	private Map<Integer, Train> findExistingTrains() {
+		return trainRepository.findAllWithCars().stream()
+			.collect(Collectors.toMap(Train::getTrainNumber, Function.identity()));
 	}
 
 	/**

@@ -17,7 +17,7 @@ public class ScheduleStopJdbcRepositoryImpl implements ScheduleStopJdbcRepositor
 	private static final int BATCH_SIZE = 1000;
 
 	@Override
-	public void bulkInsert(List<ScheduleStop> scheduleStops) {
+	public void saveAll(List<ScheduleStop> scheduleStops) {
 		String sql = "INSERT INTO schedule_stop (stop_order, arrival_time, departure_time, train_schedule_id, station_id) VALUES (?, ?, ?, ?, ?)";
 
 		for (int i = 0; i < scheduleStops.size(); i += BATCH_SIZE) {

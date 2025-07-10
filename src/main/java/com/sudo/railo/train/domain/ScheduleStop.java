@@ -68,9 +68,14 @@ public class ScheduleStop {
 	}
 
 	/* 정적 팩토리 메서드 */
-	public static ScheduleStop create(int stopOrder, LocalTime arrivalTime, LocalTime departureTime,
-		Station station, TrainSchedule trainSchedule) {
+	public static ScheduleStop create(ScheduleStopTemplate template, TrainSchedule trainSchedule) {
 
-		return new ScheduleStop(stopOrder, arrivalTime, departureTime, station, trainSchedule);
+		return new ScheduleStop(
+			template.getStopOrder(),
+			template.getArrivalTime(),
+			template.getDepartureTime(),
+			template.getStation(),
+			trainSchedule
+		);
 	}
 }

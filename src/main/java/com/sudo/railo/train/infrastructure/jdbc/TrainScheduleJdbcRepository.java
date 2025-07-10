@@ -6,5 +6,5 @@ import com.sudo.railo.train.domain.TrainSchedule;
 
 public interface TrainScheduleJdbcRepository {
 
-	void bulkInsert(List<TrainSchedule> trainSchedules);
+	void saveAll(List<TrainSchedule> trainSchedules);
 }

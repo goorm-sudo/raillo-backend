@@ -33,7 +33,7 @@ public class SeatService {
 			}).toList();
 
 		// 좌석 저장
-		trainJdbcRepository.bulkInsertSeats(seats);
+		trainJdbcRepository.saveAllSeats(seats);
 		log.info("{}개의 좌석 저장 완료", seats.size());
 	}
 }

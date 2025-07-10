@@ -18,7 +18,7 @@ public class TrainJdbcRepositoryImpl implements TrainJdbcRepository {
 	private final JdbcTemplate jdbcTemplate;
 
 	@Override
-	public void bulkInsertTrains(List<Train> trains) {
+	public void saveAllTrains(List<Train> trains) {
 		String sql = "INSERT INTO train (train_number, train_type, train_name, total_cars) VALUES (?, ?, ?, ?)";
 
 		jdbcTemplate.batchUpdate(sql, trains, trains.size(), (ps, train) -> {
@@ -30,7 +30,7 @@ public class TrainJdbcRepositoryImpl implements TrainJdbcRepository {
 	}
 
 	@Override
-	public void bulkInsertTrainCars(List<TrainCar> trainCars) {
+	public void saveAllTrainCars(List<TrainCar> trainCars) {
 		String sql = "INSERT INTO train_car (car_number, car_type, seat_row_count, total_seats, seat_arrangement, train_id) VALUES (?, ?, ?, ?, ?, ?)";
 		int batchSize = 2000;
 
@@ -50,7 +50,7 @@ public class TrainJdbcRepositoryImpl implements TrainJdbcRepository {
 	}
 
 	@Override
-	public void bulkInsertSeats(List<Seat> seats) {
+	public void saveAllSeats(List<Seat> seats) {
 		String sql = "INSERT INTO seat (seat_row, seat_column, seat_type, is_accessible, is_available, train_car_id) VALUES (?, ?, ?, ?, ?, ?)";
 		int batchSize = 10000;
 

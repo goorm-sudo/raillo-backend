@@ -1,12 +1,8 @@
 package com.sudo.railo.train.infrastructure.excel;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -20,6 +16,7 @@ import org.springframework.util.StringUtils;
 import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
 import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
+import com.sudo.railo.train.util.OperatingDayUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,8 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TrainScheduleParser extends ExcelParser {
 
 	private static final String EXCLUDE_SHEET = "총괄";
-	private static final String OPERATION_DATE_COLUMN = "비고";
-	private static final String OPERATION_DATE_EVERY_DAY = "매일";
+	private static final String OPERATING_DAY_COLUMN = "비고";
 	private static final int DWELL_TIME = 2; // 정차역에 머무는 시간(분)
 
 	@Value("${train.schedule.excel.filename}")
@@ -63,6 +59,9 @@ public class TrainScheduleParser extends ExcelParser {
 		throw new IllegalStateException("열차 시간표의 시작 지점을 찾을 수 없습니다.");
 	}
 
+	/**
+	 * 역 이름 파싱
+	 */
 	public List<String> parseStationNames(Sheet sheet, CellAddress address) {
 		Row row = sheet.getRow(address.getRow());
 		int stationIdx = getStationIdx(address);
@@ -74,7 +73,7 @@ public class TrainScheduleParser extends ExcelParser {
 			String stationName = row.getCell(i).getStringCellValue();
 
 			// 역 이름이 아니라면 파싱을 멈춘다.
-			if (stationName.contains(OPERATION_DATE_COLUMN)) {
+			if (stationName.contains(OPERATING_DAY_COLUMN)) {
 				break;
 			}
 			stationNames.add(stationName);
@@ -83,52 +82,17 @@ public class TrainScheduleParser extends ExcelParser {
 	}
 
 	/**
-	 * 열차 파싱
-	 */
-	public List<TrainData> parseTrain(Sheet sheet, CellAddress address) {
-		List<TrainData> trainData = new ArrayList<>();
-
-		int rowNum = address.getRow() + 2;
-		while (rowNum <= sheet.getLastRowNum()) {
-			Row row = sheet.getRow(rowNum++);
-			extractTrainData(address, row).ifPresent(trainData::add);
-		}
-		return trainData;
-	}
-
-	/**
-	 * 열차 정보 추출
-	 */
-	private Optional<TrainData> extractTrainData(CellAddress address, Row row) {
-		int trainNumberIdx = getTrainNumberIdx(address);
-		int trainNameIdx = getTrainNameIdx(address);
-
-		// 열, 행이 비어있다면 파싱하지 않는다.
-		if (isEmpty(row, trainNumberIdx)) {
-			return Optional.empty();
-		}
-
-		int trainNumber = (int)row.getCell(trainNumberIdx).getNumericCellValue();
-		String trainName = row.getCell(trainNameIdx).getStringCellValue().replaceAll("_", "-");
-		return Optional.of(TrainData.of(trainNumber, trainName));
-	}
-
-	/**
 	 * 운행 스케줄 파싱
 	 */
-	public List<TrainScheduleData> parseTrainSchedule(Sheet sheet, CellAddress address, LocalDate date) {
+	public List<TrainScheduleData> parseTrainSchedule(Sheet sheet, CellAddress address) {
 		String sheetName = sheet.getSheetName();
 		int stationIdx = getStationIdx(address);
 		List<String> stationNames = parseStationNames(sheet, address);
-		int operationDateIdx = getOperationDateIdx(stationIdx, stationNames.size());
-
-		// 생성 날짜 요일 (월, 화, 수 ...)
-		String dayOfWeek = date.getDayOfWeek()
-			.getDisplayName(TextStyle.SHORT, Locale.KOREAN);
+		int operatingDayIdx = getOperatingDayIdx(stationIdx, stationNames.size());
 
 		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
 
-		int rowNum = address.getRow() + 2;
+		int rowNum = address.getRow() + 3;
 		while (rowNum <= sheet.getLastRowNum()) {
 			try {
 				Row row = sheet.getRow(rowNum++);
@@ -138,25 +102,22 @@ public class TrainScheduleParser extends ExcelParser {
 					break;
 				}
 
-				// 운행일에 생성 날짜 요일이 포함되지 않는다면 파싱하지 않는다.
-				String operationDate = row.getCell(operationDateIdx).getStringCellValue();
-				if (!operationDate.equals(OPERATION_DATE_EVERY_DAY) && !operationDate.contains(dayOfWeek)) {
-					continue;
-				}
-
 				// 열차 파싱
-				TrainData trainData = extractTrainData(address, row)
-					.orElseThrow();
+				TrainData trainData = extractTrainData(address, row);
 
 				// 정차역 파싱
 				List<ScheduleStopData> scheduleStopData = parseScheduleStop(row, stationIdx, stationNames);
+
+				// 운행일 파싱
+				String operatingDay = row.getCell(operatingDayIdx).getStringCellValue();
+				int bitMask = OperatingDayUtil.toBitMask(operatingDay);
 
 				// 스케줄 이름 (KTX 001 경부선, KTX-산천 075 경부선)
 				String scheduleName = String.format("%s %03d %s", trainData.getTrainName(),
 					trainData.getTrainNumber(), sheetName);
 
 				// 스케줄 추가
-				trainScheduleData.add(TrainScheduleData.of(scheduleName, date, scheduleStopData, trainData));
+				trainScheduleData.add(TrainScheduleData.of(scheduleName, bitMask, scheduleStopData, trainData));
 
 			} catch (Exception ex) {
 				// 스케줄 파싱에 실패해도 계속 진행
@@ -164,6 +125,18 @@ public class TrainScheduleParser extends ExcelParser {
 			}
 		}
 		return trainScheduleData;
+	}
+
+	/**
+	 * 열차 정보 추출
+	 */
+	private TrainData extractTrainData(CellAddress address, Row row) {
+		int trainNumberIdx = getTrainNumberIdx(address);
+		int trainNameIdx = getTrainNameIdx(address);
+
+		int trainNumber = (int)row.getCell(trainNumberIdx).getNumericCellValue();
+		String trainName = row.getCell(trainNameIdx).getStringCellValue().replaceAll("_", "-");
+		return TrainData.of(trainNumber, trainName);
 	}
 
 	/**
@@ -224,7 +197,7 @@ public class TrainScheduleParser extends ExcelParser {
 	/**
 	 * 운행일 인덱스
 	 */
-	private int getOperationDateIdx(int stationIdx, int stationSize) {
+	private int getOperatingDayIdx(int stationIdx, int stationSize) {
 		return stationIdx + stationSize;
 	}
 }

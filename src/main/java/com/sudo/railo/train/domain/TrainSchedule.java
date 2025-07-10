@@ -131,23 +131,16 @@ public class TrainSchedule {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static TrainSchedule create(
-		String scheduleName,
-		LocalDate operationDate,
-		LocalTime departureTime,
-		LocalTime arrivalTime,
-		Train train,
-		Station departureStation,
-		Station arrivalStation) {
+	public static TrainSchedule create(LocalDate operationDate, TrainScheduleTemplate template) {
 
 		return new TrainSchedule(
-			scheduleName,
+			template.getScheduleName(),
 			operationDate,
-			departureTime,
-			arrivalTime,
-			train,
-			departureStation,
-			arrivalStation
+			template.getDepartureTime(),
+			template.getArrivalTime(),
+			template.getTrain(),
+			template.getDepartureStation(),
+			template.getArrivalStation()
 		);
 	}
 
