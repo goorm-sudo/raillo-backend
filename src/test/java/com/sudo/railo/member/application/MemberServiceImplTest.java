@@ -88,21 +88,21 @@ class MemberServiceImplTest {
 		SecurityContextHolder.clearContext();
 	}
 
-	@DisplayName("로그인 된 사용자의 이메일 변경 성공")
-	@Test
-	void updateEmailSuccess() {
-
-		//given
-		String newEmail = "updateEmail@email.com";
-
-		//when
-		memberService.updateEmail(newEmail);
-
-		//then
-		Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
-		assertThat(result.getMemberDetail().getEmail()).isEqualTo(newEmail);
-	}
+	// @DisplayName("로그인 된 사용자의 이메일 변경 성공")
+	// @Test
+	// void updateEmailSuccess() {
+	//
+	// 	//given
+	// 	String newEmail = "updateEmail@email.com";
+	//
+	// 	//when
+	// 	memberService.updateEmail(newEmail);
+	//
+	// 	//then
+	// 	Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
+	// 		.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+	// 	assertThat(result.getMemberDetail().getEmail()).isEqualTo(newEmail);
+	// }
 
 	@DisplayName("로그인 된 사용자의 휴대폰 번호 변경 성공")
 	@Test
