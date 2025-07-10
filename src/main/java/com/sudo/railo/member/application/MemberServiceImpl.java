@@ -134,7 +134,11 @@ public class MemberServiceImpl implements MemberService {
 		String newEmail = request.newEmail();
 		String authCode = request.authCode();
 
-		memberAuthService.verifyAuthCode(newEmail, authCode); // 이메일 검증
+		boolean isVerified = memberAuthService.verifyAuthCode(newEmail, authCode); // 이메일 검증
+
+		if (!isVerified) {
+			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
+		}
 
 		memberDetail.updateEmail(newEmail);
 	}
