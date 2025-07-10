@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.domain.Member;
@@ -94,15 +93,15 @@ class MemberServiceImplTest {
 	void updateEmailSuccess() {
 
 		//given
-		UpdateEmailRequest request = new UpdateEmailRequest("updateMail@email.com");
+		String newEmail = "updateEmail@email.com";
 
 		//when
-		memberService.updateEmail(request);
+		memberService.updateEmail(newEmail);
 
 		//then
 		Member result = memberRepository.findByMemberNo(testMember.getMemberDetail().getMemberNo())
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
-		assertThat(result.getMemberDetail().getEmail()).isEqualTo(request.newEmail());
+		assertThat(result.getMemberDetail().getEmail()).isEqualTo(newEmail);
 	}
 
 	@DisplayName("로그인 된 사용자의 휴대폰 번호 변경 성공")
