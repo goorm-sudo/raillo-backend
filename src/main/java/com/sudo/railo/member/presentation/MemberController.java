@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
+import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.docs.MemberControllerDocs;
@@ -30,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberController implements MemberControllerDocs {
 
 	private final MemberService memberService;
+	private final MemberAuthService memberAuthService;
 	private final TokenExtractor tokenExtractor;
 
 	@PostMapping("/guest/register")
@@ -59,15 +61,18 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/email")
-	public SuccessResponse<?> updateEmail(@RequestBody UpdateEmailRequest request) {
+	public SuccessResponse<?> updateEmail(@RequestBody @Valid VerifyCodeRequest request) {
 
-		memberService.updateEmail(request);
+		memberAuthService.verifyAuthCode(request);
+
+		String newEmail = request.email();
+		memberService.updateEmail(newEmail);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
 	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatePhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
+	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request) {
 
 		memberService.updatePhoneNumber(request);
 
@@ -75,7 +80,7 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/password")
-	public SuccessResponse<?> updatePassword(@RequestBody UpdatePasswordRequest request) {
+	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
 
 		memberService.updatePassword(request);
 
