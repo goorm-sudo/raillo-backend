@@ -21,7 +21,8 @@ public enum BookingError implements ErrorCode {
 	EXPIRED_SEAT_CANCELLATION_FAILED("만료된 좌석 취소에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "B_008"),
 	RESERVATION_CREATE_FAILED("예약에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "B_009"),
 	RESERVATION_DELETE_FAILED("예약 취소에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "B_010"),
-	TRAIN_NOT_OPERATIONAL("운행중인 스케줄이 아닙니다.", HttpStatus.BAD_REQUEST, "B_011");
+	TRAIN_NOT_OPERATIONAL("운행중인 스케줄이 아닙니다.", HttpStatus.BAD_REQUEST, "B_011"),
+	RESERVATION_CREATE_SEATS_INVALID("좌석 수는 총 승객 수와 같아야 합니다.", HttpStatus.BAD_REQUEST, "B_012");
 
 	private final String message;
 	private final HttpStatus status;
