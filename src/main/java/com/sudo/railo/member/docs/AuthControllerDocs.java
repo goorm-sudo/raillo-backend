@@ -7,6 +7,7 @@ import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
@@ -109,4 +110,21 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "401", description = "인증 코드가 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
 	SuccessResponse<TemporaryTokenResponse> verifyFindPassword(VerifyCodeRequest request);
+
+	@Operation(method = "POST", summary = "이메일 변경 요청", description = "요청으로 변경할 이메일을 받아 db 내 정보로 변경 가능 여부 확인 후 이메일 인증 코드를 보냅니다.",
+		security = {@SecurityRequirement(name = "bearerAuth")})
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "이메일 인증 코드 전송을 성공했습니다."),
+		@ApiResponse(responseCode = "409", description = "현재 사용하는 이메일과 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+		@ApiResponse(responseCode = "409", description = "이미 사용중인 이메일입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	SuccessResponse<SendCodeResponse> requestUpdateEmail(SendCodeRequest request);
+
+	@Operation(method = "PUT", summary = "이메일 변경 인증코드 검증 요청", description = "이메일 변경 전 사용 가능한 이메일인지 검증 후, 회원 이메일을 변경합니다.",
+		security = {@SecurityRequirement(name = "bearerAuth")})
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "이메일 변경에 성공했습니다."),
+		@ApiResponse(responseCode = "401", description = "인증 코드가 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+	})
+	SuccessResponse<?> verifyUpdateEmail(UpdateEmailRequest request);
 }

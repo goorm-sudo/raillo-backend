@@ -3,7 +3,6 @@ package com.sudo.railo.member.docs;
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
@@ -43,15 +42,6 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
 	SuccessResponse<MemberInfoResponse> getMemberInfo();
-
-	@Operation(method = "PUT", summary = "이메일 변경", description = "요청으로 변경할 이메일을 받아 회원 정보의 이메일을 새로운 이메일로 변경합니다.",
-		security = {@SecurityRequirement(name = "bearerAuth")})
-	@ApiResponses(value = {
-		@ApiResponse(responseCode = "200", description = "이메일 변경에 성공했습니다."),
-		@ApiResponse(responseCode = "409", description = "현재 사용하는 이메일과 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-		@ApiResponse(responseCode = "409", description = "이미 사용중인 이메일입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-	})
-	SuccessResponse<?> updateEmail(UpdateEmailRequest request);
 
 	@Operation(method = "PUT", summary = "휴대폰 번호 변경", description = "요청으로 변경할 휴대폰 번호를 받아 회원 정보의 휴대폰 번호를 새로운 번호로 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})

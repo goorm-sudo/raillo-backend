@@ -10,10 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.member.application.MemberAuthService;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
@@ -31,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 public class MemberController implements MemberControllerDocs {
 
 	private final MemberService memberService;
-	private final MemberAuthService memberAuthService;
 	private final TokenExtractor tokenExtractor;
 
 	@PostMapping("/guest/register")
@@ -58,18 +55,6 @@ public class MemberController implements MemberControllerDocs {
 		MemberInfoResponse response = memberService.getMemberInfo();
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_INFO_SUCCESS, response);
-	}
-
-	@PutMapping("/members/email")
-	public SuccessResponse<?> updateEmail(@RequestBody @Valid UpdateEmailRequest request) {
-
-		String newEmail = request.newEmail();
-		String authCode = request.authCode();
-
-		memberAuthService.verifyAuthCode(newEmail, authCode);
-		memberService.updateEmail(newEmail);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
 	@PutMapping("/members/phone-number")

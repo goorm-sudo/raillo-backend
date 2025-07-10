@@ -13,6 +13,8 @@ import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
+import com.sudo.railo.member.application.dto.request.SendCodeRequest;
+import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
@@ -101,12 +103,13 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	@Transactional
-	public void updateEmail(String newEmail) {
+	@Transactional(readOnly = true)
+	public SendCodeResponse requestUpdateEmail(SendCodeRequest request) {
 
 		Member member = getCurrentMember();
-
 		MemberDetail memberDetail = member.getMemberDetail();
+
+		String newEmail = request.email();
 
 		// 이미 본인 이메일이랑 동일한 이메일로 변경을 요청했을 경우 예외
 		if (memberDetail.getEmail().equals(newEmail)) {
@@ -117,6 +120,21 @@ public class MemberServiceImpl implements MemberService {
 		if (memberRepository.existsByMemberDetailEmail(newEmail)) {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
 		}
+
+		return memberAuthService.sendAuthCode(newEmail);
+	}
+
+	@Override
+	@Transactional
+	public void verifyUpdateEmail(UpdateEmailRequest request) {
+
+		Member member = getCurrentMember();
+		MemberDetail memberDetail = member.getMemberDetail();
+
+		String newEmail = request.newEmail();
+		String authCode = request.authCode();
+
+		memberAuthService.verifyAuthCode(newEmail, authCode); // 이메일 검증
 
 		memberDetail.updateEmail(newEmail);
 	}

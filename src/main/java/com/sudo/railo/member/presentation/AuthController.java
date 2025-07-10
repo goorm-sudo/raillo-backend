@@ -2,6 +2,7 @@ package com.sudo.railo.member.presentation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +16,7 @@ import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
+import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.member.application.dto.response.SendCodeResponse;
@@ -25,6 +27,7 @@ import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.docs.AuthControllerDocs;
 import com.sudo.railo.member.success.AuthSuccess;
+import com.sudo.railo.member.success.MemberSuccess;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -145,6 +148,23 @@ public class AuthController implements AuthControllerDocs {
 		TemporaryTokenResponse response = memberService.verifyFindPassword(request);
 
 		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
+	}
+
+	/* 이메일 변경 with 이메일 인증 */
+	@PostMapping("/members/me/email-code")
+	public SuccessResponse<SendCodeResponse> requestUpdateEmail(@RequestBody @Valid SendCodeRequest request) {
+
+		SendCodeResponse response = memberService.requestUpdateEmail(request);
+
+		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
+	}
+
+	@PutMapping("/members/me/email-code")
+	public SuccessResponse<?> verifyUpdateEmail(@RequestBody @Valid UpdateEmailRequest request) {
+
+		memberService.verifyUpdateEmail(request);
+
+		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
 }
