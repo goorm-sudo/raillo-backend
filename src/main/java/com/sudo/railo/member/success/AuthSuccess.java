@@ -18,7 +18,8 @@ public enum AuthSuccess implements SuccessCode {
 
 	// 이메일 인증 관련
 	SEND_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 전송을 성공했습니다."),
-	VERIFY_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 검증에 성공했습니다.");
+	VERIFY_CODE_SUCCESS(HttpStatus.OK, "이메일 인증 코드 검증에 성공했습니다."),
+	VERIFY_CODE_SUCCESS_FINISH(HttpStatus.OK, "이메일 인증 코드 검증을 완료하였습니다."); // 코드 검증 여부 확인
 
 	private final HttpStatus status;
 	private final String message;

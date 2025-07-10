@@ -1,6 +1,5 @@
 package com.sudo.railo.member.presentation;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -103,12 +102,12 @@ public class AuthController implements AuthControllerDocs {
 
 	/* 이메일 인증 (인증된 사용자, 인증되지 않은 사용자 모두 사용) */
 	@PostMapping("/emails/verify")
-	public ResponseEntity<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
+	public SuccessResponse<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
 
 		boolean isVerified = memberAuthService.verifyAuthCode(request);
 		VerifyCodeResponse response = new VerifyCodeResponse(isVerified);
 
-		return ResponseEntity.ok(response);
+		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS_FINISH, response);
 	}
 
 	/* 회원 번호 찾기 with 이메일 인증 */

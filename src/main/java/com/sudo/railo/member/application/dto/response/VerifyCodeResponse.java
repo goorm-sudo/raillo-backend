@@ -6,6 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record VerifyCodeResponse(
 
 	@Schema(description = "이메일 인증 성공 여부", example = "true")
-	Boolean isVerified
+	boolean isVerified
 ) {
 }
