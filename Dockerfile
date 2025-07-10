@@ -13,8 +13,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar
 
 # Stage 2: 실행용 (경량 이미지에 결과물만 포함)
-#FROM openjdk:17-jdk-alpine
-FROM openjdk:17-slim
+FROM openjdk:17-jdk-alpine
 WORKDIR /app
 COPY --from=stage1 /app/build/libs/*.jar app.jar
 # 파일이 변경되지 않으면 Docker 빌드 캐시로 인해 재사용됨
