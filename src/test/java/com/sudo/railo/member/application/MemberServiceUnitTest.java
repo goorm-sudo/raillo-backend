@@ -20,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.domain.Member;
@@ -81,12 +80,11 @@ class MemberServiceUnitTest {
 
 		// given
 		String sameEmail = "test01@email.com";
-		UpdateEmailRequest request = new UpdateEmailRequest(sameEmail);
 
 		Mockito.when(memberRepository.findByMemberNo(Mockito.anyString())).thenReturn(Optional.of(testMember));
 
 		// when & then
-		assertThatThrownBy(() -> memberService.updateEmail(request))
+		assertThatThrownBy(() -> memberService.updateEmail(sameEmail))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(MemberError.SAME_EMAIL.getMessage());
 
@@ -98,13 +96,12 @@ class MemberServiceUnitTest {
 
 		// given
 		String duplicateEmail = "test02@email.com";
-		UpdateEmailRequest request = new UpdateEmailRequest(duplicateEmail);
 
 		Mockito.when(memberRepository.findByMemberNo(Mockito.anyString())).thenReturn(Optional.of(testMember));
 		Mockito.when(memberRepository.existsByMemberDetailEmail(duplicateEmail)).thenReturn(true);
 
 		// when & then
-		assertThatThrownBy(() -> memberService.updateEmail(request))
+		assertThatThrownBy(() -> memberService.updateEmail(duplicateEmail))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(MemberError.DUPLICATE_EMAIL.getMessage());
 	}
