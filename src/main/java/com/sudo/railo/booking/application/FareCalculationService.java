@@ -27,7 +27,7 @@ public class FareCalculationService {
 	 * @return 할인이 적용 된 운임
 	 */
 	public BigDecimal calculateFare(FareCalculateRequest request) {
-		BigDecimal discountRate = DISCOUNT_RATES.get(request.getPassengerType());
-		return request.getFare().multiply(discountRate);
+		BigDecimal discountRate = DISCOUNT_RATES.get(request.passengerType());
+		return request.fare().multiply(discountRate);
 	}
 }

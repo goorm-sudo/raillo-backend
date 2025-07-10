@@ -54,9 +54,8 @@ public class Reservation {
 	@JoinColumn(name = "arrival_station_id", nullable = false)
 	private Station arrivalStation;
 
-	// TODO: 예매번호 생성 방식 결정 필요, 임시 Nullable
-	@Column
-	private Long reservationNumber;
+	@Column(nullable = false)
+	private String reservationCode;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)

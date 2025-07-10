@@ -1,6 +1,9 @@
 package com.sudo.railo.booking.application;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -21,6 +24,7 @@ import com.sudo.railo.member.infra.MemberRepository;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.TrainSchedule;
 import com.sudo.railo.train.domain.status.OperationStatus;
+import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
@@ -42,9 +46,20 @@ public class ReservationService {
 	 * 고객용 예매번호를 생성하는 메서드
 	 * @return 고객용 예매번호
 	 */
-	private String generateReservationNumber() {
-		// TODO: 고객용 예매번호 생성 로직 구현, 스펙 확정 시 수행
-		return "";
+	private String generateReservationCode() {
+		// yyyyMMddHHmmss<랜덤4자리> 형식
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		String dateTimeStr = now.format(formatter);
+
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		StringBuilder randomStr = new StringBuilder();
+		SecureRandom secureRandom = new SecureRandom();
+		for (int i = 0; i < 4; i++) {
+			int idx = secureRandom.nextInt(chars.length());
+			randomStr.append(chars.charAt(idx));
+		}
+		return dateTimeStr + randomStr;
 	}
 
 	/***
@@ -55,40 +70,30 @@ public class ReservationService {
 	@Transactional
 	public Reservation createReservation(ReservationCreateRequest request, UserDetails userDetails) {
 		try {
-			// TODO: 조회된 운행 스케줄이 없을때 적절한 오류를 반환해야 합니다.
-			TrainSchedule trainSchedule = trainScheduleRepository.findById(request.getTrainScheduleId())
-				.orElseThrow(Exception::new);
+			TrainSchedule trainSchedule = trainScheduleRepository.findById(request.trainScheduleId())
+				.orElseThrow(() -> new BusinessException((TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND)));
 
-			if (trainSchedule.getOperationStatus() != OperationStatus.ACTIVE) {
-				// TODO: 스케줄 운행 여부에 따라 적절한 오류를 반환해야 합니다.
-				// throw new BusinessException(BookingError.TRAIN_NOT_OPERATIONAL);
+			if (trainSchedule.getOperationStatus() == OperationStatus.CANCELLED) {
+				throw new BusinessException(TrainErrorCode.TRAIN_OPERATION_CANCELLED);
 			}
 
-			// 멤버
 			Member member = memberRepository.findByMemberNo(userDetails.getUsername())
 				.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
-			// TODO: 조회된 출발역이 없을 때 적절한 오류를 반환해야 합니다.
-			Station departureStation = stationRepository.findById(request.getDepartureStationId())
-				.orElseThrow(Exception::new);
+			Station departureStation = stationRepository.findById(request.departureStationId())
+				.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
 
-			// TODO: 조회된 도착역이 없을 때 적절한 오류를 반환해야 합니다.
-			Station arrivalStation = stationRepository.findById(request.getArrivalStationId())
-				.orElseThrow(Exception::new);
+			Station arrivalStation = stationRepository.findById(request.arrivalStationId())
+				.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
 
-			// 승객 유형별 정보
-			PassengerSummary passengerSummary = request.getPassengerSummary();
-
-			// 예약 완료 시간, 만료 시간
+			List<PassengerSummary> passengerSummary = request.passengers();
 			LocalDateTime now = LocalDateTime.now();
-
-			// Reservation Entity
 			Reservation reservation = Reservation.builder()
 				.trainSchedule(trainSchedule)
 				.member(member)
-				//.reservationNumber()
-				.tripType(request.getTripType())
-				.totalPassengers(passengerSummary.getPassengerCount())
+				.reservationCode(generateReservationCode())
+				.tripType(request.tripType())
+				.totalPassengers(passengerSummary.stream().mapToInt(PassengerSummary::getCount).sum())
 				.passengerSummary(objectMapper.writeValueAsString(passengerSummary))
 				.reservationStatus(ReservationStatus.RESERVED)
 				.expiresAt(now.plusMinutes(bookingConfig.getExpiration().getReservation()))
@@ -109,7 +114,7 @@ public class ReservationService {
 	@Transactional
 	public void deleteReservation(ReservationDeleteRequest request) {
 		try {
-			reservationRepository.deleteById(request.getReservationId());
+			reservationRepository.deleteById(request.reservationId());
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.RESERVATION_DELETE_FAILED);
 		}
@@ -120,7 +125,6 @@ public class ReservationService {
 	 */
 	@Transactional
 	public void expireReservations() {
-		int reservationExpirationTime = bookingConfig.getExpiration().getReservation();
 		LocalDateTime now = LocalDateTime.now();
 		reservationRepository.deleteAllByExpiresAtBefore(now);
 	}
