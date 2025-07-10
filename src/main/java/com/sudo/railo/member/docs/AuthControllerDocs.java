@@ -1,7 +1,5 @@
 package com.sudo.railo.member.docs;
 
-import org.springframework.http.ResponseEntity;
-
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
@@ -81,7 +79,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "인증 코드 검증에 성공했을 경우 true, 실패했을 경우 false"),
 		@ApiResponse(responseCode = "400", description = "요청 본문이 유효하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	ResponseEntity<VerifyCodeResponse> verifyAuthCode(VerifyCodeRequest request);
+	SuccessResponse<VerifyCodeResponse> verifyAuthCode(VerifyCodeRequest request);
 
 	@Operation(method = "POST", summary = "회원번호 찾기 요청", description = "회원번호를 찾기 위한 요청을 받고, 본인인증을 위한 이메일 인증 코드를 전송합니다.")
 	@ApiResponses(value = {
