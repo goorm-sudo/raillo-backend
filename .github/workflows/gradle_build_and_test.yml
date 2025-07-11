@@ -1,0 +1,53 @@
+name: Build and Test with Gradle
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+permissions:
+  contents: read
+  checks: write
+  issues: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_PW: ${{ secrets.DB_PW }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+      MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+      STATION_FARE_FILENAME: ${{ secrets.STATION_FARE_FILENAME }}
+      TRAIN_SCHEDULE_FILENAME: ${{ secrets.TRAIN_SCHEDULE_FILENAME }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3.1.0
+
+      - name: Build and Test with Gradle
+        run: |
+          ./gradlew build
+          ./gradlew --info test
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        with:
+          files: build/test-results/**/*.xml
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'

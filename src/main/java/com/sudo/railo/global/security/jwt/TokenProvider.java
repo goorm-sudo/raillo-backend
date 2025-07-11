@@ -39,6 +39,7 @@ public class TokenProvider {
 	private static final String BEARER_TYPE = "Bearer";
 	private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
 	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;  // 7일
+	private static final long TEMPORARY_TOKEN_EXPIRE_TIME = 1000 * 60 * 5; // 5분
 	private final Key key;
 
 	public TokenProvider(
@@ -121,6 +122,19 @@ public class TokenProvider {
 		);
 	}
 
+	// 임시 토큰 발급 (5분)
+	public String generateTemporaryToken(String memberNo) {
+		long now = System.currentTimeMillis();
+		Date temporaryTokenExpiresIn = new Date(now + TEMPORARY_TOKEN_EXPIRE_TIME);
+		return Jwts.builder()
+			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)
+			.setSubject(memberNo)
+			.claim("tokenType", "TEMPORARY_TOKEN")
+			.setExpiration(temporaryTokenExpiresIn)
+			.signWith(key, SignatureAlgorithm.HS512)
+			.compact();
+	}
+
 	// 토큰에 등록된 클레임의 sub에서 해당 회원 번호 추출
 	public String getMemberNo(String accessToken) {
 		return Jwts.parserBuilder()
@@ -183,7 +197,7 @@ public class TokenProvider {
 	}
 
 	// AccessToken에서 클레임을 추출하는 메서드
-	private Claims parseClaims(String accessToken) {
+	protected Claims parseClaims(String accessToken) {
 		try {
 			return Jwts.parserBuilder()
 				.setSigningKey(key)

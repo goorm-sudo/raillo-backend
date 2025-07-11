@@ -7,16 +7,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
+import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
+import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
+import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
+import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
+import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Role;
+import com.sudo.railo.member.exception.AuthError;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
 
@@ -31,6 +40,8 @@ public class MemberServiceImpl implements MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberAuthService memberAuthService;
+	private final RedisUtil redisUtil;
+	private final TokenProvider tokenProvider;
 
 	@Override
 	@Transactional
@@ -155,10 +166,80 @@ public class MemberServiceImpl implements MemberService {
 		return memberDetail.getEmail();
 	}
 
+	/* 회원 번호 찾기 */
+	@Override
+	@Transactional(readOnly = true)
+	public SendCodeResponse requestFindMemberNo(FindMemberNoRequest request) {
+
+		Member member = memberRepository.findMemberByNameAndPhoneNumber(request.name(), request.phoneNumber())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		String memberEmail = member.getMemberDetail().getEmail();
+		String memberNo = member.getMemberDetail().getMemberNo();
+
+		sendCodeAndSaveMemberNo(memberEmail, memberNo);
+
+		return new SendCodeResponse(memberEmail);
+	}
+
+	@Override
+	public VerifyMemberNoResponse verifyFindMemberNo(VerifyCodeRequest request) {
+
+		String memberNo = verifyCodeAndGetMemberNo(request);
+
+		return new VerifyMemberNoResponse(memberNo);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public SendCodeResponse requestFindPassword(FindPasswordRequest request) {
+
+		Member member = memberRepository.findByMemberNo(request.memberNo())
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		if (!member.getName().equals(request.name())) {
+			throw new BusinessException(MemberError.NAME_MISMATCH);
+		}
+
+		String memberEmail = member.getMemberDetail().getEmail();
+		String memberNo = member.getMemberDetail().getMemberNo();
+
+		sendCodeAndSaveMemberNo(memberEmail, memberNo);
+
+		return new SendCodeResponse(memberEmail);
+	}
+
+	@Override
+	public TemporaryTokenResponse verifyFindPassword(VerifyCodeRequest request) {
+
+		String memberNo = verifyCodeAndGetMemberNo(request);
+		String temporaryToken = tokenProvider.generateTemporaryToken(memberNo); // 5분 동안 유효한 임시토큰 발급
+
+		return new TemporaryTokenResponse(temporaryToken);
+	}
+
 	private Member getCurrentMember() {
 		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
 		return memberRepository.findByMemberNo(currentMemberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+	}
+
+	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {
+		boolean isVerified = memberAuthService.verifyAuthCode(request);
+
+		if (!isVerified) { // 인증 실패 시
+			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
+		}
+
+		String memberNo = redisUtil.getMemberNo(request.email());
+		redisUtil.deleteMemberNo(request.email());
+
+		return memberNo;
+	}
+
+	private void sendCodeAndSaveMemberNo(String email, String memberNo) {
+		redisUtil.saveMemberNo(email, memberNo); // 레디스에 이메일 검증 후 보낼 회원번호 저장
+		memberAuthService.sendAuthCode(email); // 찾아온 이메일로 인증 코드 전송
 	}
 
 }

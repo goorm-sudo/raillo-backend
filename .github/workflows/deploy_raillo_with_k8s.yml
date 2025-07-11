@@ -1,0 +1,52 @@
+name: deploy raillo raillo-backend
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 전체 레포를 루트 기준으로 체크아웃
+      - name: checkout github
+        uses: actions/checkout@v2
+
+      - name: install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "v1.25.9"
+        id: install
+
+      # AWS CLI 설치 및 configure
+      - name: configure aws
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: ap-northeast-2
+
+      # Cluster 세팅
+      - name: update cluster infomation
+        run: aws eks update-kubeconfig --name  raillo --region ap-northeast-2
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: build and push docker image to ecr
+        env:
+          REGISTRY: 134125630963.dkr.ecr.ap-northeast-2.amazonaws.com
+          REPOSITORY: raillo-backend
+          IMAGE_TAG: latest
+        run: |
+          docker build \
+          -t $REGISTRY/$REPOSITORY:$IMAGE_TAG \
+          -f ./Dockerfile .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: eks kubectl apply
+        run: |
+          kubectl rollout restart deployment raillo-backend -n raillo
+        # kubectl apply -f ./k8s/depl_svc.yml

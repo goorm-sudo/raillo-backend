@@ -1,0 +1,63 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import:
+      - optional:file:.env[.properties]
+      - classpath:train-template.yml
+
+  data:
+    redis:
+      host: redis-service   # k8s의 redis 서비스명
+      port: 6379            # redis port
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PW}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+train:
+  schedule:
+    excel:
+      filename: ${TRAIN_SCHEDULE_FILENAME}
+  station-fare:
+    excel:
+      filename: ${STATION_FARE_FILENAME}
+  standing:
+    ratio: 0.15
+
+cors:
+  allowed-origins: http://localhost:3000, https://www.raillo.com
+  allowed-methods: GET, POST, PUT, DELETE
+  allowed-headers: Access-Control-Allow-Origin, Content-type, Access-Control-Allow-Headers, Authorization, X-Requested-With
+
+jwt:
+  secret: ${JWT_KEY}
+
+booking:
+  expiration:
+    reservation: 10
