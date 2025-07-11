@@ -36,5 +36,5 @@ spec:
   commonName: server.raillo.shop
   dnsNames:
     # 추가적인 서브도메인을 추가하고 싶은경우에 여기에 나열
-    - server.raillo.shopkk
+    - server.raillo.shop
 
