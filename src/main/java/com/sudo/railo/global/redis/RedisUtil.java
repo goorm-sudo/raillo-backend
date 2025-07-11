@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import com.sudo.railo.global.exception.error.BusinessException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,8 +19,10 @@ public class RedisUtil {
 	private final RedisTemplate<String, Object> objectRedisTemplate;
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
-	private static final int AUTH_CODE_EXPIRATION_MINUTES = 5;
+	private static final int AUTH_EXPIRATION_MINUTES = 5;
 	private static final int MEMBER_NO_EXPIRATION_MINUTES = 5;
+
+	private static final String UPDATE_EMAIL_PREFIX = "updateEmail:";
 
 	public void save(String key, String value) {
 		stringRedisTemplate.opsForValue().set(key, value);
@@ -75,7 +79,7 @@ public class RedisUtil {
 	/* 이메일 인증 관련 */
 	public void saveAuthCode(String email, String authCode) {
 		String key = "authEmail:" + email;
-		stringRedisTemplate.opsForValue().set(key, authCode, AUTH_CODE_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+		stringRedisTemplate.opsForValue().set(key, authCode, AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
 	}
 
 	public String getAuthCode(String email) {
@@ -101,6 +105,54 @@ public class RedisUtil {
 
 	public void deleteMemberNo(String email) {
 		String key = "memberNo:" + email;
+		stringRedisTemplate.delete(key);
+	}
+
+	public boolean handleUpdateEmailRequest(String email) {
+
+		// 락 전용 키
+		String lockKey = "lock:" + email;
+
+		// 중복 요청 확인용 키
+		String requestKey = UPDATE_EMAIL_PREFIX + email;
+
+		// 동일한 요청이 존재하면 false 반환
+		if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(requestKey))) {
+			log.error("이미 동일한 요청이 존재합니다.");
+			return false;
+		}
+
+		// 락 획득 시도
+		Boolean lockAcquired = stringRedisTemplate.opsForValue()
+			.setIfAbsent(lockKey, "LOCKED", 5, TimeUnit.SECONDS); //5초로 락 설정
+
+		if (lockAcquired != null && lockAcquired) {
+			try {
+				saveUpdateEmailRequest(email);
+			} catch (Exception e) {
+				throw new BusinessException(RedisError.EMAIL_UPDATE_REQUEST_SAVE_FAIL);
+			} finally {
+				releaseLock(lockKey);
+			}
+			deleteUpdateEmailRequest(email);
+			return true;
+		} else {
+			log.error("요청을 처리할 수 없습니다.");
+			return false;
+		}
+	}
+
+	private void releaseLock(String redisKey) {
+		stringRedisTemplate.delete(redisKey);
+	}
+
+	private void saveUpdateEmailRequest(String email) {
+		String key = UPDATE_EMAIL_PREFIX + email;
+		stringRedisTemplate.opsForValue().set(key, "REQUESTED", AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+	}
+
+	private void deleteUpdateEmailRequest(String email) {
+		String key = UPDATE_EMAIL_PREFIX + email;
 		stringRedisTemplate.delete(key);
 	}
 
