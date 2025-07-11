@@ -64,7 +64,7 @@ public class SecurityConfig {
 					.requestMatchers(HttpMethod.POST, "/auth/member-no/**", "/auth/password/**").permitAll()
 					.requestMatchers("/api/v1/guest/register", "/api/v1/trains/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-					.requestMatchers("/actuator/**").permitAll()
+					.requestMatchers("/actuator/**", "/health").permitAll()
 					.anyRequest().authenticated();
 			})
 			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, redisUtil),

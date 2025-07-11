@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raillo-backend
+  namespace: raillo
+spec:
+  # Deployment나 StatefulSet이 유지할 "옛날 ReplicaSet"의 수를 제한하는 옵션. 자원공간의 낭비 방지 및 관리의 편의성.
+  revisionHistoryLimit: 2
+  replicas: 2
+  selector:
+    matchLabels:
+      app: raillo-backend
+  template:
+    metadata:
+      labels:
+        app: raillo-backend
+    spec:
+      containers:
+        - name: raillo-backend
+          image: 134125630963.dkr.ecr.ap-northeast-2.amazonaws.com/raillo-backend:latest
+          ports:
+            - containerPort: 8080  # spring의 포트번호와 일치
+          resources:
+            # 컨테이너가 사용할수 있는 리소스의 최대치
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            # 컨테이너가 시작될떄 보장받아야 하는 최소 자원
+            requests:
+              cpu: "0.5"
+              memory: "250Mi"
+          env:
+            # name값과 yml의 ${변수} 의 변수명과 일치해야함
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: DB_USERNAME
+            - name: DB_PW
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: DB_PW
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: JWT_KEY
+            - name: MAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: MAIL_USERNAME
+            - name: MAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: MAIL_PASSWORD
+            - name: STATION_FARE_FILENAME
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: STATION_FARE_FILENAME
+            - name: TRAIN_SCHEDULE_FILENAME
+              valueFrom:
+                secretKeyRef:
+                  name: raillo-secrets
+                  key: TRAIN_SCHEDULE_FILENAME
+          # 컨테이너 상태 확인을 통해 롤링업데이트 최적화
+          readinessProbe:
+            httpGet:
+              # healthcheck 경로
+              path: /health
+              port: 8080
+            # 컨테이너 시작 후 지연
+            initialDelaySeconds: 10
+            # 확인 반복 주기
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: raillo-backend-service
+  namespace: raillo
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+  selector:
+    app: raillo-backend
