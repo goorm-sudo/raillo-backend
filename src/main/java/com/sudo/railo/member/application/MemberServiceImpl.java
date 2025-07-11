@@ -45,8 +45,6 @@ public class MemberServiceImpl implements MemberService {
 	private final RedisUtil redisUtil;
 	private final TokenProvider tokenProvider;
 
-	private static final String UPDATE_EMAIL_REQUEST_PREFIX = "updateEmail:";
-
 	@Override
 	@Transactional
 	public GuestRegisterResponse guestRegister(GuestRegisterRequest request) {
@@ -125,13 +123,13 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		// 동일한 요청이 이미 있는지 확인
-		String redisKey = UPDATE_EMAIL_REQUEST_PREFIX + newEmail;
-		if (!redisUtil.hasKey(redisKey)) {
+		String redisKey = "updateEmail:" + newEmail;
+		if (redisUtil.hasKey(redisKey)) {
 			throw new BusinessException(MemberError.EMAIL_UPDATE_ALREADY_REQUESTED);
 		}
 
 		// 동일 요청 건이 없으면 같은 이메일에 대한 요청이 들어오지 못하도록 redis 에 등록
-		if (!redisUtil.handleUpdateEmailRequest(redisKey)) {
+		if (!redisUtil.handleUpdateEmailRequest(newEmail)) {
 			throw new BusinessException(RedisError.EMAIL_UPDATE_REQUEST_SAVE_FAIL);
 		}
 
@@ -155,9 +153,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		memberDetail.updateEmail(newEmail);
-
-		String redisKey = UPDATE_EMAIL_REQUEST_PREFIX + newEmail;
-		redisUtil.deleteUpdateEmailRequest(redisKey); // 해당 변경 요청 건 redis 에서 삭제
+		redisUtil.deleteUpdateEmailRequest(newEmail); // 해당 변경 요청 건 redis 에서 삭제
 	}
 
 	@Override
