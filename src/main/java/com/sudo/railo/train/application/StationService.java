@@ -59,4 +59,12 @@ public class StationService {
 		return stationRepository.findByStationNameIn(stationNames).stream()
 			.collect(Collectors.toMap(Station::getStationName, Function.identity()));
 	}
+
+	public Station getStationByName(String stationName, Map<String, Station> stationMap) {
+		Station station = stationMap.get(stationName);
+		if (station == null) {
+			throw new IllegalArgumentException("존재하지 않는 역 이름입니다: " + stationName);
+		}
+		return station;
+	}
 }

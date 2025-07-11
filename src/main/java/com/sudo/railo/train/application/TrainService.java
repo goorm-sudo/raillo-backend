@@ -78,4 +78,12 @@ public class TrainService {
 			.map(Train::getTrainNumber)
 			.toList());
 	}
+
+	public Train getTrainByNumber(int trainNumber, Map<Integer, Train> trainMap) {
+		Train train = trainMap.get(trainNumber);
+		if (train == null) {
+			throw new IllegalArgumentException("존재하지 않는 열차입니다: " + trainNumber);
+		}
+		return train;
+	}
 }
