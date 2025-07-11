@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.redis.RedisError;
 import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
@@ -43,6 +44,8 @@ public class MemberServiceImpl implements MemberService {
 	private final MemberAuthService memberAuthService;
 	private final RedisUtil redisUtil;
 	private final TokenProvider tokenProvider;
+
+	private static final String UPDATE_EMAIL_REQUEST_PREFIX = "updateEmail:";
 
 	@Override
 	@Transactional
@@ -121,10 +124,15 @@ public class MemberServiceImpl implements MemberService {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
 		}
 
-		// Redis 에 이메일 변경 요청 상태 저장 시도
-		boolean isSuccess = redisUtil.handleUpdateEmailRequest(newEmail);
-		if (!isSuccess) {
+		// 동일한 요청이 이미 있는지 확인
+		String redisKey = UPDATE_EMAIL_REQUEST_PREFIX + newEmail;
+		if (!redisUtil.hasKey(redisKey)) {
 			throw new BusinessException(MemberError.EMAIL_UPDATE_ALREADY_REQUESTED);
+		}
+
+		// 동일 요청 건이 없으면 같은 이메일에 대한 요청이 들어오지 못하도록 redis 에 등록
+		if (!redisUtil.handleUpdateEmailRequest(redisKey)) {
+			throw new BusinessException(RedisError.EMAIL_UPDATE_REQUEST_SAVE_FAIL);
 		}
 
 		return memberAuthService.sendAuthCode(newEmail);
@@ -147,6 +155,9 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		memberDetail.updateEmail(newEmail);
+
+		String redisKey = UPDATE_EMAIL_REQUEST_PREFIX + newEmail;
+		redisUtil.deleteUpdateEmailRequest(redisKey); // 해당 변경 요청 건 redis 에서 삭제
 	}
 
 	@Override
