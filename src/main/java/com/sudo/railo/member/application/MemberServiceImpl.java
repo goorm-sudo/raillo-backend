@@ -121,6 +121,12 @@ public class MemberServiceImpl implements MemberService {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
 		}
 
+		// Redis 에 이메일 변경 요청 상태 저장 시도
+		boolean isSuccess = redisUtil.handleUpdateEmailRequest(newEmail);
+		if (!isSuccess) {
+			throw new BusinessException(MemberError.EMAIL_UPDATE_ALREADY_REQUESTED);
+		}
+
 		return memberAuthService.sendAuthCode(newEmail);
 	}
 
