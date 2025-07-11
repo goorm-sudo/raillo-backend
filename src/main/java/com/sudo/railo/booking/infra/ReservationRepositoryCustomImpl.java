@@ -62,7 +62,8 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			.join(stationFare).on(
 				stationFare.departureStation.id.eq(reservation.departureStation.id)
 					.and(stationFare.arrivalStation.id.eq(reservation.arrivalStation.id))
-			);
+			)
+			.orderBy(reservation.expiresAt.asc());
 
 		if (reservationIds != null && !reservationIds.isEmpty()) {
 			query.where(reservation.id.in(reservationIds));
