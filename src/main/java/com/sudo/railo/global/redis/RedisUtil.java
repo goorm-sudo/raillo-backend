@@ -17,8 +17,10 @@ public class RedisUtil {
 	private final RedisTemplate<String, Object> objectRedisTemplate;
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
-	private static final int AUTH_CODE_EXPIRATION_MINUTES = 5;
+	private static final int AUTH_EXPIRATION_MINUTES = 5;
 	private static final int MEMBER_NO_EXPIRATION_MINUTES = 5;
+
+	private static final String UPDATE_EMAIL_PREFIX = "updateEmail:";
 
 	public void save(String key, String value) {
 		stringRedisTemplate.opsForValue().set(key, value);
@@ -75,7 +77,7 @@ public class RedisUtil {
 	/* 이메일 인증 관련 */
 	public void saveAuthCode(String email, String authCode) {
 		String key = "authEmail:" + email;
-		stringRedisTemplate.opsForValue().set(key, authCode, AUTH_CODE_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+		stringRedisTemplate.opsForValue().set(key, authCode, AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
 	}
 
 	public String getAuthCode(String email) {
@@ -101,6 +103,25 @@ public class RedisUtil {
 
 	public void deleteMemberNo(String email) {
 		String key = "memberNo:" + email;
+		stringRedisTemplate.delete(key);
+	}
+
+	public boolean hasKey(String key) {
+		Boolean hasKey = stringRedisTemplate.hasKey(key);
+		return Boolean.TRUE.equals(hasKey);
+	}
+
+	/* 이메일 변경 중복 로직 처리 관련*/
+	public boolean handleUpdateEmailRequest(String email) {
+
+		String key = UPDATE_EMAIL_PREFIX + email;
+		Boolean isSuccess = stringRedisTemplate.opsForValue()
+			.setIfAbsent(key, "REQUESTED", AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+		return isSuccess != null && isSuccess;
+	}
+
+	public void deleteUpdateEmailRequest(String email) {
+		String key = UPDATE_EMAIL_PREFIX + email;
 		stringRedisTemplate.delete(key);
 	}
 

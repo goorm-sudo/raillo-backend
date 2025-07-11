@@ -12,7 +12,6 @@ import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
@@ -58,16 +57,8 @@ public class MemberController implements MemberControllerDocs {
 		return SuccessResponse.of(MemberSuccess.MEMBER_INFO_SUCCESS, response);
 	}
 
-	@PutMapping("/members/email")
-	public SuccessResponse<?> updateEmail(@RequestBody UpdateEmailRequest request) {
-
-		memberService.updateEmail(request);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
-	}
-
 	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatePhoneNumber(@RequestBody UpdatePhoneNumberRequest request) {
+	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request) {
 
 		memberService.updatePhoneNumber(request);
 
@@ -75,7 +66,7 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@PutMapping("/members/password")
-	public SuccessResponse<?> updatePassword(@RequestBody UpdatePasswordRequest request) {
+	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
 
 		memberService.updatePassword(request);
 

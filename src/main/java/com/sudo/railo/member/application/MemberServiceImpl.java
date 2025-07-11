@@ -7,12 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.redis.RedisError;
 import com.sudo.railo.global.redis.RedisUtil;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
+import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
@@ -102,24 +104,56 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	@Transactional
-	public void updateEmail(UpdateEmailRequest request) {
+	@Transactional(readOnly = true)
+	public SendCodeResponse requestUpdateEmail(SendCodeRequest request) {
 
 		Member member = getCurrentMember();
-
 		MemberDetail memberDetail = member.getMemberDetail();
 
+		String newEmail = request.email();
+
 		// 이미 본인 이메일이랑 동일한 이메일로 변경을 요청했을 경우 예외
-		if (memberDetail.getEmail().equals(request.newEmail())) {
+		if (memberDetail.getEmail().equals(newEmail)) {
 			throw new BusinessException(MemberError.SAME_EMAIL);
 		}
 
 		// 다른 회원이 사용중인 이메일을 입력했을 경우 예외
-		if (memberRepository.existsByMemberDetailEmail(request.newEmail())) {
+		if (memberRepository.existsByMemberDetailEmail(newEmail)) {
 			throw new BusinessException(MemberError.DUPLICATE_EMAIL);
 		}
 
-		memberDetail.updateEmail(request.newEmail());
+		// 동일한 요청이 이미 있는지 확인
+		String redisKey = "updateEmail:" + newEmail;
+		if (redisUtil.hasKey(redisKey)) {
+			throw new BusinessException(MemberError.EMAIL_UPDATE_ALREADY_REQUESTED);
+		}
+
+		// 동일 요청 건이 없으면 같은 이메일에 대한 요청이 들어오지 못하도록 redis 에 등록
+		if (!redisUtil.handleUpdateEmailRequest(newEmail)) {
+			throw new BusinessException(RedisError.EMAIL_UPDATE_REQUEST_SAVE_FAIL);
+		}
+
+		return memberAuthService.sendAuthCode(newEmail);
+	}
+
+	@Override
+	@Transactional
+	public void verifyUpdateEmail(UpdateEmailRequest request) {
+
+		Member member = getCurrentMember();
+		MemberDetail memberDetail = member.getMemberDetail();
+
+		String newEmail = request.newEmail();
+		String authCode = request.authCode();
+
+		boolean isVerified = memberAuthService.verifyAuthCode(newEmail, authCode); // 이메일 검증
+
+		if (!isVerified) {
+			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
+		}
+
+		memberDetail.updateEmail(newEmail);
+		redisUtil.deleteUpdateEmailRequest(newEmail); // 해당 변경 요청 건 redis 에서 삭제
 	}
 
 	@Override
@@ -225,7 +259,10 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {
-		boolean isVerified = memberAuthService.verifyAuthCode(request);
+
+		String email = request.email();
+		String authCode = request.authCode();
+		boolean isVerified = memberAuthService.verifyAuthCode(email, authCode);
 
 		if (!isVerified) { // 인증 실패 시
 			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
