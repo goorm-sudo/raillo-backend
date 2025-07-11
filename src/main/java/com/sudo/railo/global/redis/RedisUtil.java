@@ -112,10 +112,11 @@ public class RedisUtil {
 	}
 
 	/* 이메일 변경 중복 로직 처리 관련*/
-	public boolean handleUpdateEmailRequest(String redisKey) {
+	public boolean handleUpdateEmailRequest(String email) {
 
+		String key = UPDATE_EMAIL_PREFIX + email;
 		Boolean isSuccess = stringRedisTemplate.opsForValue()
-			.setIfAbsent(redisKey, "REQUESTED", AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
+			.setIfAbsent(key, "REQUESTED", AUTH_EXPIRATION_MINUTES, TimeUnit.MINUTES);
 		return isSuccess != null && isSuccess;
 	}
 
