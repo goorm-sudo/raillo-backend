@@ -24,6 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class TrainScheduleTemplateService {
 
+	private final TrainService trainService;
+	private final StationService stationService;
 	private final TrainScheduleTemplateRepository trainScheduleTemplateRepository;
 	private final ScheduleStopTemplateRepository scheduleStopTemplateRepository;
 
@@ -76,15 +78,15 @@ public class TrainScheduleTemplateService {
 		ScheduleStopData firstStop = data.getFirstStop();
 		ScheduleStopData lastStop = data.getLastStop();
 
-		Station departureStation = getStation(firstStop.getStationName(), stationMap);
-		Station arrivalStation = getStation(lastStop.getStationName(), stationMap);
+		Station departureStation = stationService.getStationByName(firstStop.getStationName(), stationMap);
+		Station arrivalStation = stationService.getStationByName(lastStop.getStationName(), stationMap);
 
 		return TrainScheduleTemplate.create(
 			data.getScheduleName(),
 			data.getOperatingDay(),
 			firstStop.getDepartureTime(),
 			lastStop.getArrivalTime(),
-			getTrain(data.getTrainData().getTrainNumber(), trainMap),
+			trainService.getTrainByNumber(data.getTrainData().getTrainNumber(), trainMap),
 			departureStation,
 			arrivalStation,
 			createScheduleStopTemplates(data.getScheduleStopData(), stationMap)
@@ -102,24 +104,8 @@ public class TrainScheduleTemplateService {
 				data.getStopOrder(),
 				data.getArrivalTime(),
 				data.getDepartureTime(),
-				getStation(data.getStationName(), stationMap)
+				stationService.getStationByName(data.getStationName(), stationMap)
 			))
 			.toList();
-	}
-
-	private Train getTrain(int trainNumber, Map<Integer, Train> trainMap) {
-		Train train = trainMap.get(trainNumber);
-		if (train == null) {
-			throw new IllegalArgumentException("존재하지 않는 열차입니다: " + trainNumber);
-		}
-		return train;
-	}
-
-	private Station getStation(String stationName, Map<String, Station> stationMap) {
-		Station station = stationMap.get(stationName);
-		if (station == null) {
-			throw new IllegalArgumentException("존재하지 않는 역 이름입니다: " + stationName);
-		}
-		return station;
 	}
 }
