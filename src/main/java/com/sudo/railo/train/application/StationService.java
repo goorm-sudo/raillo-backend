@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.infrastructure.StationRepository;
-import com.sudo.railo.train.infrastructure.jdbc.StationJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class StationService {
 
 	private final StationRepository stationRepository;
-	private final StationJdbcRepository stationJdbcRepository;
 
 	@Transactional(readOnly = true)
 	public Map<String, Station> getStationMap() {
@@ -44,7 +42,7 @@ public class StationService {
 			.toList();
 
 		if (!stations.isEmpty()) {
-			stationJdbcRepository.saveAll(stations);
+			stationRepository.saveAll(stations);
 			log.info("{}개의 역 저장 완료", stations.size());
 		}
 
