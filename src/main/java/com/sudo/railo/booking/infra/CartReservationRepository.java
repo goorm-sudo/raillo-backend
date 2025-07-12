@@ -1,4 +1,4 @@
-package com.sudo.railo.booking.infrastructure;
+package com.sudo.railo.booking.infra;
 
 import java.util.List;
 
