@@ -1,5 +1,6 @@
 package com.sudo.railo.booking.application;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -7,16 +8,23 @@ import java.util.List;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sudo.railo.booking.application.dto.ReservationInfo;
+import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
+import com.sudo.railo.booking.application.dto.request.FareCalculateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationDeleteRequest;
+import com.sudo.railo.booking.application.dto.response.ReservationDetail;
+import com.sudo.railo.booking.application.dto.response.SeatReservationDetail;
 import com.sudo.railo.booking.config.BookingConfig;
 import com.sudo.railo.booking.domain.PassengerSummary;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.ReservationStatus;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infra.ReservationRepository;
+import com.sudo.railo.booking.infra.ReservationRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
@@ -28,7 +36,6 @@ import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,10 +44,12 @@ public class ReservationService {
 
 	private final ObjectMapper objectMapper;
 	private final BookingConfig bookingConfig;
+	private final FareCalculationService fareCalculationService;
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final MemberRepository memberRepository;
 	private final StationRepository stationRepository;
 	private final ReservationRepository reservationRepository;
+	private final ReservationRepositoryCustom reservationRepositoryCustom;
 
 	/***
 	 * 고객용 예매번호를 생성하는 메서드
@@ -127,5 +136,48 @@ public class ReservationService {
 	public void expireReservations() {
 		LocalDateTime now = LocalDateTime.now();
 		reservationRepository.deleteAllByExpiresAtBefore(now);
+	}
+
+	/**
+	 * 예약 ID로 예약 정보을 조회하는 메서드
+	 */
+	@Transactional(readOnly = true)
+	public List<ReservationDetail> getReservationDetail(List<Long> reservationIds) {
+		// 예약 조회
+		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(reservationIds);
+
+		return reservationInfos.stream()
+			.map(info -> ReservationDetail.of(
+				info.reservationId(),
+				info.reservationCode(),
+				String.format("%03d", info.trainNumber()),
+				info.trainName(),
+				info.departureStationName(),
+				info.arrivalStationName(),
+				info.departureTime(),
+				info.arrivalTime(),
+				info.operationDate(),
+				info.expiresAt(),
+				convertToSeatReservationDetail(info.seats())
+			))
+			.toList();
+	}
+
+	private List<SeatReservationDetail> convertToSeatReservationDetail(List<SeatReservationProjection> projection) {
+		return projection.stream()
+			.map(p -> SeatReservationDetail.of(
+				p.getSeatReservationId(),
+				p.getPassengerType(),
+				p.getCarNumber(),
+				p.getCarType(),
+				p.getSeatNumber(),
+				p.getFare(),
+				// 운임 계산
+				fareCalculationService.calculateFare(new FareCalculateRequest(
+					p.getPassengerType(),
+					BigDecimal.valueOf(p.getFare()))
+				).intValue()
+			))
+			.toList();
 	}
 }
