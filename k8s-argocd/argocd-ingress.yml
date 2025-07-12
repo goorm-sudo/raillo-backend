@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-ingress
+  namespace: argocd
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: raillo-issuer # https.yml의 issuer 이름과 일치
+spec:
+  # argocd pod에 --insecure로 https를 사용하지 않는다고 명시해놓았기 때문에
+  # ingress에서 인증처리
+  tls:
+    - hosts:
+        - argo.raillo.shop
+      secretName: argo-raillo-com-tls  # 해당 host에 해당 이름으로 인증서에 secret 생성
+  rules:
+    - host: argo.raillo.shop
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server  # argocd-server의 80포트로 라우팅
+                port:
+                  number: 80
