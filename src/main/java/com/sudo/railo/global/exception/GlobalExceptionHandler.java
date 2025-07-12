@@ -9,6 +9,7 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -31,6 +32,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	/**
+	 * 접근 권한 예외 처리
+	 */
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+		ErrorResponse errorResponse = ErrorResponse.of(GlobalError.FORBIDDEN_ACCESS, ex.getMessage());
+
+		return ResponseEntity
+			.status(HttpStatus.FORBIDDEN)
+			.body(errorResponse);
+	}
 
 	/**
 	 * @RequestBody 누락 처리 : HttpMessageNotReadableException
