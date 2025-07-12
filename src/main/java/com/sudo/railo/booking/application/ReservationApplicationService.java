@@ -23,9 +23,10 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ReservationAllocationService {
+public class ReservationApplicationService {
 
 	private final ReservationService reservationService;
+	private final TicketService ticketService;
 	private final SeatReservationService seatReservationService;
 	private final SeatRepository seatRepository;
 
@@ -55,6 +56,7 @@ public class ReservationAllocationService {
 			PassengerType passengerType = passenger.getPassengerType();
 			int passengerCnt = passenger.getCount();
 			for (int i = 0; i < passengerCnt && idx < seatIds.size(); i++, idx++) {
+				ticketService.createTicket(reservation, passengerType);
 				Seat seat = seatRepository.findById(seatIds.get(idx))
 					.orElseThrow(() -> new BusinessException((BookingError.SEAT_NOT_FOUND)));
 				SeatReservation seatReservation = seatReservationService.reserveNewSeat(reservation, seat,

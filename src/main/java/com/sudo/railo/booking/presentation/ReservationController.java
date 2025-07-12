@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sudo.railo.booking.application.ReservationAllocationService;
+import com.sudo.railo.booking.application.ReservationApplicationService;
 import com.sudo.railo.booking.application.ReservationService;
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationDeleteRequest;
@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReservationController implements ReservationControllerDocs {
 
-	private final ReservationAllocationService reservationAllocationService;
+	private final ReservationApplicationService reservationApplicationService;
 	private final ReservationService reservationService;
 
 	/***
@@ -37,7 +37,7 @@ public class ReservationController implements ReservationControllerDocs {
 		@RequestBody ReservationCreateRequest request,
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
-		ReservationCreateResponse response = reservationAllocationService.createReservation(request, userDetails);
+		ReservationCreateResponse response = reservationApplicationService.createReservation(request, userDetails);
 		return SuccessResponse.of(ReservationSuccess.RESERVATION_CREATE_SUCCESS, response);
 	}
 
