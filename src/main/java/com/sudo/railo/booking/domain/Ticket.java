@@ -74,4 +74,59 @@ public class Ticket {
 
 	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
 	private String purchaseUid;
+
+	/**
+	 * 티켓 결제 상태를 PAID로 변경 (결제 완료 시)
+	 */
+	public void markAsPaid() {
+		// 유효성 검증: RESERVED 상태에서만 PAID로 변경 가능
+		if (this.paymentStatus != PaymentStatus.RESERVED) {
+			throw new IllegalStateException(
+				String.format("티켓 결제 상태가 RESERVED가 아닙니다. 현재 상태: %s (티켓ID: %d)", 
+					this.paymentStatus, this.id)
+			);
+		}
+		
+		this.paymentStatus = PaymentStatus.PAID;
+		this.paymentAt = LocalDateTime.now();
+		
+		// 티켓 상태도 함께 업데이트 (결제 완료 시 발급됨)
+		if (this.status == null) {
+			this.status = TicketStatus.ISSUED;
+		}
+	}
+
+	/**
+	 * 티켓 결제 상태를 CANCELLED로 변경 (결제 취소 시)
+	 */
+	public void markAsCancelled() {
+		// 유효성 검증: RESERVED 상태에서만 CANCELLED로 변경 가능
+		if (this.paymentStatus != PaymentStatus.RESERVED) {
+			throw new IllegalStateException(
+				String.format("티켓 결제 상태가 RESERVED가 아닙니다. 현재 상태: %s (티켓ID: %d)", 
+					this.paymentStatus, this.id)
+			);
+		}
+		
+		this.paymentStatus = PaymentStatus.CANCELLED;
+		this.status = TicketStatus.CANCELLED;
+		this.paymentAt = null; // 결제 취소 시 결제 시간 초기화
+	}
+
+	/**
+	 * 티켓 결제 상태를 REFUNDED로 변경 (환불 완료 시)
+	 */
+	public void markAsRefunded() {
+		// 유효성 검증: PAID 상태에서만 REFUNDED로 변경 가능
+		if (this.paymentStatus != PaymentStatus.PAID) {
+			throw new IllegalStateException(
+				String.format("티켓 결제 상태가 PAID가 아닙니다. 현재 상태: %s (티켓ID: %d)", 
+					this.paymentStatus, this.id)
+			);
+		}
+		
+		this.paymentStatus = PaymentStatus.REFUNDED;
+		this.status = TicketStatus.REFUNDED;
+		this.paymentAt = null; // 환불 시 결제 시간 초기화
+	}
 }

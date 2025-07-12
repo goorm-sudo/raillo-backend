@@ -29,6 +29,9 @@ public interface MemberService {
 
 	String getMemberEmail(String memberNo);
 
+	// 회원의 현재 마일리지 잔액 조회
+	java.math.BigDecimal getMileageBalance(Long memberId);
+
 	SendCodeResponse requestFindMemberNo(FindMemberNoRequest request);
 
 	VerifyMemberNoResponse verifyFindMemberNo(VerifyCodeRequest request);

@@ -1,5 +1,6 @@
 package com.sudo.railo.member.application;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -240,6 +241,18 @@ public class MemberServiceImpl implements MemberService {
 	private void sendCodeAndSaveMemberNo(String email, String memberNo) {
 		redisUtil.saveMemberNo(email, memberNo); // 레디스에 이메일 검증 후 보낼 회원번호 저장
 		memberAuthService.sendAuthCode(email); // 찾아온 이메일로 인증 코드 전송
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getMileageBalance(Long memberId) {
+		Member member = memberRepository.findById(memberId)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		
+		MemberDetail memberDetail = member.getMemberDetail();
+		Long mileage = memberDetail.getTotalMileage();
+		
+		return BigDecimal.valueOf(mileage != null ? mileage : 0L);
 	}
 
 }

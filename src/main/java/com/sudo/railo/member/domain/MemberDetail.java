@@ -46,4 +46,34 @@ public class MemberDetail {
 		this.email = newEmail;
 	}
 
+	/**
+	 * 마일리지 조회 (MemberInfoAdapter 호환성을 위한 메서드)
+	 */
+	public Long getMileage() {
+		return this.totalMileage;
+	}
+
+	/**
+	 * 마일리지 추가
+	 */
+	public void addMileage(Long amount) {
+		if (amount < 0) {
+			throw new IllegalArgumentException("마일리지 추가 금액은 0보다 커야 합니다");
+		}
+		this.totalMileage += amount;
+	}
+
+	/**
+	 * 마일리지 차감
+	 */
+	public void useMileage(Long amount) {
+		if (amount < 0) {
+			throw new IllegalArgumentException("마일리지 사용 금액은 0보다 커야 합니다");
+		}
+		if (this.totalMileage < amount) {
+			throw new IllegalArgumentException("마일리지가 부족합니다");
+		}
+		this.totalMileage -= amount;
+	}
+
 }

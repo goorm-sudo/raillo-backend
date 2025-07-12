@@ -2,6 +2,7 @@ package com.sudo.railo.train.application;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -414,4 +415,44 @@ public class TrainScheduleService {
 		boolean canReserveStanding, int maxOccupancyInRoute
 	) {
 	}
+
+	/**
+	 * 노선 정보 조회 (Payment 도메인용)
+	 * @param trainScheduleId 열차 스케줄 ID
+	 * @return "출발역명 → 도착역명" 형식의 노선 정보
+	 */
+	public String getRouteInfo(Long trainScheduleId) {
+		TrainSchedule trainSchedule = trainScheduleRepository.findById(trainScheduleId)
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.TRAIN_SCHEDULE_DETAIL_NOT_FOUND));
+		
+		return trainSchedule.getDepartureStation().getStationName() + " → " + 
+			   trainSchedule.getArrivalStation().getStationName();
+	}
+	
+	/**
+	 * 열차 출발/도착 시간 정보 조회 (Payment 도메인용)
+	 * @param trainScheduleId 열차 스케줄 ID
+	 * @return 열차 시간 정보 (출발 시간, 예정 도착 시간, 실제 도착 시간)
+	 */
+	public TrainTimeInfo getTrainTimeInfo(Long trainScheduleId) {
+		TrainSchedule trainSchedule = trainScheduleRepository.findById(trainScheduleId)
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.TRAIN_SCHEDULE_DETAIL_NOT_FOUND));
+		
+		LocalDateTime departureDateTime = trainSchedule.getOperationDate().atTime(trainSchedule.getDepartureTime());
+		LocalDateTime scheduledArrivalDateTime = trainSchedule.getOperationDate().atTime(trainSchedule.getArrivalTime());
+		LocalDateTime actualArrivalDateTime = trainSchedule.getActualArrivalTime();
+		Integer delayMinutes = trainSchedule.getDelayMinutes();
+		
+		return new TrainTimeInfo(departureDateTime, scheduledArrivalDateTime, actualArrivalDateTime, delayMinutes);
+	}
+	
+	/**
+	 * 열차 시간 정보 DTO
+	 */
+	public record TrainTimeInfo(
+		LocalDateTime departureTime,
+		LocalDateTime scheduledArrivalTime,
+		LocalDateTime actualArrivalTime,
+		Integer delayMinutes
+	) {}
 }

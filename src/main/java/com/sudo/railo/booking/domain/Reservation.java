@@ -80,4 +80,52 @@ public class Reservation {
 	private LocalDateTime paidAt;
 
 	private LocalDateTime cancelledAt;
+
+	/**
+	 * 예약 상태를 PAID로 변경 (결제 완료 시)
+	 */
+	public void markAsPaid() {
+		// 유효성 검증: RESERVED 상태에서만 PAID로 변경 가능
+		if (this.reservationStatus != ReservationStatus.RESERVED) {
+			throw new IllegalStateException(
+				String.format("예약 상태가 RESERVED가 아닙니다. 현재 상태: %s (예약ID: %d)", 
+					this.reservationStatus, this.id)
+			);
+		}
+		
+		this.reservationStatus = ReservationStatus.PAID;
+		this.paidAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 예약 상태를 CANCELLED로 변경 (결제 취소 시)
+	 */
+	public void markAsCancelled() {
+		// 유효성 검증: RESERVED 상태에서만 CANCELLED로 변경 가능
+		if (this.reservationStatus != ReservationStatus.RESERVED) {
+			throw new IllegalStateException(
+				String.format("예약 상태가 RESERVED가 아닙니다. 현재 상태: %s (예약ID: %d)", 
+					this.reservationStatus, this.id)
+			);
+		}
+		
+		this.reservationStatus = ReservationStatus.CANCELLED;
+		this.cancelledAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 예약 상태를 REFUNDED로 변경 (환불 완료 시)
+	 */
+	public void markAsRefunded() {
+		// 유효성 검증: PAID 상태에서만 REFUNDED로 변경 가능
+		if (this.reservationStatus != ReservationStatus.PAID) {
+			throw new IllegalStateException(
+				String.format("예약 상태가 PAID가 아닙니다. 현재 상태: %s (예약ID: %d)", 
+					this.reservationStatus, this.id)
+			);
+		}
+		
+		this.reservationStatus = ReservationStatus.REFUNDED;
+		this.cancelledAt = LocalDateTime.now();
+	}
 }

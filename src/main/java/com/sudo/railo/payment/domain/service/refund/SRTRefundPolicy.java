@@ -1,0 +1,83 @@
+package com.sudo.railo.payment.domain.service.refund;
+
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * SRT 환불 정책 구현
+ * SRT 열차에 적용되는 환불 정책
+ *
+ * SRT도 KORAIL과 동일한 환불 정책을 적용:
+ * - 열차 출발 전까지: 위약금 없음
+ * - 열차 출발 후 20분까지: 위약금 30% 부과
+ * - 열차 출발 후 60분까지: 위약금 40% 부과
+ * - 열차 도착 시간까지: 위약금 70% 부과
+ * - 열차 도착 시간 이후: 반환 불가
+ */
+@Slf4j
+@Component
+public class SRTRefundPolicy implements RefundPolicyService {
+
+	// 환불 수수료율 상수 (KORAIL과 동일)
+	private static final BigDecimal NO_FEE = BigDecimal.ZERO;
+	private static final BigDecimal FEE_30_PERCENT = new BigDecimal("0.3");
+	private static final BigDecimal FEE_40_PERCENT = new BigDecimal("0.4");
+	private static final BigDecimal FEE_70_PERCENT = new BigDecimal("0.7");
+	private static final BigDecimal FULL_FEE = BigDecimal.ONE;
+
+	// 시간 기준 상수 (분)
+	private static final long MINUTES_20 = 20;
+	private static final long MINUTES_60 = 60;
+
+	@Override
+	public BigDecimal calculateRefundFeeRate(LocalDateTime departureTime,
+		LocalDateTime arrivalTime,
+		LocalDateTime requestTime) {
+		log.debug("SRT 환불 수수료 계산 - 출발: {}, 도착: {}, 요청: {}",
+			departureTime, arrivalTime, requestTime);
+
+		// 1. 도착 후 환불 요청 - 환불 불가 (100% 수수료)
+		if (requestTime.isAfter(arrivalTime)) {
+			log.info("도착 후 환불 요청 - 환불 불가");
+			return FULL_FEE;
+		}
+
+		// 2. 출발 전 환불 - 수수료 없음
+		if (requestTime.isBefore(departureTime)) {
+			log.info("출발 전 환불 요청 - 수수료 없음");
+			return NO_FEE;
+		}
+
+		// 3. 출발 후 ~ 도착 전 환불 - 경과 시간에 따른 수수료
+		long minutesAfterDeparture = Duration.between(departureTime, requestTime).toMinutes();
+
+		BigDecimal feeRate;
+		if (minutesAfterDeparture <= MINUTES_20) {
+			feeRate = FEE_30_PERCENT;
+			log.info("출발 후 {}분 이내 환불 - 30% 수수료", minutesAfterDeparture);
+		} else if (minutesAfterDeparture <= MINUTES_60) {
+			feeRate = FEE_40_PERCENT;
+			log.info("출발 후 {}분 이내 환불 - 40% 수수료", minutesAfterDeparture);
+		} else {
+			feeRate = FEE_70_PERCENT;
+			log.info("출발 후 {}분 초과 환불 - 70% 수수료", minutesAfterDeparture);
+		}
+
+		return feeRate;
+	}
+
+	@Override
+	public boolean supports(String operator) {
+		return "SRT".equalsIgnoreCase(operator);
+	}
+
+	@Override
+	public String getPolicyName() {
+		return "SRT 환불 정책";
+	}
+}

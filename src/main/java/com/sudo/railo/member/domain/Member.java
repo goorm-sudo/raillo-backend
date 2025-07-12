@@ -65,4 +65,34 @@ public class Member extends BaseEntity {
 	public void updatePassword(String password) {
 		this.password = password;
 	}
+
+	/**
+	 * 마일리지 추가
+	 */
+	public void addMileage(Long amount) {
+		if (this.memberDetail == null) {
+			throw new IllegalStateException("회원 상세 정보가 없습니다");
+		}
+		this.memberDetail.addMileage(amount);
+	}
+
+	/**
+	 * 마일리지 차감
+	 */
+	public void useMileage(Long amount) {
+		if (this.memberDetail == null) {
+			throw new IllegalStateException("회원 상세 정보가 없습니다");
+		}
+		this.memberDetail.useMileage(amount);
+	}
+
+	/**
+	 * 현재 마일리지 조회
+	 */
+	public Long getTotalMileage() {
+		if (this.memberDetail == null) {
+			return 0L;
+		}
+		return this.memberDetail.getTotalMileage();
+	}
 }
