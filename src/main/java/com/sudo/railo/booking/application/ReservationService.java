@@ -139,6 +139,27 @@ public class ReservationService {
 	}
 
 	/**
+	 * 예약을 조회하는 메서드
+	 * @param memberNo 회원 번호
+	 * @param reservationId 예약 ID
+	 * @return 예약
+	 */
+	@Transactional(readOnly = true)
+	public ReservationDetail getReservation(String memberNo, Long reservationId) {
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(
+			member.getId(), List.of(reservationId));
+
+		if (reservationInfos.isEmpty()) {
+			throw new BusinessException(BookingError.RESERVATION_NOT_FOUND);
+		}
+
+		return convertToReservationDetail(reservationInfos).get(0);
+	}
+
+	/**
 	 * 예약 목록을 조회하는 메서드
 	 * @param memberNo 회원 번호
 	 * @return 예약 목록
