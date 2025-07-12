@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.stereotype.Service;
@@ -31,56 +30,65 @@ public class StationFareCreator {
 	private final StationFareRepository stationFareRepository;
 
 	@Transactional
-	public void createStationFare() {
-		try {
-			log.info("운임표 생성 시작");
+	public void parseStationFare() {
+		log.info("운임표 파싱 시작");
 
-			List<Sheet> sheets = parser.getSheets();
-			Set<StationFareData> stationFareData = new HashSet<>();
-			sheets.forEach(sheet -> {
-				log.info("{} 시트 파싱 시작", sheet.getSheetName());
+		List<Sheet> sheets = parser.getSheets();
+		Set<StationFareData> stationFareData = new HashSet<>();
 
-				StationFareHeader header = parser.getHeader(sheet);
-				List<StationFareData> data = parser.getStationFareData(sheet, header);
-				stationFareData.addAll(data);
+		for (Sheet sheet : sheets) {
+			// 운임표 헤더 위치 파싱
+			StationFareHeader header = parser.getHeader(sheet);
 
-				log.info("{} 시트 파싱 종료", sheet.getSheetName());
-			});
-
-			persistStationFare(stationFareData);
-
-			log.info("운임표 생성 완료");
-		} catch (Exception ex) {
-			log.error("운임표 생성 중 예외가 발생했습니다", ex);
+			// 운임표 파싱
+			List<StationFareData> data = parser.getStationFareData(sheet, header);
+			stationFareData.addAll(data);
 		}
+
+		// 운임표 저장
+		persistStationFare(stationFareData);
+
+		log.info("운임표 파싱 종료");
 	}
 
 	private void persistStationFare(Set<StationFareData> stationFareData) {
-		List<String> stationNames = stationFareData.stream()
-			.flatMap(data -> Stream.of(data.departureStation(), data.arrivalStation()))
-			.distinct()
-			.toList();
-		Map<String, Station> stations = stationService.findOrCreateStation(stationNames);
+		// 역 조회 및 저장
+		Map<String, Station> stationMap = stationService.getStationMap();
+
+		// 운임표 삭제
+		deleteAllStationFare();
 
 		List<StationFare> stationFares = new ArrayList<>();
-		stationFares.addAll(stationFareData.stream()
-			.map(data -> StationFare.create(
-				stations.get(data.departureStation()),
-				stations.get(data.arrivalStation()),
-				data.standardFare(),
-				data.firstClassFare()
-			)).toList());
+		stationFareData.forEach(data -> {
 
-		// TODO: 역방향 운임
-		stationFares.addAll(stationFareData.stream()
-			.map(data -> StationFare.create(
-				stations.get(data.arrivalStation()),
-				stations.get(data.departureStation()),
+			Station departureStation = stationService.getStationByName(data.departureStation(), stationMap);
+			Station arrivalStation = stationService.getStationByName(data.arrivalStation(), stationMap);
+
+			// 순방향 운임
+			stationFares.add(StationFare.create(
+				departureStation,
+				arrivalStation,
 				data.standardFare(),
 				data.firstClassFare()
-			)).toList());
+			));
+
+			// 역방향 운임
+			stationFares.add(StationFare.create(
+				arrivalStation,
+				departureStation,
+				data.standardFare(),
+				data.firstClassFare()
+			));
+		});
 
 		stationFareRepository.saveAll(stationFares);
 		log.info("{}개 운임 데이터 저장 완료", stationFares.size());
+	}
+
+	/**
+	 * 운임표 삭제 메서드
+	 */
+	private void deleteAllStationFare() {
+		stationFareRepository.deleteAllInBatch();
 	}
 }
