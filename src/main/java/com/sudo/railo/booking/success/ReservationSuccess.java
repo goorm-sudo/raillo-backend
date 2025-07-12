@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 public enum ReservationSuccess implements SuccessCode {
 
 	RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "예약이 성공적으로 생성되었습니다."),
-	RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "예약이 성공적으로 삭제되었습니다.");
+	RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "예약이 성공적으로 삭제되었습니다."),
+	RESERVATION_LIST_SUCCESS(HttpStatus.OK, "예약 목록을 성공적으로 조회했습니다."),
+	RESERVATION_DETAIL_SUCCESS(HttpStatus.OK, "예약 정보를 성공적으로 조회했습니다.");
 
 	private final HttpStatus status;
 	private final String message;

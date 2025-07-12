@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.booking.application.dto.ReservationInfo;
 import com.sudo.railo.booking.application.dto.request.CartReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.response.ReservationDetail;
 import com.sudo.railo.booking.domain.CartReservation;
@@ -12,6 +13,7 @@ import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infra.CartReservationRepository;
 import com.sudo.railo.booking.infra.ReservationRepository;
+import com.sudo.railo.booking.infra.ReservationRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
@@ -28,6 +30,7 @@ public class CartReservationService {
 	private final ReservationService reservationService;
 	private final MemberRepository memberRepository;
 	private final ReservationRepository reservationRepository;
+	private final ReservationRepositoryCustom reservationRepositoryCustom;
 	private final CartReservationRepository cartReservationRepository;
 
 	/**
@@ -65,7 +68,9 @@ public class CartReservationService {
 		List<Long> reservationIds = cartReservationRepository.findReservationIdsByMember(member);
 
 		// 예약 조회
-		return reservationService.getReservationDetail(reservationIds);
+		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(
+			member.getId(), reservationIds);
+		return reservationService.convertToReservationDetail(reservationInfos);
 	}
 
 	private void validateReservationAccess(Member member, Reservation reservation) {
