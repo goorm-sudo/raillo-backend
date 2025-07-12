@@ -22,7 +22,10 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        order_inserts: true
         format_sql: true
+        jdbc:
+          batch_size: 500
 
   mail:
     host: smtp.gmail.com
