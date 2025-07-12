@@ -34,7 +34,12 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public List<ReservationInfo> findReservationDetail(List<Long> reservationIds) {
+	public List<ReservationInfo> findReservationDetail(Long memberId) {
+		return findReservationDetail(memberId, List.of());
+	}
+
+	@Override
+	public List<ReservationInfo> findReservationDetail(Long memberId, List<Long> reservationIds) {
 		QStation departureStation = new QStation("departureStation");
 		QStation arrivalStation = new QStation("arrivalStation");
 
@@ -63,6 +68,7 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 				stationFare.departureStation.id.eq(reservation.departureStation.id)
 					.and(stationFare.arrivalStation.id.eq(reservation.arrivalStation.id))
 			)
+			.where(reservation.member.id.eq(memberId))
 			.orderBy(reservation.expiresAt.asc());
 
 		if (reservationIds != null && !reservationIds.isEmpty()) {

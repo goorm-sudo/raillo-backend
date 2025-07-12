@@ -6,5 +6,7 @@ import com.sudo.railo.booking.application.dto.ReservationInfo;
 
 public interface ReservationRepositoryCustom {
 
-	List<ReservationInfo> findReservationDetail(List<Long> reservationIds);
+	List<ReservationInfo> findReservationDetail(Long memberId);
+
+	List<ReservationInfo> findReservationDetail(Long memberId, List<Long> reservationIds);
 }
