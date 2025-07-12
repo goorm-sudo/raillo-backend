@@ -61,3 +61,13 @@ jwt:
 booking:
   expiration:
     reservation: 10
+
+# Prometheus
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, metrics
+  endpoint:
+    prometheus:
+      enabled: true
