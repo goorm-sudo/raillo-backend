@@ -42,6 +42,10 @@ public class Ticket extends BaseEntity {
 	@JoinColumn(name = "reservation_id")
 	private Reservation reservation;
 
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "seat_reservation_id", nullable = false, unique = true)
+	private SeatReservation seatReservation;
+
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "qr_id", unique = true)
 	private Qr qr;
