@@ -63,7 +63,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private String getTokenType(String jwt) {
 		Claims claims = tokenProvider.parseClaims(jwt);
-		return claims.get("tokenType", String.class);
+		return claims.get("auth", String.class);
 	}
 
 }
