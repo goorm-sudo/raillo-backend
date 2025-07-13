@@ -22,6 +22,7 @@ import com.sudo.railo.booking.application.dto.projection.QReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.QSeatReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.ReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
+import com.sudo.railo.booking.domain.ReservationStatus;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.type.CarType;
 
@@ -68,7 +69,10 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 				stationFare.departureStation.id.eq(reservation.departureStation.id)
 					.and(stationFare.arrivalStation.id.eq(reservation.arrivalStation.id))
 			)
-			.where(reservation.member.id.eq(memberId))
+			.where(
+				reservation.member.id.eq(memberId),
+				reservation.reservationStatus.eq(ReservationStatus.RESERVED)
+			)
 			.orderBy(reservation.expiresAt.asc());
 
 		if (reservationIds != null && !reservationIds.isEmpty()) {
