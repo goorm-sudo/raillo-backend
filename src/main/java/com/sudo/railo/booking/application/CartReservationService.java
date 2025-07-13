@@ -67,6 +67,11 @@ public class CartReservationService {
 		// 장바구니에 등록된 예약 ID 조회
 		List<Long> reservationIds = cartReservationRepository.findReservationIdsByMember(member);
 
+		// 장바구니가 비어있다면 빈 응답 반환
+		if (reservationIds.isEmpty()) {
+			return List.of();
+		}
+
 		// 예약 조회
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(
 			member.getId(), reservationIds);
