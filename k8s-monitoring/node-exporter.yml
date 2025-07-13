@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+# DaemonSet은 클러스터 내 모든 노드에 Pod를 하나씩 자동으로 배포
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+        - name: node-exporter
+          image: prom/node-exporter
+          ports:
+            - containerPort: 9100  # Pod 내부 포트
+              # 컨테이너의 포트를 노드(호스트) 자체의 포트로 직접 노출하겠다는 의미
+              # 모든 node_exporter Pod에 직접 접근하도록 함
+              hostPort: 9100
+          volumeMounts:
+            # volumeMounts : 실제경로의 파일을 컨테이너내의 경로에 올림
+            # proc : CPU, 메모리, 프로세스 등의 실시간 정보 제공
+            # sys : 커널 상태, 디바이스, 하드웨어 정보 등
+            # root : 디스크 사용량
+            - name: proc
+              mountPath: /host/proc  # 컨테이너 내부에 해당 경로로 기록
+              readOnly: true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /rootfs
+              readOnly: true
+      volumes:
+        # 각 path는 EC2 인스턴스 호스트의 Linux path이다.
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: node-exporter-service
+#   namespace: monitoring
+# spec:
+#   selector:
+#     app: node-exporter
+#   ports:
+#     - port: 9100
+#       targetPort: 9100
