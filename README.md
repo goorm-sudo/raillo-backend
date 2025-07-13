@@ -1,1 +1,1 @@
-<img width="1920" height="1080" alt="Raillo-Server-Architecture" src="https://github.com/user-attachments/assets/37e15f65-796f-412a-a84f-d3c42072f3ea" />
+<img width="1920" height="1080" alt="Raillo-Server-Architecture" src="https://github.com/user-attachments/assets/32c23601-05e8-4298-b9af-0d8313ff4cf7" />
