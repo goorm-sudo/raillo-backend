@@ -106,11 +106,6 @@ public class RedisUtil {
 		stringRedisTemplate.delete(key);
 	}
 
-	public boolean hasKey(String key) {
-		Boolean hasKey = stringRedisTemplate.hasKey(key);
-		return Boolean.TRUE.equals(hasKey);
-	}
-
 	/* 이메일 변경 중복 로직 처리 관련*/
 	public boolean handleUpdateEmailRequest(String email) {
 
