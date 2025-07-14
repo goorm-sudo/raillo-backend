@@ -20,7 +20,8 @@ public enum MemberError implements ErrorCode {
 	DUPLICATE_PHONE_NUMBER("이미 사용 중인 휴대폰 번호입니다.", HttpStatus.CONFLICT, "M_007"),
 	SAME_EMAIL("현재 사용중인 이메일과 동일합니다.", HttpStatus.CONFLICT, "M_008"),
 	SAME_PASSWORD("현재 사용중인 비밀번호와 동일합니다.", HttpStatus.CONFLICT, "M_009"),
-	NAME_MISMATCH("이름이 일치하지 않습니다.", HttpStatus.BAD_REQUEST, "M_010");
+	NAME_MISMATCH("이름이 일치하지 않습니다.", HttpStatus.BAD_REQUEST, "M_010"),
+	EMAIL_UPDATE_ALREADY_REQUESTED("해당 이메일에 대한 변경 요청이 이미 처리중입니다.", HttpStatus.CONFLICT, "M_011");
 
 	private final String message;
 	private final HttpStatus status;

@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monitoring-raillo-com-tls
+  namespace: monitoring
+spec:
+  secretName: monitoring-raillo-com-tls
+  duration: 2160h #90day
+  renewBefore: 360h #before 15day
+  issuerRef: # ClusterIssuer 는 기존 것을 재사용
+    name: raillo-issuer
+    kind: ClusterIssuer  # 어떤 인증 기관에서 어떤 인증서 종류를 발급받을 것인지에 대한 정의
+  commonName: monitoring.raillo.shop
+  dnsNames:
+    - monitoring.raillo.shop  # Ingress 의 host 이름과 일치

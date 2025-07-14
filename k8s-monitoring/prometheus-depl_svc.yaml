@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      # serviceAccountName : Kubernetes에서 Pod에 역할 부여
+      # rabc에서 만든 ServiceAccount를 Prometheus Pod에 연결
+      # Prometheus는 각 node에 접근 권한 부여, raillo-backend(spring), node-exporter로부터 정보를 수집
+      serviceAccountName: prometheus
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          args:
+            # prometheus-config.yml에서 정의한 prometheus.yml 내용을 가져옴
+            # 아래 volumnMount를 통해 저장된 prometheus.yml 파일을 read
+            # 이 파일을 기반으로 node-exporter에서 시스템 정보를 수집
+            - "--config.file=/etc/prometheus/prometheus.yml"
+          ports:
+            - containerPort: 9090
+          resources:
+            # 컨테이너가 사용할수 있는 리소스의 최대치
+            limits:
+              cpu: "1"
+              memory: "500Mi"
+            # 컨테이너가 시작될떄 보장받아야 하는 최소 자원
+            requests:
+              cpu: "0.5"
+              memory: "250Mi"
+          volumeMounts: # 어디에 기록할 것인지
+            - name: config-volume
+              mountPath: /etc/prometheus
+              # 아래의 volumes에 저장된 config설정을 위 volumeMount로 즉, 컨테이너 내의 /etc/prometheus에 저장하는것
+      volumes: # 어디서 가져올 것인지
+        - name: config-volume
+          configMap:
+            name: prometheus-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+spec:
+  ports:
+    - port: 9090
+      targetPort: 9090 # 위에서 정의한 Pod의 Port
+  selector:
+    app: prometheus

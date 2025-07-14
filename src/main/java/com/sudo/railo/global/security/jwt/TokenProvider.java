@@ -129,7 +129,7 @@ public class TokenProvider {
 		return Jwts.builder()
 			.setHeaderParam(Header.TYPE, Header.JWT_TYPE)
 			.setSubject(memberNo)
-			.claim("tokenType", "TEMPORARY_TOKEN")
+			.claim(AUTHORITIES_KEY, "TEMPORARY_TOKEN")
 			.setExpiration(temporaryTokenExpiresIn)
 			.signWith(key, SignatureAlgorithm.HS512)
 			.compact();
