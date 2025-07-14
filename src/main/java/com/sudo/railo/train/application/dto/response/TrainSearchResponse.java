@@ -43,12 +43,12 @@ public record TrainSearchResponse(
 ) {
 	public TrainSearchResponse {
 		if (travelTime == null) {
-			// 자정을 지난 도착일 경우 다음날로 간주
-			if (arrivalTime.isBefore(departureTime)) {
-				travelTime = Duration.between(departureTime, arrivalTime.plusHours(24));
-			} else {
-				travelTime = Duration.between(departureTime, arrivalTime);
+			Duration duration = Duration.between(departureTime, arrivalTime);
+			// 도착 시간이 출발 시간보다 빠르면 다음 날 도착으로 간주
+			if (duration.isNegative()) {
+				duration = duration.plusHours(24);
 			}
+			travelTime = duration;
 		}
 	}
 
