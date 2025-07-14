@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.excel.StationFareData;
 import com.sudo.railo.train.application.dto.excel.StationFareHeader;
@@ -29,7 +28,6 @@ public class StationFareCreator {
 	private final StationService stationService;
 	private final StationFareRepository stationFareRepository;
 
-	@Transactional
 	public void parseStationFare() {
 		log.info("운임표 파싱 시작");
 
