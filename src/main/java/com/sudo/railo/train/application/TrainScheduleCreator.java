@@ -1,6 +1,8 @@
 package com.sudo.railo.train.application;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -8,6 +10,7 @@ import java.util.Set;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.excel.TrainData;
 import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
@@ -36,6 +39,10 @@ public class TrainScheduleCreator {
 	private final TrainScheduleJdbcRepository trainScheduleJdbcRepository;
 	private final ScheduleStopService scheduleStopService;
 
+	/**
+	 * 마지막 운행일 기준 다음 날 스케줄 생성
+	 */
+	@Transactional
 	public void createTrainSchedule() {
 		LocalDate localDate = trainScheduleRepository.findLastOperationDate()
 			.map(date -> date.plusDays(1))
@@ -44,7 +51,9 @@ public class TrainScheduleCreator {
 		createTrainSchedule(List.of(localDate));
 	}
 
+	@Transactional
 	public void createTrainSchedule(List<LocalDate> dates) {
+		List<TrainSchedule> trainSchedules = new ArrayList<>();
 		List<TrainScheduleTemplate> templates = trainScheduleTemplateService.findTrainScheduleTemplate();
 
 		// 운행 스케줄이 존재하는 날짜 조회
@@ -60,22 +69,22 @@ public class TrainScheduleCreator {
 			}
 
 			// 스케줄 템플릿에서 운행일에 해당하는 스케줄만 추가
-			List<TrainSchedule> trainSchedules = templates.stream()
+			trainSchedules.addAll(templates.stream()
 				.filter(template -> OperatingDayUtil.isOperatingDay(date, template.getOperatingDay()))
 				.map(template -> TrainSchedule.create(date, template))
-				.toList();
+				.toList());
+		}
 
-			if (!trainSchedules.isEmpty()) {
-				// 스케줄 저장
-				trainScheduleJdbcRepository.saveAll(trainSchedules);
-				log.info("{}개의 운행 스케줄 저장 완료", trainSchedules.size());
+		if (!trainSchedules.isEmpty()) {
+			// 스케줄 저장
+			trainScheduleJdbcRepository.saveAll(trainSchedules);
+			log.info("{}개의 운행 스케줄 저장 완료", trainSchedules.size());
 
-				// 정차역 생성
-				scheduleStopService.createScheduleStops(
-					fetchTrainSchedules(trainSchedules, newDates),
-					templates
-				);
-			}
+			// 정차역 생성
+			scheduleStopService.createScheduleStops(
+				fetchTrainSchedules(trainSchedules, newDates),
+				templates
+			);
 		}
 	}
 
@@ -93,10 +102,13 @@ public class TrainScheduleCreator {
 	/**
 	 * 스케줄 파싱
 	 */
+	@Transactional
 	public void parseTrainSchedule() {
 		log.info("스케줄 파싱 시작");
 
 		List<Sheet> sheets = parser.getSheets();
+		Set<String> stationNames = new LinkedHashSet<>();
+		List<TrainScheduleData> trainScheduleData = new ArrayList<>();
 
 		for (Sheet sheet : sheets) {
 			List<CellAddress> addresses = getFirstCellAddresses(sheet);
@@ -104,27 +116,24 @@ public class TrainScheduleCreator {
 			for (CellAddress address : addresses) {
 
 				// 역 이름 파싱
-				List<String> stationNames = parser.parseStationNames(sheet, address);
+				stationNames.addAll(parser.parseStationNames(sheet, address));
 
 				// 스케줄 파싱
-				List<TrainScheduleData> trainScheduleData = parser.parseTrainSchedule(sheet, address);
-
-				// 파싱 결과 저장
-				persistTrainSchedule(stationNames, trainScheduleData);
-				log.info("{} 시트 파싱 완료", sheet.getSheetName());
+				trainScheduleData.addAll(parser.parseTrainSchedule(sheet, address));
 			}
 		}
 
+		// 파싱 결과 저장
+		persistTrainSchedule(stationNames, trainScheduleData);
 		log.info("스케줄 파싱 종료");
 	}
 
 	/**
 	 * 파싱 결과 저장
 	 */
-	private void persistTrainSchedule(List<String> stationNames, List<TrainScheduleData> trainScheduleData) {
+	private void persistTrainSchedule(Set<String> stationNames, List<TrainScheduleData> trainScheduleData) {
 		// 역 조회 및 저장
 		Map<String, Station> stationMap = stationService.findOrCreateStations(stationNames);
-		log.info("역 저장 완료");
 
 		// 스케줄에서 열차 데이터 분리
 		List<TrainData> trainData = trainScheduleData.stream()
@@ -133,11 +142,9 @@ public class TrainScheduleCreator {
 
 		// 열차 조회 및 저장
 		Map<Integer, Train> trainMap = trainService.findOrCreateTrains(trainData);
-		log.info("열차 저장 완료");
 
 		// 스케줄 템플릿 저장
 		trainScheduleTemplateService.createTrainScheduleTemplate(trainScheduleData, stationMap, trainMap);
-		log.info("템플릿 저장 완료");
 	}
 
 	/**
