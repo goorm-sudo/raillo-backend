@@ -1,0 +1,36 @@
+# prometheus-config.yml
+# Prometheus의 동작 방식 정의 - 필요한 정보를 수집할 방식 명시
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  # Prometheus가 node-exporter가 수집한 노드(서버)의 시스템 정보를 15초마다 데이터를 주기적으로 받아 저장하고 처리 => prometheus.yml로 저장
+  #  <노드 IP>:10250 : Prometheus가 k8s 노드를 자동 탐색할 때 사용하는 기본 주소(__address__라벨이 붙어있음). 이것을 :9100 으로 대체
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+
+    scrape_configs:
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - source_labels: [ __address__ ]
+            regex: '(.*):10250'
+            replacement: '${1}:9100'
+            target_label: __address__
+      - job_name: 'raillo-backend'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [ __meta_kubernetes_pod_label_app ]
+            action: keep
+            regex: raillo-backend
+          - source_labels: [ __meta_kubernetes_pod_container_port_number ]
+            action: keep
+            regex: "8080"
+          - target_label: __metrics_path__
+            replacement: /actuator/prometheus
