@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.excel.ScheduleStopData;
 import com.sudo.railo.train.application.dto.excel.TrainScheduleData;
@@ -35,11 +36,15 @@ public class TrainScheduleTemplateService {
 		return trainScheduleTemplateRepository.findAllWithScheduleStops();
 	}
 
+	/**
+	 * 스케줄 템플릿 저장
+	 */
+	@Transactional
 	public void createTrainScheduleTemplate(List<TrainScheduleData> trainScheduleData,
 		Map<String, Station> stationMap, Map<Integer, Train> trainMap) {
 
 		// 스케줄 템플릿 삭제
-		// deleteAllTrainSchedule();
+		deleteAllTrainSchedule();
 
 		// 스케줄 템플릿 생성
 		List<TrainScheduleTemplate> trainScheduleTemplates = new ArrayList<>();
