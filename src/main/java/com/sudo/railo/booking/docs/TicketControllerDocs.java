@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.sudo.railo.booking.domain.Ticket;
+import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
 import com.sudo.railo.global.success.SuccessResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,5 +25,5 @@ public interface TicketControllerDocs {
 		@ApiResponse(responseCode = "404", description = "유저를 찾을 수 없습니다."),
 		@ApiResponse(responseCode = "500", description = "티켓 정보를 가져올 수 없습니다.")
 	})
-	SuccessResponse<List<Ticket>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails);
+	SuccessResponse<List<TicketReadResponse>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails);
 }
