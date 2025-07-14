@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.SeatStatus;
@@ -43,6 +44,21 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 		int middleRow = (maxSeatRow != null) ? (maxSeatRow + 1) / 2 : 8; // 중간 지점 계산
 
 		// 2. 좌석별 상세 정보 조회 (예약 상태 포함)
+
+		/**
+		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
+		 * 역 ID가 낮은 쪽 → 높은 쪽: 하행 (예: 서울(10) → 부산(50))
+		 * 역 ID가 높은 쪽 → 낮은 쪽: 상행 (예: 부산(50) → 서울(10))
+		 */
+		boolean isDownward = departureStationId < arrivalStationId;
+
+		// 구간 겹침 조건 정의
+		BooleanExpression overlapCondition = isDownward
+			? seatReservation.departureStation.id.lt(arrivalStationId)
+			.and(seatReservation.arrivalStation.id.gt(departureStationId)) // 하행: 기존출발 < 검색도착 && 기존도착 > 검색출발
+			: seatReservation.departureStation.id.gt(arrivalStationId)
+			.and(seatReservation.arrivalStation.id.lt(departureStationId)); // 상행: 기존출발 > 검색도착 && 기존도착 < 검색출발
+
 		List<SeatProjection> seatProjections = queryFactory.select(
 				new QSeatProjection(seat.id, seat.seatRow.stringValue().concat(seat.seatColumn), seat.seatRow,
 					seat.seatColumn, seat.seatType,
@@ -66,9 +82,8 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 				.and(seatReservation.trainSchedule.id.eq(trainScheduleId))
 				.and(seatReservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED))
 				.and(seatReservation.isStanding.isFalse())
-				// 구간 겹침 확인 (기존출발 < 검색도착 AND 기존도착 > 검색출발)
-				.and(seatReservation.departureStation.id.lt(arrivalStationId))
-				.and(seatReservation.arrivalStation.id.gt(departureStationId)))
+				.and(overlapCondition) // 구간 겹침 확인
+			)
 			.where(seat.trainCar.id.eq(trainCarId))
 			.orderBy(seat.seatRow.asc(), seat.seatColumn.asc())
 			.fetch();
