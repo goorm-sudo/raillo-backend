@@ -1,7 +1,5 @@
 package com.sudo.railo.global.redis;
 
-import org.springframework.data.redis.core.RedisHash;
-
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import jakarta.persistence.Id;
@@ -10,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@RedisHash(value = "MemberToken", timeToLive = 3600 * 24 * 7)
+// @RedisHash(value = "MemberToken", timeToLive = 3600 * 24 * 7)
 @Getter
 @Setter
 @NoArgsConstructor
