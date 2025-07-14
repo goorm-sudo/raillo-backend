@@ -38,7 +38,8 @@ public class RedisUtil {
 
 	// Member 리프레시 토큰 저장
 	public void saveMemberToken(MemberRedis memberRedis) {
-		objectRedisTemplate.opsForValue().set(memberRedis.getMemberNo(), memberRedis);
+		objectRedisTemplate.opsForValue()
+			.set(memberRedis.getMemberNo(), memberRedis, 3600 * 24 * 7, TimeUnit.SECONDS); // TTL 설정 임시 코드
 	}
 
 	// 리프레시 토큰 조회
