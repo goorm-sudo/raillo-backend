@@ -63,15 +63,15 @@ public class Ticket extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private TicketStatus status;
 
-	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 발행 주체 코드 (웹, 모바일, 역 등 - 5자리)'")
+	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 발행 주체 코드 (웹, 모바일, 역 등 - 5자리)'")
 	private String vendorCode;
 
-	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 일자 (MMdd)'")
+	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 일자 (MMdd)'")
 	private String purchaseDate;
 
-	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 순번 (10000~)'")
+	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 순번 (10000~)'")
 	private String purchaseSeq;
 
-	@Column(nullable = false, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
+	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
 	private String purchaseUid;
 }
