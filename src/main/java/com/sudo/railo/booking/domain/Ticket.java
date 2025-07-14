@@ -2,6 +2,8 @@ package com.sudo.railo.booking.domain;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.sudo.railo.global.domain.BaseEntity;
@@ -40,10 +42,12 @@ public class Ticket extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "reservation_id")
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Reservation reservation;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "seat_reservation_id", nullable = false, unique = true)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private SeatReservation seatReservation;
 
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
