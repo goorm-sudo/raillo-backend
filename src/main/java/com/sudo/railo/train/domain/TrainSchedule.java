@@ -87,7 +87,7 @@ public class TrainSchedule {
 	private Station arrivalStation;
 
 	// 좌석 타입별 잔여 좌석 수 (Map 형태로 저장)
-	@ElementCollection(fetch = FetchType.EAGER)
+	@ElementCollection
 	@CollectionTable(name = "schedule_available_seats",
 		joinColumns = @JoinColumn(name = "train_schedule_id"))
 	@MapKeyColumn(name = "car_type")
@@ -131,27 +131,17 @@ public class TrainSchedule {
 	/**
 	 * 정적 팩토리 메서드
 	 */
-	public static TrainSchedule create(
-		String scheduleName,
-		LocalDate operationDate,
-		LocalTime departureTime,
-		LocalTime arrivalTime,
-		Train train,
-		Station departureStation,
-		Station arrivalStation,
-		List<ScheduleStop> scheduleStops) {
+	public static TrainSchedule create(LocalDate operationDate, TrainScheduleTemplate template) {
 
-		TrainSchedule trainSchedule = new TrainSchedule(
-			scheduleName,
+		return new TrainSchedule(
+			template.getScheduleName(),
 			operationDate,
-			departureTime,
-			arrivalTime,
-			train,
-			departureStation,
-			arrivalStation
+			template.getDepartureTime(),
+			template.getArrivalTime(),
+			template.getTrain(),
+			template.getDepartureStation(),
+			template.getArrivalStation()
 		);
-		scheduleStops.forEach(trainSchedule::addScheduleStop);
-		return trainSchedule;
 	}
 
 	/** 초기 좌석 수 설정 */
@@ -160,24 +150,6 @@ public class TrainSchedule {
 			int totalSeats = train.getTotalSeatsByType(carType);
 			availableSeatsMap.put(carType, totalSeats);
 		}
-	}
-
-	/* 연관관계 편의 메서드 */
-	public void setTrain(Train train) {
-		this.train = train;
-	}
-
-	public void setDepartureStation(Station departureStation) {
-		this.departureStation = departureStation;
-	}
-
-	public void setArrivalStation(Station arrivalStation) {
-		this.arrivalStation = arrivalStation;
-	}
-
-	public void addScheduleStop(ScheduleStop scheduleStop) {
-		scheduleStops.add(scheduleStop);
-		scheduleStop.setTrainSchedule(this);
 	}
 
 	/* 비즈니스 메서드 */

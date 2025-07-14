@@ -82,7 +82,7 @@ public class StationFareParser extends ExcelParser {
 			try {
 				Row row = sheet.getRow(rowNum);
 
-				// `row`가 `null`이거나, `cell`이 `null`이라면 파싱하지 않는다.
+				// 열, 행이 비어있다면 파싱하지 않는다.
 				if (isEmpty(row, departureStationIdx)) {
 					break;
 				}
@@ -99,7 +99,7 @@ public class StationFareParser extends ExcelParser {
 					firstClassFare
 				));
 			} catch (Exception ex) {
-				log.error("운임표 파싱 중 예외가 발생했습니다", ex);
+				log.warn("운임표 파싱 중 예외가 발생했습니다", ex);
 			}
 		}
 		return stationFareData;

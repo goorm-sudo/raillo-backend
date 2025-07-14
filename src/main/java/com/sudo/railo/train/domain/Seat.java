@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -44,6 +45,7 @@ public class Seat {
 	@Column(length = 1)
 	private String isAvailable;
 
+	@Setter
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_car_id")
 	private TrainCar trainCar;
@@ -58,10 +60,5 @@ public class Seat {
 
 	public static Seat create(int seatRow, String seatColumn, SeatType seatType) {
 		return new Seat(seatRow, seatColumn, seatType);
-	}
-
-	public void setTrainCar(TrainCar trainCar) {
-		this.trainCar = trainCar;
-		trainCar.getSeats().add(this);
 	}
 }
