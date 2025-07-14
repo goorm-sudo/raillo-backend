@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TicketSuccess implements SuccessCode {
 
-	TICKET_LIST_GET_SUCCESS(HttpStatus.OK, "정상적으로 계산되었습니다.");
+	TICKET_LIST_GET_SUCCESS(HttpStatus.OK, "정상적으로 조회되었습니다.");
 
 	private final HttpStatus status;
 	private final String message;
