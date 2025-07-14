@@ -2,9 +2,9 @@ package com.sudo.railo.booking.domain;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.sudo.railo.global.domain.BaseEntity;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -20,14 +20,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@AllArgsConstructor
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class Ticket {
+public class Ticket extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,14 +45,6 @@ public class Ticket {
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "qr_id", unique = true)
 	private Qr qr;
-
-	@CreatedDate
-	@Column(updatable = false, nullable = false)
-	private LocalDateTime createdAt;
-
-	@LastModifiedDate
-	@Column(nullable = false)
-	private LocalDateTime updatedAt;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
