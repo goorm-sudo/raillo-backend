@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.booking.application.TicketService;
+import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
 import com.sudo.railo.booking.docs.TicketControllerDocs;
-import com.sudo.railo.booking.domain.Ticket;
 import com.sudo.railo.booking.success.TicketSuccess;
 import com.sudo.railo.global.success.SuccessResponse;
 
@@ -24,8 +24,8 @@ public class TicketController implements TicketControllerDocs {
 	private final TicketService ticketService;
 
 	@GetMapping
-	public SuccessResponse<List<Ticket>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails) {
-		List<Ticket> tickets = ticketService.getMyTickets(userDetails);
+	public SuccessResponse<List<TicketReadResponse>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails) {
+		List<TicketReadResponse> tickets = ticketService.getMyTickets(userDetails);
 		return SuccessResponse.of(TicketSuccess.TICKET_LIST_GET_SUCCESS, tickets);
 	}
 }
