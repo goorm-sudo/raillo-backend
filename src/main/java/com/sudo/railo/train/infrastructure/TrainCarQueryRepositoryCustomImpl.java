@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.QSeatReservation;
@@ -38,6 +39,24 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 		QSeat s = QSeat.seat;
 		QSeatReservation sr = QSeatReservation.seatReservation;
 
+		/**
+		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
+		 * 역 ID가 낮은 쪽 → 높은 쪽: 하행 (예: 서울(10) → 부산(50))
+		 * 역 ID가 높은 쪽 → 낮은 쪽: 상행 (예: 부산(50) → 서울(10))
+		 */
+		boolean isDownward = departureStationId < arrivalStationId;
+
+		// 구간 겹침 조건 정의
+		// 예약 구간: [기존출발 ~ 기존도착]
+		// 요청 구간: [검색출발 ~ 검색도착]
+		// 겹침 조건: 기존출발 < 검색도착 AND 기존도착 > 검색출발 (하행 기준)
+		//           기존출발 > 검색도착 AND 기존도착 < 검색출발 (상행 기준)
+		BooleanExpression overlapCondition = isDownward
+			? sr.departureStation.id.lt(arrivalStationId)
+			.and(sr.arrivalStation.id.gt(departureStationId)) // 하행
+			: sr.departureStation.id.gt(arrivalStationId)
+			.and(sr.arrivalStation.id.lt(departureStationId)); // 상행
+
 		// 1. 해당 trainScheduleId의 객차(trainCar) 조회
 		List<TrainCarProjection> carProjections = queryFactory
 			.select(new QTrainCarProjection(
@@ -65,9 +84,7 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 				sr.trainSchedule.id.eq(trainScheduleId), // trainSchedule 직접 참조
 				sr.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
 				sr.isStanding.isFalse(),
-				// 구간 겹침 조건
-				sr.departureStation.id.lt(arrivalStationId)
-					.and(sr.arrivalStation.id.gt(departureStationId))
+				overlapCondition  // 구간 겹침 조건
 			)
 			.groupBy(tc.id)
 			.fetch()
