@@ -22,6 +22,7 @@ import com.sudo.railo.booking.application.dto.projection.QReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.QSeatReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.ReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
+import com.sudo.railo.booking.domain.ReservationStatus;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.type.CarType;
 
@@ -34,7 +35,12 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public List<ReservationInfo> findReservationDetail(List<Long> reservationIds) {
+	public List<ReservationInfo> findReservationDetail(Long memberId) {
+		return findReservationDetail(memberId, List.of());
+	}
+
+	@Override
+	public List<ReservationInfo> findReservationDetail(Long memberId, List<Long> reservationIds) {
 		QStation departureStation = new QStation("departureStation");
 		QStation arrivalStation = new QStation("arrivalStation");
 
@@ -62,6 +68,10 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			.join(stationFare).on(
 				stationFare.departureStation.id.eq(reservation.departureStation.id)
 					.and(stationFare.arrivalStation.id.eq(reservation.arrivalStation.id))
+			)
+			.where(
+				reservation.member.id.eq(memberId),
+				reservation.reservationStatus.eq(ReservationStatus.RESERVED)
 			)
 			.orderBy(reservation.expiresAt.asc());
 
