@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
 import com.sudo.railo.booking.domain.PassengerType;
 import com.sudo.railo.booking.domain.PaymentStatus;
 import com.sudo.railo.booking.domain.Qr;
@@ -14,6 +15,7 @@ import com.sudo.railo.booking.domain.Ticket;
 import com.sudo.railo.booking.domain.TicketStatus;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infra.TicketRepository;
+import com.sudo.railo.booking.infra.TicketRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
@@ -28,6 +30,7 @@ public class TicketService {
 	private final QrService qrService;
 	private final MemberRepository memberRepository;
 	private final TicketRepository ticketRepository;
+	private final TicketRepositoryCustom ticketRepositoryCustom;
 
 	/***
 	 * 티켓을 생성하는 메서드
@@ -51,11 +54,12 @@ public class TicketService {
 		}
 	}
 
-	public List<Ticket> getMyTickets(UserDetails userDetails) {
+	public List<TicketReadResponse> getMyTickets(UserDetails userDetails) {
 		Member member = memberRepository.findByMemberNo(userDetails.getUsername())
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		try {
-			return ticketRepository.findByReservationMemberId(member.getId());
+			// List<TicketReadResponse> tickets = ticketRepository.findByReservationMemberId(member.getId());
+			return ticketRepositoryCustom.findPaidTicketResponsesByMemberId(member.getId());
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.TICKET_LIST_GET_FAILED);
 		}
