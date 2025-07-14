@@ -6,6 +6,9 @@ spring:
       - optional:file:.env[.properties]
       - classpath:train-template.yml
 
+  jackson:
+    time-zone: Asia/Seoul
+  
   data:
     redis:
       host: redis-service   # k8s의 redis 서비스명
