@@ -9,6 +9,7 @@ import com.sudo.railo.booking.domain.PassengerType;
 import com.sudo.railo.booking.domain.PaymentStatus;
 import com.sudo.railo.booking.domain.Qr;
 import com.sudo.railo.booking.domain.Reservation;
+import com.sudo.railo.booking.domain.SeatReservation;
 import com.sudo.railo.booking.domain.Ticket;
 import com.sudo.railo.booking.domain.TicketStatus;
 import com.sudo.railo.booking.exception.BookingError;
@@ -33,10 +34,11 @@ public class TicketService {
 	 * @param reservation 예약 정보
 	 * @param passengerType 승객 유형
 	 */
-	public void createTicket(Reservation reservation, PassengerType passengerType) {
+	public void createTicket(Reservation reservation, SeatReservation seatReservation, PassengerType passengerType) {
 		Qr qr = qrService.createQr();
 		Ticket ticket = Ticket.builder()
 			.reservation(reservation)
+			.seatReservation(seatReservation)
 			.qr(qr)
 			.passengerType(passengerType)
 			.paymentStatus(PaymentStatus.RESERVED)
