@@ -43,7 +43,12 @@ public record TrainSearchResponse(
 ) {
 	public TrainSearchResponse {
 		if (travelTime == null) {
-			travelTime = Duration.between(departureTime, arrivalTime);
+			// 자정을 지난 도착일 경우 다음날로 간주
+			if (arrivalTime.isBefore(departureTime)) {
+				travelTime = Duration.between(departureTime, arrivalTime.plusHours(24));
+			} else {
+				travelTime = Duration.between(departureTime, arrivalTime);
+			}
 		}
 	}
 
