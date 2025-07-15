@@ -135,7 +135,7 @@ public class ReservationService {
 	@Transactional
 	public void expireReservations() {
 		LocalDateTime now = LocalDateTime.now();
-		reservationRepository.deleteAllByExpiresAtBefore(now);
+		reservationRepository.deleteAllByExpiresAtBeforeAndReservationStatusNot(now, ReservationStatus.PAID);
 	}
 
 	/**

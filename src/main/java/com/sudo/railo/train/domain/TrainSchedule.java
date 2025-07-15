@@ -2,6 +2,7 @@ package com.sudo.railo.train.domain;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,6 +75,13 @@ public class TrainSchedule {
 
 	private int delayMinutes;
 
+	// 마일리지 시스템용 추가 필드들
+	@Column(name = "actual_arrival_time")
+	private LocalDateTime actualArrivalTime;
+
+	@Column(name = "mileage_processed", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+	private boolean mileageProcessed = false;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_id")
 	private Train train;
@@ -118,6 +126,10 @@ public class TrainSchedule {
 		this.arrivalTime = arrivalTime;
 		this.operationStatus = OperationStatus.ACTIVE;
 		this.delayMinutes = 0;
+
+		// 초기 실제 도착시간 설정 (예정 시간으로)
+		this.actualArrivalTime = operationDate.atTime(arrivalTime);
+		this.mileageProcessed = false;
 
 		// 연관관계 설정
 		this.train = train;
@@ -171,11 +183,17 @@ public class TrainSchedule {
 		if (this.delayMinutes >= 5) {
 			this.operationStatus = OperationStatus.DELAYED;
 		}
+
+		// 실제 도착시간도 지연 시간만큼 업데이트
+		this.actualArrivalTime = operationDate.atTime(arrivalTime).plusMinutes(this.delayMinutes);
 	}
 
 	public void recoverDelay() {
 		this.delayMinutes = 0;
 		this.operationStatus = OperationStatus.ACTIVE;
+		
+		// 실제 도착시간을 원래 예정 시간으로 복구
+		this.actualArrivalTime = operationDate.atTime(arrivalTime);
 	}
 
 	/* 조회 로직 */
@@ -245,5 +263,68 @@ public class TrainSchedule {
 			throw new IllegalStateException(
 				"좌석이 부족합니다. 요청: " + seatCount + "석, 잔여: " + getAvailableSeats(carType) + "석");
 		}
+	}
+
+	/* 마일리지 시스템용 메서드들 */
+
+	/**
+	 * 관리자가 수동으로 실제 도착시간을 설정
+	 * @param actualArrivalTime 실제 도착한 시간
+	 */
+	public void setActualArrivalTime(LocalDateTime actualArrivalTime) {
+		this.actualArrivalTime = actualArrivalTime;
+		
+		// 지연 시간 자동 계산
+		LocalDateTime scheduledArrival = operationDate.atTime(arrivalTime);
+		if (actualArrivalTime.isAfter(scheduledArrival)) {
+			Duration delay = Duration.between(scheduledArrival, actualArrivalTime);
+			this.delayMinutes = (int) delay.toMinutes();
+			
+			if (this.delayMinutes >= 5) {
+				this.operationStatus = OperationStatus.DELAYED;
+			}
+		}
+	}
+
+	/**
+	 * 마일리지 처리 완료 표시
+	 */
+	public void markMileageProcessed() {
+		this.mileageProcessed = true;
+	}
+
+	/**
+	 * 마일리지 처리 준비됨 여부 확인
+	 * @param currentTime 현재 시간
+	 * @return 마일리지 처리 가능 여부
+	 */
+	public boolean isReadyForMileageProcessing(LocalDateTime currentTime) {
+		return actualArrivalTime != null 
+			&& currentTime.isAfter(actualArrivalTime) 
+			&& !mileageProcessed;
+	}
+
+	/**
+	 * 중요한 지연 여부 확인 (20분 이상)
+	 * @return 20분 이상 지연 여부
+	 */
+	public boolean hasSignificantDelay() {
+		return delayMinutes >= 20;
+	}
+
+	/**
+	 * 지연 분 반환
+	 * @return 지연 시간(분)
+	 */
+	public int getDelayMinutes() {
+		return delayMinutes;
+	}
+
+	/**
+	 * 실제 도착시간 반환
+	 * @return 실제 도착시간
+	 */
+	public LocalDateTime getActualArrivalTime() {
+		return actualArrivalTime;
 	}
 }

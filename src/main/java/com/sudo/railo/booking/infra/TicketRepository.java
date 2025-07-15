@@ -8,4 +8,5 @@ import com.sudo.railo.booking.domain.Ticket;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 	List<Ticket> findByReservationMemberId(Long reservationMemberId);
+	List<Ticket> findByReservationId(Long reservationId);
 }
