@@ -23,6 +23,7 @@ import com.sudo.railo.booking.application.dto.projection.QSeatReservationProject
 import com.sudo.railo.booking.application.dto.projection.ReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
 import com.sudo.railo.booking.domain.ReservationStatus;
+import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.type.CarType;
 
@@ -41,6 +42,8 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 
 	@Override
 	public List<ReservationInfo> findReservationDetail(Long memberId, List<Long> reservationIds) {
+		QScheduleStop departureStop = new QScheduleStop("departureStop");
+		QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
 		QStation departureStation = new QStation("departureStation");
 		QStation arrivalStation = new QStation("arrivalStation");
 
@@ -53,8 +56,8 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 				train.trainName,
 				departureStation.stationName,
 				arrivalStation.stationName,
-				trainSchedule.departureTime,
-				trainSchedule.arrivalTime,
+				departureStop.departureTime,
+				arrivalStop.arrivalTime,
 				trainSchedule.operationDate,
 				reservation.expiresAt,
 				stationFare.standardFare,
@@ -63,6 +66,8 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			.from(reservation)
 			.join(reservation.trainSchedule, trainSchedule)
 			.join(trainSchedule.train, train)
+			.join(trainSchedule.scheduleStops, departureStop)
+			.join(trainSchedule.scheduleStops, arrivalStop)
 			.join(reservation.departureStation, departureStation)
 			.join(reservation.arrivalStation, arrivalStation)
 			.join(stationFare).on(
@@ -71,7 +76,10 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			)
 			.where(
 				reservation.member.id.eq(memberId),
-				reservation.reservationStatus.eq(ReservationStatus.RESERVED)
+				reservation.reservationStatus.eq(ReservationStatus.RESERVED),
+				arrivalStop.station.id.eq(arrivalStation.id),
+				departureStop.station.id.eq(departureStation.id),
+				departureStop.stopOrder.lt(arrivalStop.stopOrder)
 			)
 			.orderBy(reservation.expiresAt.asc());
 
