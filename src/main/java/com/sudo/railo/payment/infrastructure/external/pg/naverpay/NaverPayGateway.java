@@ -15,12 +15,11 @@ import java.time.LocalDateTime;
 
 /**
  * 네이버페이 API 연동 Gateway
- * prod, dev 프로파일에서만 활성화
  */
 @Slf4j
 @Component
-@Profile({"prod", "dev", "real"}) // Mock과 구분하기 위한 프로파일
 @RequiredArgsConstructor
+@Profile("never") // 실제 PG 연동은 사용하지 않음
 public class NaverPayGateway implements PgPaymentGateway {
     
     private final RestTemplate restTemplate;

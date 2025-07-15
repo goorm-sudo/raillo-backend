@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"real", "prod"})  // PG 연동 시에만 활성화
+@Profile("never") // 실제 PG 연동은 사용하지 않음
 public class KakaoPayGateway implements PgPaymentGateway {
 
     private final RestTemplate restTemplate;
