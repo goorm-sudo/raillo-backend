@@ -67,8 +67,8 @@ public class BankAccountVerificationService {
         
         log.info("계좌 검증 성공 (Mock) - 은행: {}, 계좌번호: {}", bankName, maskedAccountNumber);
         
-        // 계좌번호 끝자리로 예금주명 생성 (Mock)
-        String accountHolderName = generateMockAccountHolderName(request.getAccountNumber());
+        // Mock 환경에서는 고정된 예금주명 사용
+        String accountHolderName = "홍길동";
         
         return BankAccountVerificationResponse.success(
                 accountHolderName,
