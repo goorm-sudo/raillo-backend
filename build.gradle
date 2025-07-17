@@ -1,5 +1,3 @@
-import java.awt.Desktop
-
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
@@ -109,8 +107,9 @@ jacocoTestReport {
         classDirectories.setFrom(
                 sourceSets.main.output.asFileTree.matching {
                     include "**/application/**"
-                    include "**/infra/*RepositoryCustomImpl.class"
+                    include "**/infrastructure/*RepositoryCustomImpl.class"
                     exclude "**/train/infrastructure/excel/**"
+                    exclude "**/application/dto/**"
                 }
         )
     }
