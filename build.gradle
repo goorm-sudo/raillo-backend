@@ -37,6 +37,9 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
+    testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
+    testImplementation "com.navercorp.fixturemonkey:fixture-monkey-starter:1.1.14"
 
     /* JWT */
     // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
