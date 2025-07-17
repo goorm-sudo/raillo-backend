@@ -67,12 +67,6 @@ public class SecurityConfig {
 					.requestMatchers("/api/v1/guest/register", "/api/v1/trains/**").permitAll()
 					.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 					.requestMatchers("/actuator/**", "/health").permitAll()
-					// 결제 관련 API (비회원도 접근 가능)
-					.requestMatchers(HttpMethod.POST, "/api/v1/payments/calculate").permitAll()
-					.requestMatchers(HttpMethod.GET, "/api/v1/payments/calculations/**").permitAll()
-					.requestMatchers(HttpMethod.POST, "/api/v1/payments/pg/approve").permitAll()
-					.requestMatchers(HttpMethod.POST, "/api/v1/payments/pg/request").permitAll()
-					.requestMatchers(HttpMethod.GET, "/api/v1/payment-history/reservation/**").permitAll()
 					.anyRequest().authenticated();
 			})
 			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, redisUtil),

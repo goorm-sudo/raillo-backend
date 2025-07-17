@@ -272,14 +272,4 @@ public class MemberServiceImpl implements MemberService {
 		memberAuthService.sendAuthCode(email); // 찾아온 이메일로 인증 코드 전송
 	}
 
-	@Override
-	@Transactional(readOnly = true)
-	public java.math.BigDecimal getMileageBalance(Long memberId) {
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
-		
-		// 회원의 마일리지 잔액 반환 (기본값 0)
-		return member.getMileageBalance() != null ? member.getMileageBalance() : java.math.BigDecimal.ZERO;
-	}
-
 }

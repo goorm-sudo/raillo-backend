@@ -40,11 +40,4 @@ public interface MemberService {
 
 	TemporaryTokenResponse verifyFindPassword(VerifyCodeRequest request);
 
-	/**
-	 * 회원의 마일리지 잔액 조회
-	 * @param memberId 회원 ID
-	 * @return 마일리지 잔액
-	 */
-	java.math.BigDecimal getMileageBalance(Long memberId);
-
 }
