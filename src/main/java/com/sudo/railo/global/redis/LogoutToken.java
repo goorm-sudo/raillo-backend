@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
-public class LogoutRedis {
+public class LogoutToken {
 
 	private String value; // "logout"
 	private Long expireTime; // 토큰 만료 시간

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.redis.MemberRedisRepository;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
@@ -41,7 +41,7 @@ public class MemberServiceImpl implements MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberAuthService memberAuthService;
-	private final RedisUtil redisUtil;
+	private final MemberRedisRepository memberRedisRepository;
 	private final TokenProvider tokenProvider;
 
 	@Override
@@ -122,7 +122,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		// 동일 요청 건이 없으면 같은 이메일에 대한 요청이 들어오지 못하도록 redis 에 등록
-		if (!redisUtil.handleUpdateEmailRequest(newEmail)) {
+		if (!memberRedisRepository.handleUpdateEmailRequest(newEmail)) {
 			throw new BusinessException(MemberError.EMAIL_UPDATE_ALREADY_REQUESTED);
 		}
 
@@ -146,7 +146,7 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		memberDetail.updateEmail(newEmail);
-		redisUtil.deleteUpdateEmailRequest(newEmail); // 해당 변경 요청 건 redis 에서 삭제
+		memberRedisRepository.deleteUpdateEmailRequest(newEmail); // 해당 변경 요청 건 redis 에서 삭제
 	}
 
 	@Override
@@ -261,14 +261,14 @@ public class MemberServiceImpl implements MemberService {
 			throw new BusinessException(AuthError.INVALID_AUTH_CODE);
 		}
 
-		String memberNo = redisUtil.getMemberNo(request.email());
-		redisUtil.deleteMemberNo(request.email());
+		String memberNo = memberRedisRepository.getMemberNo(request.email());
+		memberRedisRepository.deleteMemberNo(request.email());
 
 		return memberNo;
 	}
 
 	private void sendCodeAndSaveMemberNo(String email, String memberNo) {
-		redisUtil.saveMemberNo(email, memberNo); // 레디스에 이메일 검증 후 보낼 회원번호 저장
+		memberRedisRepository.saveMemberNo(email, memberNo); // 레디스에 이메일 검증 후 보낼 회원번호 저장
 		memberAuthService.sendAuthCode(email); // 찾아온 이메일로 인증 코드 전송
 	}
 
