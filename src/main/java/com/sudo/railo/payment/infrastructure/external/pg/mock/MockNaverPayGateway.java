@@ -4,6 +4,7 @@ import com.sudo.railo.payment.domain.entity.PaymentMethod;
 import com.sudo.railo.payment.infrastructure.external.pg.PgPaymentGateway;
 import com.sudo.railo.payment.infrastructure.external.pg.dto.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
+@Profile({"local", "test", "mock"}) // Mock 환경에서만 활성화
 public class MockNaverPayGateway implements PgPaymentGateway {
     
     @Override

@@ -196,12 +196,17 @@ public class PaymentConfirmationService {
         
         // 회원 설정 (회원인 경우)
         if (determineMemberType(calculation.getUserIdExternal()) == MemberType.MEMBER) {
-            Member member = memberRepository.findByMemberNo(calculation.getUserIdExternal())
-                .orElseThrow(() -> new PaymentValidationException(
-                    String.format("회원 정보를 찾을 수 없습니다. memberNo: %s", calculation.getUserIdExternal())));
-            paymentBuilder.member(member);
-            log.debug("회원 결제 설정 완료: memberNo={}, memberId={}", 
-                calculation.getUserIdExternal(), member.getId());
+            try {
+                Long memberId = Long.parseLong(calculation.getUserIdExternal());
+                Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new PaymentValidationException(
+                        String.format("회원 정보를 찾을 수 없습니다. memberId: %d", memberId)));
+                paymentBuilder.member(member);
+                log.debug("회원 결제 설정 완료: memberId={}", memberId);
+            } catch (NumberFormatException e) {
+                throw new PaymentValidationException(
+                    String.format("잘못된 회원 ID 형식입니다: %s", calculation.getUserIdExternal()));
+            }
         }
         
         // 비회원인 경우 추가 정보 설정
@@ -254,18 +259,20 @@ public class PaymentConfirmationService {
                 return;
             }
             
-            // memberNo로 회원 조회
-            Member member = memberRepository.findByMemberNo(calculation.getUserIdExternal())
-                .orElseThrow(() -> new PaymentValidationException(
-                    String.format("회원 정보를 찾을 수 없습니다. memberNo: %s", calculation.getUserIdExternal())));
-            
-            // 마일리지 차감은 Payment 객체 생성 후 PaymentExecutionService에서 처리됨
-            // 여기서는 계산 세션에 마일리지 사용 정보만 기록
-            log.info("마일리지 차감 예정: memberNo={}, memberId={}, amount={}", 
-                calculation.getUserIdExternal(), member.getId(), calculation.getMileageToUse());
-            
-            // 실제 차감은 PaymentConfirmRequest를 통해 Payment 생성 후 
-            // PaymentExecutionService.execute()에서 mileageExecutionService.executeUsage(payment) 호출로 처리
+            try {
+                Long memberId = Long.parseLong(calculation.getUserIdExternal());
+                
+                // 마일리지 차감은 Payment 객체 생성 후 PaymentExecutionService에서 처리됨
+                // 여기서는 계산 세션에 마일리지 사용 정보만 기록
+                log.info("마일리지 차감 예정: memberId={}, amount={}", memberId, calculation.getMileageToUse());
+                
+                // 실제 차감은 PaymentConfirmRequest를 통해 Payment 생성 후 
+                // PaymentExecutionService.execute()에서 mileageExecutionService.executeUsage(payment) 호출로 처리
+                
+            } catch (NumberFormatException e) {
+                throw new PaymentValidationException(
+                    String.format("잘못된 회원 ID 형식입니다: %s", calculation.getUserIdExternal()));
+            }
         }
     }
     

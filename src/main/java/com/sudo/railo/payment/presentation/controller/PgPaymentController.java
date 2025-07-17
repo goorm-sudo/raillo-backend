@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 
@@ -108,46 +106,27 @@ public class PgPaymentController {
                         calculationResponse.getFinalPayableAmount());
                 
                 // PaymentExecuteRequest 생성 전 상세 로깅
-                log.info("PaymentExecuteRequest 생성 시작 - calculationId: {}, merchantOrderId: {}, memberId: {}", 
+                log.info("🔍 PaymentExecuteRequest 생성 시작 - calculationId: {}, merchantOrderId: {}, memberId: {}", 
                     calculationId, request.getMerchantOrderId(), request.getMemberId());
-                log.info("PaymentCalculation 정보 - reservationId: {}, externalOrderId: {}, finalAmount: {}", 
+                log.info("📊 PaymentCalculation 정보 - reservationId: {}, externalOrderId: {}, finalAmount: {}", 
                     calculationResponse.getReservationId(), calculationResponse.getExternalOrderId(), 
                     calculationResponse.getFinalPayableAmount());
                 
-                // 회원 정보 처리: JWT 토큰에서 자동으로 가져오기
+                // 회원 정보 처리: memberId는 실제 member.id
                 Long actualMemberId = null;
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                
-                if (authentication != null && authentication.isAuthenticated() && 
-                    !"anonymousUser".equals(authentication.getPrincipal())) {
-                    // JWT 토큰에서 memberNo 가져오기
-                    String memberNo = authentication.getName(); // JWT의 subject (memberNo)
-                    log.info("JWT 토큰에서 회원 정보 추출 - memberNo: {}", memberNo);
-                    
-                    // memberNo로 회원 조회
-                    if (!"guest_user".equals(memberNo)) {
-                        Member member = memberRepository.findByMemberNo(memberNo)
-                            .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다. memberNo: " + memberNo));
-                        
-                        actualMemberId = member.getId();
-                        log.info("회원 정보 확인 완료 - id: {}, memberNo: {}", 
-                            member.getId(), memberNo);
-                    }
-                } else if (request.getMemberId() != null) {
-                    // 폴백: 요청에 memberId가 있는 경우 사용 (하위 호환성)
+                if (request.getMemberId() != null) {
+                    // memberId는 이미 실제 member.id
                     actualMemberId = request.getMemberId();
-                    log.info("요청 데이터에서 회원 정보 확인 - memberId: {}", actualMemberId);
+                    log.info("🔍 회원 정보 확인 - memberId: {}", actualMemberId);
                     
                     // 회원 존재 여부 확인
-                    final Long memberIdForLambda = actualMemberId;
+                    final Long memberIdForLambda = actualMemberId; // lambda를 위한 final 변수
                     Member member = memberRepository.findById(actualMemberId)
                         .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다. ID: " + memberIdForLambda));
                     
-                    log.info("회원 정보 확인 완료 - id: {}, memberNo: {}", 
+                    log.info("✅ 회원 정보 확인 완료 - id: {}, memberNo: {}", 
                         member.getId(), 
                         member.getMemberDetail() != null ? member.getMemberDetail().getMemberNo() : "N/A");
-                } else {
-                    log.info("비회원 결제로 처리");
                 }
                 
                 PaymentExecuteRequest paymentRequest = PaymentExecuteRequest.builder()
@@ -163,10 +142,10 @@ public class PgPaymentController {
                         // 마일리지 정보 추가 (계산 결과에서 가져옴)
                         .mileageToUse(calculationResponse.getMileageInfo().getUsedMileage())
                         .availableMileage(calculationResponse.getMileageInfo().getAvailableMileage())
-                        // 비회원 정보 설정 (actualMemberId가 없는 경우에만)
-                        .nonMemberName(actualMemberId != null ? null : request.getNonMemberName())
-                        .nonMemberPhone(actualMemberId != null ? null : request.getNonMemberPhone()) 
-                        .nonMemberPassword(actualMemberId != null ? null : request.getNonMemberPassword())
+                        // 비회원 정보 설정
+                        .nonMemberName(request.getMemberId() != null ? null : request.getNonMemberName())
+                        .nonMemberPhone(request.getMemberId() != null ? null : request.getNonMemberPhone()) 
+                        .nonMemberPassword(request.getMemberId() != null ? null : request.getNonMemberPassword())
                         // 현금영수증 정보 설정
                         .requestReceipt(request.getRequestReceipt() != null ? request.getRequestReceipt() : false)
                         .receiptType(request.getReceiptType())

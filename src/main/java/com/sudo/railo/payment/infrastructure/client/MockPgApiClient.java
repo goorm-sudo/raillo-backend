@@ -6,6 +6,7 @@ import com.sudo.railo.payment.exception.PaymentValidationException;
 import com.sudo.railo.payment.infrastructure.client.dto.PgVerificationResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
  * - 에러 처리 및 재시도 로직
  * - 타임아웃 처리
  */
+@Profile("!prod")
 @Component
 @RequiredArgsConstructor
 @Slf4j
