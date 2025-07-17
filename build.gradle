@@ -1,7 +1,10 @@
+import java.awt.Desktop
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'com.sudo'
@@ -84,5 +87,47 @@ tasks.withType(JavaCompile) {
 // QueryDSL 추가, 자동 생성된 Q 클래스 gradle clean 으로 제거
 clean {
     delete file(querydslSrcDir)
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy 'jacocoTestReport'
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+jacocoTestReport {
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(
+                sourceSets.main.output.asFileTree.matching {
+                    include "**/application/**"
+                    include "**/infra/*RepositoryCustomImpl.class"
+                    exclude "**/train/infrastructure/excel/**"
+                }
+        )
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'CLASS'
+
+            excludes = [
+                    '*.test.*',
+                    '*.Q*'
+            ]
+        }
+    }
 }
 
