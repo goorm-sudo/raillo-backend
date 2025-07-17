@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.redis.AuthRedisRepository;
 import com.sudo.railo.global.security.jwt.JwtAccessDeniedHandler;
 import com.sudo.railo.global.security.jwt.JwtAuthenticationEntryPoint;
 import com.sudo.railo.global.security.jwt.JwtFilter;
@@ -31,7 +31,7 @@ import lombok.RequiredArgsConstructor;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-	private final RedisUtil redisUtil;
+	private final AuthRedisRepository authRedisRepository;
 	private final TokenProvider tokenProvider;
 	private final TokenExtractor tokenExtractor;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -69,7 +69,7 @@ public class SecurityConfig {
 					.requestMatchers("/actuator/**", "/health").permitAll()
 					.anyRequest().authenticated();
 			})
-			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, redisUtil),
+			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, authRedisRepository),
 				UsernamePasswordAuthenticationFilter.class)
 			.build();
 	}

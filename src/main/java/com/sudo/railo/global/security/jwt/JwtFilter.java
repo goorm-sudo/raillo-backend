@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.redis.AuthRedisRepository;
 import com.sudo.railo.global.security.TokenError;
 
 import io.jsonwebtoken.Claims;
@@ -25,7 +25,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private final TokenExtractor tokenExtractor;
 	private final TokenProvider tokenProvider;
-	private final RedisUtil redisUtil;
+	private final AuthRedisRepository authRedisRepository;
 
 	// 각 요청에 대해 JWT 토큰을 검사하고 유효한 경우 SecurityContext에 인증 정보를 설정
 	@Override
@@ -47,7 +47,7 @@ public class JwtFilter extends OncePerRequestFilter {
 			}
 
 			// 블랙리스트 형식으로 redis 에 해당 accessToken logout 여부 확인
-			Object isLogout = redisUtil.getLogoutToken(jwt);
+			Object isLogout = authRedisRepository.getLogoutToken(jwt);
 
 			// 로그아웃이 되어 있지 않은 경우 토큰 정상 작동
 			if (ObjectUtils.isEmpty(isLogout)) {
