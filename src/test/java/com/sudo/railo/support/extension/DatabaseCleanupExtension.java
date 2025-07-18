@@ -17,17 +17,18 @@ public class DatabaseCleanupExtension implements AfterEachCallback {
 	}
 
 	private JdbcTemplate getJdbcTemplate(ExtensionContext context) {
-		return SpringExtension.getApplicationContext(context)
-			.getBean(JdbcTemplate.class);
+		return SpringExtension.getApplicationContext(context).getBean(JdbcTemplate.class);
 	}
 
 	private List<String> getTruncateQueries(JdbcTemplate jdbcTemplate) {
-		return jdbcTemplate.queryForList(
-			"SELECT CONCAT('DELETE FROM ', TABLE_NAME) AS q "
-				+ "FROM INFORMATION_SCHEMA.TABLES "
-				+ "WHERE TABLE_SCHEMA = 'PUBLIC' "
-				+ "AND TABLE_TYPE = 'TABLE'",
-			String.class);
+		List<String> tableNames = jdbcTemplate.query(
+			"SELECT TABLE_SCHEMA, TABLE_NAME " + "FROM INFORMATION_SCHEMA.TABLES ",
+			(rs, rowNum) -> rs.getString("TABLE_SCHEMA") + "." + rs.getString("TABLE_NAME"));
+
+		return tableNames.stream()
+			.filter(tableNameWithSchema -> tableNameWithSchema.startsWith("PUBLIC."))
+			.map(tableNameWithSchema -> "DELETE FROM " + tableNameWithSchema)
+			.collect(java.util.stream.Collectors.toList());
 	}
 
 	private void truncateTables(JdbcTemplate jdbcTemplate, List<String> truncateQueries) {
