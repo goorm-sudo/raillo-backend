@@ -26,6 +26,16 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.springframework.jdbc.core: DEBUG
 
-security:
-  jwt:
-    secret-key: "railo-test-jwt-secret-key-2024-for-development-and-testing-only"
+train:
+  schedule:
+    excel:
+      filename: "train_schedule.xlsx"
+  station-fare:
+    excel:
+      filename: "station_fare.xls"
+  standing:
+    ratio: 0.15
+
+jwt:
+  # railo-test-jwt-secret-key-2024-for-development-and-testing-only
+  secret: "cmFpbG8tdGVzdC1qd3Qtc2VjcmV0LWtleS0yMDI0LWZvci1kZXZlbG9wbWVudC1hbmQtdGVzdGluZy1vbmx5"
