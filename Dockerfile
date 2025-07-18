@@ -28,4 +28,4 @@ COPY --from=stage1 /app/build/libs/*.jar app.jar
 COPY files ./files
 
 # 실행 : CMD 또는 ENTRYPOINT를 통해 컨테이너를 배열 형태의 명령어로 실행
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
