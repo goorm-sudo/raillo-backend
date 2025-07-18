@@ -5,10 +5,12 @@ import java.util.Properties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Configuration
+@Profile("!test")
 public class AuthEmailConfig {
 
 	@Value("${spring.mail.host}")
@@ -52,7 +54,7 @@ public class AuthEmailConfig {
 		mailSender.setJavaMailProperties(getMailProperties());
 		return mailSender;
 	}
-	
+
 	private Properties getMailProperties() {
 		Properties properties = new Properties();
 		properties.put("mail.smtp.auth", auth);
