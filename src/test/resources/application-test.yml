@@ -20,22 +20,12 @@ spring:
         highlight_sql: true
     open-in-view: false
 
-  spring:
-    mail:
-      host: smtp.test.com
-      port: 587
-      username: dummy
-      password: dummy
-      properties:
-        mail:
-          smtp:
-            auth: true
-            starttls:
-              enable: true
-              required: true
-            connectiontimeout: 5000
-            timeout: 3000
-            writetimeout: 5000
+  mail:
+    host: smtp.test.com
+    port: 62525
+    username: dummy
+    password: dummy
+    test-connection: false # 테스트 시 메일 연결 확인 비활성화
 
 logging:
   level:
@@ -54,8 +44,7 @@ train:
     ratio: 0.15
 
 jwt:
-  # railo-test-jwt-secret-key-2024-for-development-and-testing-only
-  secret: "cmFpbG8tdGVzdC1qd3Qtc2VjcmV0LWtleS0yMDI0LWZvci1kZXZlbG9wbWVudC1hbmQtdGVzdGluZy1vbmx5"
+  secret: "crailotestjwtsecretkey2025fordevelopmentandtestingonly"
 
 cors:
   allowed-origins: http://localhost:3000

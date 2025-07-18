@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: prod
+      on-profile: dev
     import:
       - optional:file:.env[.properties]
       - classpath:train-template.yml
@@ -11,8 +11,8 @@ spring:
 
   data:
     redis:
-      host: redis-service   # k8s의 redis 서비스명
-      port: 6379            # redis port
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   datasource:
     url: ${DB_URL}
@@ -22,11 +22,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         order_inserts: true
-        format_sql: false
+        format_sql: true
         jdbc:
           batch_size: 500
 
@@ -57,7 +57,7 @@ train:
     ratio: 0.15
 
 cors:
-  allowed-origins: http://localhost:3000, https://www.raillo.shop
+  allowed-origins: http://localhost:3000
   allowed-methods: GET, POST, PUT, DELETE
   allowed-headers: Access-Control-Allow-Origin, Content-type, Access-Control-Allow-Headers, Authorization, X-Requested-With
 
