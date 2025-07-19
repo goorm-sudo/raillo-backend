@@ -12,42 +12,44 @@ import lombok.RequiredArgsConstructor;
 public class MemberRedisRepository {
 
 	private final RedisTemplate<String, String> stringRedisTemplate;
+	private final RedisKeyGenerator redisKeyGenerator;
 
 	private static final Duration COMMON_EXPIRE_TIME = Duration.ofMinutes(5);
-
-	private static final String MEMBER_NO_KEY_PREFIX = "member:no:email:";
-	private static final String UPDATE_EMAIL_KEY_PREFIX = "member:update:email";
-
+	
 	/**
 	 * 회원번호 관련
-	 * Key = member:getMemberNo:email:{email}
+	 * Key = member:no:email:{email}
 	 * */
 	public void saveMemberNo(String email, String memberNo) {
+		String key = redisKeyGenerator.generateMemberNoKey(email);
 		stringRedisTemplate.opsForValue()
-			.set(MEMBER_NO_KEY_PREFIX + email, memberNo, COMMON_EXPIRE_TIME);
+			.set(key, memberNo, COMMON_EXPIRE_TIME);
 	}
 
 	public String getMemberNo(String email) {
-		return stringRedisTemplate.opsForValue().get(MEMBER_NO_KEY_PREFIX + email);
+		String key = redisKeyGenerator.generateMemberNoKey(email);
+		return stringRedisTemplate.opsForValue().get(key);
 	}
 
 	public void deleteMemberNo(String email) {
-		stringRedisTemplate.delete(MEMBER_NO_KEY_PREFIX + email);
+		String key = redisKeyGenerator.generateMemberNoKey(email);
+		stringRedisTemplate.delete(key);
 	}
 
 	/**
 	 * 이메일 변경 관련
-	 * Key = member:updateEmail:email:{email}
+	 * Key = member:update:email:{email}
 	 * */
 	public boolean handleUpdateEmailRequest(String email) {
 
-		String key = UPDATE_EMAIL_KEY_PREFIX + email;
+		String key = redisKeyGenerator.generateUpdateEmailKey(email);
 		Boolean isSuccess = stringRedisTemplate.opsForValue()
 			.setIfAbsent(key, "REQUESTED", COMMON_EXPIRE_TIME);
 		return isSuccess != null && isSuccess;
 	}
 
 	public void deleteUpdateEmailRequest(String email) {
-		stringRedisTemplate.delete(UPDATE_EMAIL_KEY_PREFIX + email);
+		String key = redisKeyGenerator.generateUpdateEmailKey(email);
+		stringRedisTemplate.delete(key);
 	}
 }
