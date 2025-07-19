@@ -1,5 +1,7 @@
 package com.sudo.railo.global.redis;
 
+import java.time.Duration;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import lombok.AllArgsConstructor;
@@ -15,5 +17,5 @@ import lombok.Setter;
 public class LogoutToken {
 
 	private String value; // "logout"
-	private Long expireTime; // 토큰 만료 시간
+	private Duration expireTime; // 토큰 만료 시간
 }

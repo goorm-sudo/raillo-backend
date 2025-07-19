@@ -1,6 +1,7 @@
 package com.sudo.railo.member.application;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -94,7 +95,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		}
 
 		// 해당 AccessToken 유효 시간을 가져와 BlackList 에 저장
-		Long expiration = tokenProvider.getAccessTokenExpiration(accessToken);
+		Duration expiration = tokenProvider.getAccessTokenExpiration(accessToken);
 		LogoutToken logoutToken = new LogoutToken("logout", expiration);
 		authRedisRepository.saveLogoutToken(accessToken, logoutToken, expiration);
 	}
