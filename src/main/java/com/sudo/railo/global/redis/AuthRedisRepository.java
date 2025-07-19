@@ -1,5 +1,6 @@
 package com.sudo.railo.global.redis;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,8 +15,8 @@ public class AuthRedisRepository {
 	private final RedisTemplate<String, String> stringRedisTemplate;
 	private final RedisTemplate<String, Object> objectRedisTemplate;
 
-	private static final int AUTH_EXPIRE_TIME = 5 * 60;
-	private static final int REFRESH_TOKEN_EXPIRE_TIME = 3600 * 24 * 7;
+	private static final Duration AUTH_EXPIRE_TIME = Duration.ofMinutes(5);
+	private static final Duration REFRESH_TOKEN_EXPIRE_TIME = Duration.ofDays(7);
 
 	private static final String EMAIL_AUTH_CODE_KEY_PREFIX = "auth:email:";
 	private static final String REFRESH_TOKEN_KEY_PREFIX = "auth:refreshToken:memberNo:";
@@ -27,7 +28,7 @@ public class AuthRedisRepository {
 	 * */
 	public void saveAuthCode(String email, String authCode) {
 		stringRedisTemplate.opsForValue()
-			.set(EMAIL_AUTH_CODE_KEY_PREFIX + email, authCode, AUTH_EXPIRE_TIME, TimeUnit.SECONDS);
+			.set(EMAIL_AUTH_CODE_KEY_PREFIX + email, authCode, AUTH_EXPIRE_TIME);
 	}
 
 	public String getAuthCode(String email) {
@@ -44,7 +45,7 @@ public class AuthRedisRepository {
 	 * */
 	public void saveRefreshToken(String memberNo, String refreshToken) {
 		stringRedisTemplate.opsForValue()
-			.set(REFRESH_TOKEN_KEY_PREFIX + memberNo, refreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.SECONDS);
+			.set(REFRESH_TOKEN_KEY_PREFIX + memberNo, refreshToken, REFRESH_TOKEN_EXPIRE_TIME);
 	}
 
 	public String getRefreshToken(String memberNo) {

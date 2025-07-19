@@ -1,6 +1,6 @@
 package com.sudo.railo.global.redis;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -13,10 +13,10 @@ public class MemberRedisRepository {
 
 	private final RedisTemplate<String, String> stringRedisTemplate;
 
-	private static final int COMMON_EXPIRE_TIME = 5 * 60; // 5분
+	private static final Duration COMMON_EXPIRE_TIME = Duration.ofMinutes(5);
 
-	private static final String MEMBER_NO_KEY_PREFIX = "member:getMemberNo:email:";
-	private static final String UPDATE_EMAIL_KEY_PREFIX = "member:updateEmail:email:";
+	private static final String MEMBER_NO_KEY_PREFIX = "member:no:email:";
+	private static final String UPDATE_EMAIL_KEY_PREFIX = "member:update:email";
 
 	/**
 	 * 회원번호 관련
@@ -24,7 +24,7 @@ public class MemberRedisRepository {
 	 * */
 	public void saveMemberNo(String email, String memberNo) {
 		stringRedisTemplate.opsForValue()
-			.set(MEMBER_NO_KEY_PREFIX + email, memberNo, COMMON_EXPIRE_TIME, TimeUnit.SECONDS);
+			.set(MEMBER_NO_KEY_PREFIX + email, memberNo, COMMON_EXPIRE_TIME);
 	}
 
 	public String getMemberNo(String email) {
@@ -43,7 +43,7 @@ public class MemberRedisRepository {
 
 		String key = UPDATE_EMAIL_KEY_PREFIX + email;
 		Boolean isSuccess = stringRedisTemplate.opsForValue()
-			.setIfAbsent(key, "REQUESTED", COMMON_EXPIRE_TIME, TimeUnit.SECONDS);
+			.setIfAbsent(key, "REQUESTED", COMMON_EXPIRE_TIME);
 		return isSuccess != null && isSuccess;
 	}
 
