@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ReservationStatus {
-	SELECTING("선택중", "좌석을 선택하고 있는 상태"),
 	RESERVED("예약완료", "예약이 완료된 상태"),
 	PAID("결제완료", "결제가 완료된 상태"),
 	CANCELLED("취소", "예약이 취소된 상태"),
