@@ -36,5 +36,5 @@ public class Qr extends BaseEntity {
 	private int scanCount;
 
 	@Column(nullable = true)
-	private String qrUrl;
+	private String qrData;
 }

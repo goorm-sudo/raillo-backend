@@ -1,17 +1,13 @@
 package com.sudo.railo.booking.domain;
 
-import java.time.LocalDateTime;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.sudo.railo.global.domain.BaseEntity;
+import com.sudo.railo.train.domain.Seat;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -29,53 +25,50 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 public class Ticket extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ticket_id")
-	private Long id;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "reservation_id")
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	private Reservation reservation;
+	private Long id; // 승차권 ID
 
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "seat_reservation_id", nullable = false, unique = true)
+	@JoinColumn(name = "seat_id")
+	@OnDelete(action = OnDeleteAction.SET_NULL)
+	private Seat seat; // 좌석 ID
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reservation_id", nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	private SeatReservation seatReservation;
+	private Reservation reservation; // 예약 ID
 
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "qr_id", unique = true)
-	private Qr qr;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
-	private PassengerType passengerType;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "qr_id", nullable = false)
+	private Qr qr; // QR ID
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private PaymentStatus paymentStatus;
-
-	private LocalDateTime paymentAt;
+	private TicketStatus ticketStatus; // 승차권 상태
 
 	@Enumerated(EnumType.STRING)
-	private TicketStatus status;
+	@Column(nullable = false)
+	private PassengerType passengerType; // 승객 유형
+
+	@Column(nullable = false)
+	private int fare; // 운임
 
 	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 발행 주체 코드 (웹, 모바일, 역 등 - 5자리)'")
-	private String vendorCode;
+	private String vendorCode; // 결제 위치 번호 (예: 온라인 (01), ~~역(02...))
 
 	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 일자 (MMdd)'")
-	private String purchaseDate;
+	private String purchaseDate; // 결제 날짜 (MMdd)
 
 	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 순번 (10000~)'")
-	private String purchaseSeq;
+	private String purchaseSeq; // 결제 순번 (10000~)
 
 	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
-	private String purchaseUid;
+	private String purchaseUid; // 결제 고유번호 (숫자 2자리)
 }
