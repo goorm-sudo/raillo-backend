@@ -58,9 +58,9 @@ public class ReservationApplicationService {
 			for (int i = 0; i < passengerCnt && idx < seatIds.size(); i++, idx++) {
 				Seat seat = seatRepository.findById(seatIds.get(idx))
 					.orElseThrow(() -> new BusinessException((BookingError.SEAT_NOT_FOUND)));
-				SeatReservation seatReservation = seatReservationService.reserveNewSeat(reservation, seat,
-					passengerType);
-				ticketService.createTicket(reservation, seatReservation, passengerType);
+				SeatReservation seatReservation = seatReservationService
+					.reserveNewSeat(reservation, seat, passengerType);
+				ticketService.createTicket(reservation, seat, passengerType);
 				seatReservationIds.add(seatReservation.getId());
 			}
 		}

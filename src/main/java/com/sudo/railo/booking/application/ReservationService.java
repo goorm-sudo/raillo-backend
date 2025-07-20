@@ -29,10 +29,11 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
-import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.TrainSchedule;
 import com.sudo.railo.train.domain.status.OperationStatus;
 import com.sudo.railo.train.exception.TrainErrorCode;
+import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
@@ -48,6 +49,7 @@ public class ReservationService {
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final MemberRepository memberRepository;
 	private final StationRepository stationRepository;
+	private final ScheduleStopRepository scheduleStopRepository;
 	private final ReservationRepository reservationRepository;
 	private final ReservationRepositoryCustom reservationRepositoryCustom;
 
@@ -89,11 +91,13 @@ public class ReservationService {
 			Member member = memberRepository.findByMemberNo(userDetails.getUsername())
 				.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
-			Station departureStation = stationRepository.findById(request.departureStationId())
-				.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
+			ScheduleStop departureStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
+				trainSchedule.getId(), request.departureStationId()
+			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
 
-			Station arrivalStation = stationRepository.findById(request.arrivalStationId())
-				.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
+			ScheduleStop arrivalStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
+				trainSchedule.getId(), request.arrivalStationId()
+			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
 
 			List<PassengerSummary> passengerSummary = request.passengers();
 			LocalDateTime now = LocalDateTime.now();
@@ -106,9 +110,8 @@ public class ReservationService {
 				.passengerSummary(objectMapper.writeValueAsString(passengerSummary))
 				.reservationStatus(ReservationStatus.RESERVED)
 				.expiresAt(now.plusMinutes(bookingConfig.getExpiration().getReservation()))
-				.reservedAt(now)
-				.departureStation(departureStation)
-				.arrivalStation(arrivalStation)
+				.departureStop(departureStop)
+				.arrivalStop(arrivalStop)
 				.build();
 			return reservationRepository.save(reservation);
 		} catch (Exception e) {
