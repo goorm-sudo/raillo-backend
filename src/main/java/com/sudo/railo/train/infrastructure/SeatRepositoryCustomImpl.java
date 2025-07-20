@@ -1,5 +1,6 @@
 package com.sudo.railo.train.infrastructure;
 
+import static com.sudo.railo.booking.domain.QReservation.*;
 import static com.sudo.railo.booking.domain.QSeatReservation.*;
 import static com.sudo.railo.train.domain.QSeat.*;
 import static com.sudo.railo.train.domain.QTrainCar.*;
@@ -13,7 +14,6 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sudo.railo.booking.domain.SeatStatus;
 import com.sudo.railo.train.application.TrainCarSeatInfo;
 import com.sudo.railo.train.application.dto.projection.QSeatProjection;
 import com.sudo.railo.train.application.dto.projection.SeatProjection;
@@ -54,10 +54,10 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 
 		// 구간 겹침 조건 정의
 		BooleanExpression overlapCondition = isDownward
-			? seatReservation.departureStation.id.lt(arrivalStationId)
-			.and(seatReservation.arrivalStation.id.gt(departureStationId)) // 하행: 기존출발 < 검색도착 && 기존도착 > 검색출발
-			: seatReservation.departureStation.id.gt(arrivalStationId)
-			.and(seatReservation.arrivalStation.id.lt(departureStationId)); // 상행: 기존출발 > 검색도착 && 기존도착 < 검색출발
+			? reservation.departureStop.station.id.lt(arrivalStationId)
+			.and(reservation.arrivalStop.station.id.gt(departureStationId)) // 하행: 기존출발 < 검색도착 && 기존도착 > 검색출발
+			: reservation.departureStop.station.id.gt(arrivalStationId)
+			.and(reservation.arrivalStop.station.id.lt(departureStationId)); // 상행: 기존출발 > 검색도착 && 기존도착 < 검색출발
 
 		List<SeatProjection> seatProjections = queryFactory.select(
 				new QSeatProjection(seat.id, seat.seatRow.stringValue().concat(seat.seatColumn), seat.seatRow,
@@ -80,10 +80,11 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 			.leftJoin(seatReservation)
 			.on(seatReservation.seat.id.eq(seat.id)
 				.and(seatReservation.trainSchedule.id.eq(trainScheduleId))
-				.and(seatReservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED))
 				.and(seatReservation.isStanding.isFalse())
-				.and(overlapCondition) // 구간 겹침 확인
 			)
+			.leftJoin(reservation)
+			.on(reservation.id.eq(seatReservation.id)
+				.and(overlapCondition)) // 구간 겹침 확인
 			.where(seat.trainCar.id.eq(trainCarId))
 			.orderBy(seat.seatRow.asc(), seat.seatColumn.asc())
 			.fetch();

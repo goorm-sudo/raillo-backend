@@ -1,7 +1,6 @@
 package com.sudo.railo.booking.infra;
 
 import static com.sudo.railo.booking.domain.QReservation.*;
-import static com.sudo.railo.booking.domain.QSeatReservation.*;
 import static com.sudo.railo.booking.domain.QTicket.*;
 import static com.sudo.railo.train.domain.QSeat.*;
 import static com.sudo.railo.train.domain.QTrain.*;
@@ -16,7 +15,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
-import com.sudo.railo.booking.domain.PaymentStatus;
+import com.sudo.railo.booking.domain.TicketStatus;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 
@@ -40,7 +39,6 @@ public class TicketRepositoryCustomImpl implements TicketRepositoryCustom {
 				TicketReadResponse.class,
 				ticket.id,
 				reservation.id,
-				seatReservation.id,
 				trainSchedule.operationDate,
 				departureStation.id,
 				departureStation.stationName,
@@ -57,19 +55,18 @@ public class TicketRepositoryCustomImpl implements TicketRepositoryCustom {
 				seat.seatType
 			))
 			.from(ticket)
+			.join(ticket.seat, seat)
 			.join(ticket.reservation, reservation)
 			.join(reservation.trainSchedule, trainSchedule)
 			.join(trainSchedule.train, train)
-			.join(trainSchedule.scheduleStops, departureStop)
-			.join(trainSchedule.scheduleStops, arrivalStop)
-			.join(ticket.seatReservation, seatReservation)
-			.join(seatReservation.seat, seat)
+			.join(reservation.departureStop, departureStop)
+			.join(reservation.arrivalStop, arrivalStop)
 			.join(seat.trainCar, trainCar)
-			.join(seatReservation.departureStation, departureStation)
-			.join(seatReservation.arrivalStation, arrivalStation)
+			.join(departureStop.station, departureStation)
+			.join(arrivalStop.station, arrivalStation)
 			.where(
 				reservation.member.id.eq(memberId)
-					.and(ticket.paymentStatus.eq(PaymentStatus.PAID))
+					.and(ticket.ticketStatus.eq(TicketStatus.PAID))
 					.and(arrivalStop.station.id.eq(arrivalStation.id))
 					.and(departureStop.station.id.eq(departureStation.id))
 					.and(departureStop.stopOrder.lt(arrivalStop.stopOrder))
