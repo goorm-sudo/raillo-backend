@@ -1,20 +1,20 @@
 package com.sudo.railo.member.application;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.redis.LogoutRedis;
-import com.sudo.railo.global.redis.MemberRedis;
-import com.sudo.railo.global.redis.RedisUtil;
+import com.sudo.railo.global.redis.AuthRedisRepository;
+import com.sudo.railo.global.redis.LogoutToken;
 import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.global.security.util.SecurityUtil;
@@ -41,9 +41,9 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final MemberNoGenerator memberNoGenerator;
 	private final EmailAuthService emailAuthService;
-	private final AuthenticationManagerBuilder authenticationManagerBuilder;
+	private final AuthenticationManager authenticationManager;
 	private final TokenProvider tokenProvider;
-	private final RedisUtil redisUtil;
+	private final AuthRedisRepository authRedisRepository;
 
 	@Override
 	@Transactional
@@ -73,12 +73,11 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
 			request.memberNo(), request.password());
 
-		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+		Authentication authentication = authenticationManager.authenticate(authenticationToken);
 		TokenResponse tokenResponse = tokenProvider.generateTokenDTO(authentication);
 
 		// 레디스에 리프레시 토큰 저장
-		MemberRedis memberRedis = new MemberRedis(request.memberNo(), tokenResponse.refreshToken());
-		redisUtil.saveMemberToken(memberRedis);
+		authRedisRepository.saveRefreshToken(request.memberNo(), tokenResponse.refreshToken());
 
 		return tokenResponse;
 	}
@@ -91,14 +90,14 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		String memberNo = SecurityUtil.getCurrentMemberNo();
 
 		// Redis 에서 해당 memberNo 로 저장된 RefreshToken 이 있는지 여부 확인 후, 존재할 경우 삭제
-		if (redisUtil.getRefreshToken(memberNo) != null) {
-			redisUtil.deleteRefreshToken(memberNo);
+		if (authRedisRepository.getRefreshToken(memberNo) != null) {
+			authRedisRepository.deleteRefreshToken(memberNo);
 		}
 
 		// 해당 AccessToken 유효 시간을 가져와 BlackList 에 저장
-		Long expiration = tokenProvider.getAccessTokenExpiration(accessToken);
-		LogoutRedis logoutRedis = new LogoutRedis("logout", expiration);
-		redisUtil.saveLogoutToken(accessToken, logoutRedis, expiration);
+		Duration expiration = tokenProvider.getAccessTokenExpiration(accessToken);
+		LogoutToken logoutToken = new LogoutToken("logout", expiration);
+		authRedisRepository.saveLogoutToken(accessToken, logoutToken, expiration);
 	}
 
 	@Override
@@ -106,7 +105,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	public ReissueTokenResponse reissueAccessToken(String refreshToken) {
 
 		String memberNo = SecurityUtil.getCurrentMemberNo();
-		String restoredRefreshToken = redisUtil.getRefreshToken(memberNo);
+		String restoredRefreshToken = authRedisRepository.getRefreshToken(memberNo);
 
 		if (!refreshToken.equals(restoredRefreshToken)) {
 			throw new BusinessException(TokenError.NOT_EQUALS_REFRESH_TOKEN);
@@ -121,7 +120,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		String code = createAuthCode();
 		emailAuthService.sendEmail(email, code);
 		// redis 에 유효시간 설정해서 인증코드 저장
-		redisUtil.saveAuthCode(email, code);
+		authRedisRepository.saveAuthCode(email, code);
 
 		return new SendCodeResponse(email);
 	}
@@ -129,11 +128,11 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 	@Override
 	public boolean verifyAuthCode(String email, String authCode) {
 		// redis 에서 저장해둔 인증 코드 get
-		String findCode = redisUtil.getAuthCode(email);
+		String findCode = authRedisRepository.getAuthCode(email);
 		boolean isVerified = authCode.equals(findCode);
 
 		if (isVerified) {
-			redisUtil.deleteAuthCode(email);
+			authRedisRepository.deleteAuthCode(email);
 		}
 
 		return isVerified;

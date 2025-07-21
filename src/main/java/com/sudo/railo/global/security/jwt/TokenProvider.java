@@ -1,6 +1,7 @@
 package com.sudo.railo.global.security.jwt;
 
 import java.security.Key;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -146,14 +147,14 @@ public class TokenProvider {
 	}
 
 	// accessToken 유효 시간 추출
-	public Long getAccessTokenExpiration(String accessToken) {
+	public Duration getAccessTokenExpiration(String accessToken) {
 
 		Claims claims = parseClaims(accessToken);
 
 		Date expiration = claims.getExpiration();
 
 		// 현재시간 기준으로 남은 유효시간 계산
-		return expiration.getTime() - System.currentTimeMillis();
+		return Duration.ofMillis(expiration.getTime() - System.currentTimeMillis());
 	}
 
 	// AccessToken으로 인증 객체 추출
