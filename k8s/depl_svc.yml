@@ -24,11 +24,11 @@ spec:
             # 컨테이너가 사용할수 있는 리소스의 최대치
             limits:
               cpu: "1"
-              memory: "500Mi"
+              memory: "1Gi"
             # 컨테이너가 시작될떄 보장받아야 하는 최소 자원
             requests:
               cpu: "0.5"
-              memory: "250Mi"
+              memory: "512Mi"
           env:
             # name값과 yml의 ${변수} 의 변수명과 일치해야함
             - name: DB_URL
