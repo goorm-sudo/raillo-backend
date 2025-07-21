@@ -1,5 +1,6 @@
 package com.sudo.railo.booking.domain;
 
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -42,29 +43,36 @@ public class SeatReservation extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "seat_reservation_id")
-	private Long id; // 예약 상태 ID
+	@Comment("예약 상태 ID")
+	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_schedule_id", nullable = false)
-	private TrainSchedule trainSchedule; // 운행 일정 ID
+	@Comment("운행 일정 ID")
+	private TrainSchedule trainSchedule;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "seat_id") // 입석 시 null
-	private Seat seat; // 좌석 ID
+	@JoinColumn(name = "seat_id")
+	@Comment("좌석 ID")
+	private Seat seat;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "reservation_id", nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	private Reservation reservation; // 예약 ID
+	@Comment("예약 ID")
+	private Reservation reservation;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "passenger_type", nullable = false)
-	private PassengerType passengerType; // 승객 유형
+	@Comment("승객 유형")
+	private PassengerType passengerType;
 
 	@Builder.Default
 	@Column(name = "is_standing", nullable = false)
-	private boolean isStanding = false; // 입석 여부
+	@Comment("입석 여부")
+	private boolean isStanding = false;
 
 	@Version
-	private Long version; // 테이블 버전
+	@Comment("테이블 버전")
+	private Long version;
 }

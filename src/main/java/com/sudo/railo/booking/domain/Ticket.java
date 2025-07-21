@@ -1,5 +1,6 @@
 package com.sudo.railo.booking.domain;
 
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -33,42 +34,49 @@ public class Ticket extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ticket_id")
-	private Long id; // 승차권 ID
+	@Comment("승차권 ID")
+	private Long id;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "seat_id")
 	@OnDelete(action = OnDeleteAction.SET_NULL)
-	private Seat seat; // 좌석 ID
+	@Comment("좌석 ID")
+	private Seat seat;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "reservation_id", nullable = false)
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	private Reservation reservation; // 예약 ID
+	@Comment("예약 ID")
+	private Reservation reservation;
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "qr_id", nullable = false)
-	private Qr qr; // QR ID
+	@Comment("QR ID")
+	private Qr qr;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private TicketStatus ticketStatus; // 승차권 상태
+	@Comment("승차권 상태")
+	private TicketStatus ticketStatus;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private PassengerType passengerType; // 승객 유형
+	@Comment("승객 유형")
+	private PassengerType passengerType;
 
 	@Column(nullable = false)
-	private int fare; // 운임
+	@Comment("운임")
+	private int fare;
 
-	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 발행 주체 코드 (웹, 모바일, 역 등 - 5자리)'")
-	private String vendorCode; // 결제 위치 번호 (예: 온라인 (01), ~~역(02...))
+	@Comment("결제 위치 번호 (예: 온라인 (01), ~~역(02...))")
+	private String vendorCode;
 
-	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 일자 (MMdd)'")
-	private String purchaseDate; // 결제 날짜 (MMdd)
+	@Comment("결제 날짜 (MMdd)")
+	private String purchaseDate;
 
-	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 결제 순번 (10000~)'")
-	private String purchaseSeq; // 결제 순번 (10000~)
+	@Comment("승차권 결제 순번 (10000~)")
+	private String purchaseSeq;
 
-	@Column(nullable = true, columnDefinition = "VARCHAR(255) COMMENT '승차권 고유번호 (2자리)'")
-	private String purchaseUid; // 결제 고유번호 (숫자 2자리)
+	@Comment("결제 고유번호 (숫자 2자리)")
+	private String purchaseUid;
 }
