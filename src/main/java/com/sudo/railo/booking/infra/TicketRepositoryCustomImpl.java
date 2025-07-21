@@ -66,7 +66,7 @@ public class TicketRepositoryCustomImpl implements TicketRepositoryCustom {
 			.join(arrivalStop.station, arrivalStation)
 			.where(
 				reservation.member.id.eq(memberId)
-					.and(ticket.ticketStatus.eq(TicketStatus.PAID))
+					.and(ticket.ticketStatus.eq(TicketStatus.ISSUED))
 					.and(arrivalStop.station.id.eq(arrivalStation.id))
 					.and(departureStop.station.id.eq(departureStation.id))
 					.and(departureStop.stopOrder.lt(arrivalStop.stopOrder))

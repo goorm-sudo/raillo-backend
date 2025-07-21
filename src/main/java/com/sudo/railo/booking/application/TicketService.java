@@ -43,7 +43,7 @@ public class TicketService {
 			.seat(seat)
 			.qr(qr)
 			.passengerType(passengerType)
-			.ticketStatus(TicketStatus.PAID)
+			.ticketStatus(TicketStatus.ISSUED)
 			.build();
 		try {
 			ticketRepository.save(ticket);
