@@ -50,7 +50,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "로그아웃에 성공하였습니다."),
 		@ApiResponse(responseCode = "401", description = "이미 로그아웃된 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> logout(HttpServletRequest request);
+	SuccessResponse<?> logout(HttpServletRequest request, String memberNo);
 
 	@Operation(method = "POST", summary = "accessToken 재발급", description = "accessToken 이 만료되었을 때, 토큰을 재발급 받을 수 있도록 합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
@@ -58,7 +58,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "accessToken 이 성공적으로 재발급되었습니다."),
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request);
+	SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request, String memberNo);
 
 	@Operation(method = "POST", summary = "인증되지 않은 사용자용 이메일 인증코드 전송 요청", description = "회원번호 찾기, 비밀번호 찾기 등 로그인 할 수 없는 상황에서 사용되는 이메일 인증 요청입니다.")
 	@ApiResponses(value = {
@@ -118,7 +118,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "409", description = "현재 사용하는 이메일과 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
 		@ApiResponse(responseCode = "409", description = "이미 사용중인 이메일입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<SendCodeResponse> requestUpdateEmail(SendCodeRequest request);
+	SuccessResponse<SendCodeResponse> requestUpdateEmail(SendCodeRequest request, String memberNo);
 
 	@Operation(method = "PUT", summary = "이메일 변경 인증코드 검증 요청", description = "이메일 변경 전 사용 가능한 이메일인지 검증 후, 회원 이메일을 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
@@ -126,5 +126,5 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "이메일 변경에 성공했습니다."),
 		@ApiResponse(responseCode = "401", description = "인증 코드가 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> verifyUpdateEmail(UpdateEmailRequest request);
+	SuccessResponse<?> verifyUpdateEmail(UpdateEmailRequest request, String memberNo);
 }
