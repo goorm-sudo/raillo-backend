@@ -7,10 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
 import com.sudo.railo.booking.domain.PassengerType;
-import com.sudo.railo.booking.domain.PaymentStatus;
 import com.sudo.railo.booking.domain.Qr;
 import com.sudo.railo.booking.domain.Reservation;
-import com.sudo.railo.booking.domain.SeatReservation;
 import com.sudo.railo.booking.domain.Ticket;
 import com.sudo.railo.booking.domain.TicketStatus;
 import com.sudo.railo.booking.exception.BookingError;
@@ -20,6 +18,7 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.train.domain.Seat;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,15 +36,14 @@ public class TicketService {
 	 * @param reservation 예약 정보
 	 * @param passengerType 승객 유형
 	 */
-	public void createTicket(Reservation reservation, SeatReservation seatReservation, PassengerType passengerType) {
+	public void createTicket(Reservation reservation, Seat seat, PassengerType passengerType) {
 		Qr qr = qrService.createQr();
 		Ticket ticket = Ticket.builder()
 			.reservation(reservation)
-			.seatReservation(seatReservation)
+			.seat(seat)
 			.qr(qr)
 			.passengerType(passengerType)
-			.paymentStatus(PaymentStatus.RESERVED)
-			.status(TicketStatus.ISSUED)
+			.ticketStatus(TicketStatus.ISSUED)
 			.build();
 		try {
 			ticketRepository.save(ticket);

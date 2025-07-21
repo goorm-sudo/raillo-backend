@@ -1,5 +1,7 @@
 package com.sudo.railo.train.infrastructure;
 
+import static com.sudo.railo.booking.domain.QReservation.*;
+
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -8,10 +10,10 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.QSeatReservation;
-import com.sudo.railo.booking.domain.SeatStatus;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QSeat;
+import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrainCar;
 
 import lombok.RequiredArgsConstructor;
@@ -27,11 +29,14 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	 * - 요청한 출발역~도착역 구간과 겹치는 예약 찾기
 	 */
 	@Override
-	public List<SeatReservationInfo> findOverlappingReservations(Long trainScheduleId, Long departureStationId,
-		Long arrivalStationId) {
-		QSeatReservation reservation = QSeatReservation.seatReservation;
+	public List<SeatReservationInfo> findOverlappingReservations(
+		Long trainScheduleId, Long departureStationId, Long arrivalStationId
+	) {
+		QSeatReservation seatReservation = QSeatReservation.seatReservation;
 		QSeat s = QSeat.seat;
 		QTrainCar tc = QTrainCar.trainCar;
+		QStation departureStation = new QStation("departureStation");
+		QStation arrivalStation = new QStation("arrivalStation");
 
 		/**
 		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
@@ -46,26 +51,28 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 		// 겹침 조건: 기존출발 < 검색도착 AND 기존도착 > 검색출발 (하행 기준)
 		//           기존출발 > 검색도착 AND 기존도착 < 검색출발 (상행 기준)
 		BooleanExpression overlapCondition = isDownward
-			? reservation.departureStation.id.lt(arrivalStationId)
-			.and(reservation.arrivalStation.id.gt(departureStationId)) // 하행
-			: reservation.departureStation.id.gt(arrivalStationId)
-			.and(reservation.arrivalStation.id.lt(departureStationId)); // 상행
+			? departureStation.id.lt(arrivalStationId)
+			.and(arrivalStation.id.gt(departureStationId)) // 하행
+			: departureStation.id.gt(arrivalStationId)
+			.and(arrivalStation.id.lt(departureStationId)); // 상행
 
 		return queryFactory
 			.select(Projections.constructor(
 				SeatReservationInfo.class,
-				reservation.seat.id,
+				seatReservation.seat.id,
 				tc.carType,
-				reservation.departureStation.id,
-				reservation.arrivalStation.id
+				departureStation.id,
+				arrivalStation.id
 			))
-			.from(reservation)
-			.join(s).on(s.id.eq(reservation.seat.id))
+			.from(seatReservation)
+			.join(s).on(s.id.eq(seatReservation.seat.id))
 			.join(tc).on(tc.id.eq(s.trainCar.id))
+			.join(seatReservation.reservation, reservation)
+			.join(reservation.departureStop.station, departureStation)
+			.join(reservation.arrivalStop.station, arrivalStation)
 			.where(
-				reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
-				reservation.isStanding.isFalse(),
+				seatReservation.trainSchedule.id.eq(trainScheduleId),
+				seatReservation.seat.isNotNull(),
 				overlapCondition  // 구간 겹침 조건
 			)
 			.fetch();
@@ -77,22 +84,32 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	@Override
 	public int countOverlappingStandingReservations(Long trainScheduleId, Long departureStationId,
 		Long arrivalStationId) {
-		QSeatReservation reservation = QSeatReservation.seatReservation;
+		QSeatReservation seatReservation = QSeatReservation.seatReservation;
 		QScheduleStop searchDepartureStop = new QScheduleStop("searchDepartureStop");
 		QScheduleStop searchArrivalStop = new QScheduleStop("searchArrivalStop");
 		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
 		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
+		QStation reservedDepartureStation = new QStation("departureStation");
+		QStation reservedArrivalStation = new QStation("arrivalStation");
 
-		Long count = queryFactory.select(reservation.count())
-			.from(reservation)
+		Long count = queryFactory.select(seatReservation.count())
+			.from(seatReservation)
+			.join(seatReservation.reservation, reservation)
+			.join(reservation.departureStop, reservedDepartureStop)
+			.join(reservation.arrivalStop, reservedArrivalStop)
+			.join(reservedDepartureStop.station, reservedDepartureStation)
+			.join(reservedArrivalStop.station, reservedArrivalStation)
+
+			// TODO: 검증 필요 - 백업
 			// 기존 예약의 출발역 정보 조회
-			.join(reservedDepartureStop)
-			.on(reservedDepartureStop.trainSchedule.id.eq(reservation.trainSchedule.id)
-				.and(reservedDepartureStop.station.id.eq(reservation.departureStation.id)))
-			// 기존 예약의 도착역 정보 조회
-			.join(reservedArrivalStop)
-			.on(reservedArrivalStop.trainSchedule.id.eq(reservation.trainSchedule.id)
-				.and(reservedArrivalStop.station.id.eq(reservation.arrivalStation.id)))
+			// .join(reservedDepartureStop)
+			// .on(reservedDepartureStop.trainSchedule.id.eq(seatReservation.trainSchedule.id)
+			// 	.and(reservedDepartureStop.station.id.eq(reservedDepartureStation.id)))
+			// // 기존 예약의 도착역 정보 조회
+			// .join(reservedArrivalStop)
+			// .on(reservedArrivalStop.trainSchedule.id.eq(seatReservation.trainSchedule.id)
+			// 	.and(reservedArrivalStop.station.id.eq(reservedArrivalStation.id)))
+
 			// 검색 구간의 출발역 정보
 			.join(searchDepartureStop)
 			.on(searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
@@ -102,9 +119,8 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.on(searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
 			.where(
-				reservation.trainSchedule.id.eq(trainScheduleId),
-				reservation.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
-				reservation.isStanding.isTrue(),
+				seatReservation.trainSchedule.id.eq(trainScheduleId),
+				seatReservation.seat.isNull(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
 				// NOT(end1 <= start2 OR start1 >= end2) = NOT(안겹침)
@@ -125,15 +141,20 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
 		Long arrivalStationId) {
 		QSeatReservation sr = QSeatReservation.seatReservation;
-
+		QScheduleStop departureStop = new QScheduleStop("departureStop");
+		QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
+		QStation departureStation = new QStation("departureStation");
+		QStation arrivalStation = new QStation("arrivalStation");
 		Long count = queryFactory.select(sr.count())
 			.from(sr)
+			.join(sr.reservation, reservation)
+			.join(reservation.departureStop, departureStop)
+			.join(reservation.arrivalStop, arrivalStop)
+			.join(departureStop.station, departureStation)
+			.join(arrivalStop.station, arrivalStation)
 			.where(sr.trainSchedule.id.eq(trainScheduleId), sr.seat.id.eq(seatId),
-				// 점유 상태인 예약들만 확인
-				sr.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED), sr.isStanding.isFalse(),
-
 				// 구간 겹침 확인
-				sr.departureStation.id.lt(arrivalStationId).and(sr.arrivalStation.id.gt(departureStationId)))
+				departureStation.id.lt(arrivalStationId).and(arrivalStation.id.gt(departureStationId)))
 			.fetchOne();
 
 		return count == null || count == 0;

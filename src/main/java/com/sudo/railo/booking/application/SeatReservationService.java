@@ -1,14 +1,11 @@
 package com.sudo.railo.booking.application;
 
-import java.time.LocalDateTime;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.domain.PassengerType;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
-import com.sudo.railo.booking.domain.SeatStatus;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infra.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
@@ -35,17 +32,11 @@ public class SeatReservationService {
 	@Transactional
 	public SeatReservation reserveNewSeat(Reservation reservation, Seat seat, PassengerType passengerType) {
 		try {
-			SeatStatus seatStatus = SeatStatus.RESERVED;
-			LocalDateTime reservedAt = LocalDateTime.now();
 			SeatReservation seatReservation = SeatReservation.builder()
 				.trainSchedule(reservation.getTrainSchedule())
 				.seat(seat)
 				.reservation(reservation)
 				.passengerType(passengerType)
-				.seatStatus(seatStatus)
-				.reservedAt(reservedAt)
-				.departureStation(reservation.getDepartureStation())
-				.arrivalStation(reservation.getArrivalStation())
 				.build();
 			return seatReservationRepository.save(seatReservation);
 		} catch (OptimisticLockException | DataIntegrityViolationException e) {

@@ -1,5 +1,7 @@
 package com.sudo.railo.train.infrastructure;
 
+import static com.sudo.railo.booking.domain.QReservation.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,11 +12,11 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.QSeatReservation;
-import com.sudo.railo.booking.domain.SeatStatus;
 import com.sudo.railo.train.application.dto.projection.QTrainCarProjection;
 import com.sudo.railo.train.application.dto.projection.TrainCarProjection;
 import com.sudo.railo.train.application.dto.response.TrainCarInfo;
 import com.sudo.railo.train.domain.QSeat;
+import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrain;
 import com.sudo.railo.train.domain.QTrainCar;
 import com.sudo.railo.train.domain.QTrainSchedule;
@@ -38,6 +40,10 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 		QTrainCar tc = QTrainCar.trainCar;
 		QSeat s = QSeat.seat;
 		QSeatReservation sr = QSeatReservation.seatReservation;
+		// QScheduleStop departureStop = new QScheduleStop("departureStop");
+		// QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
+		QStation departureStation = new QStation("departureStation");
+		QStation arrivalStation = new QStation("arrivalStation");
 
 		/**
 		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
@@ -52,10 +58,10 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 		// 겹침 조건: 기존출발 < 검색도착 AND 기존도착 > 검색출발 (하행 기준)
 		//           기존출발 > 검색도착 AND 기존도착 < 검색출발 (상행 기준)
 		BooleanExpression overlapCondition = isDownward
-			? sr.departureStation.id.lt(arrivalStationId)
-			.and(sr.arrivalStation.id.gt(departureStationId)) // 하행
-			: sr.departureStation.id.gt(arrivalStationId)
-			.and(sr.arrivalStation.id.lt(departureStationId)); // 상행
+			? departureStation.id.lt(arrivalStationId)
+			.and(arrivalStation.id.gt(departureStationId)) // 하행
+			: departureStation.id.gt(arrivalStationId)
+			.and(arrivalStation.id.lt(departureStationId)); // 상행
 
 		// 1. 해당 trainScheduleId의 객차(trainCar) 조회
 		List<TrainCarProjection> carProjections = queryFactory
@@ -80,10 +86,12 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 			.from(sr)
 			.join(sr.seat, s)
 			.join(s.trainCar, tc)
+			.join(sr.reservation, reservation)
+			.join(reservation.departureStop.station, departureStation)
+			.join(reservation.arrivalStop.station, arrivalStation)
 			.where(
 				sr.trainSchedule.id.eq(trainScheduleId), // trainSchedule 직접 참조
-				sr.seatStatus.in(SeatStatus.RESERVED, SeatStatus.LOCKED),
-				sr.isStanding.isFalse(),
+				sr.seat.isNotNull(),
 				overlapCondition  // 구간 겹침 조건
 			)
 			.groupBy(tc.id)

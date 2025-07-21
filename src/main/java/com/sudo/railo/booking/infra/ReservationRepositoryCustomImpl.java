@@ -65,14 +65,14 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			))
 			.from(reservation)
 			.join(reservation.trainSchedule, trainSchedule)
+			.join(reservation.departureStop, departureStop)
+			.join(reservation.arrivalStop, arrivalStop)
 			.join(trainSchedule.train, train)
-			.join(trainSchedule.scheduleStops, departureStop)
-			.join(trainSchedule.scheduleStops, arrivalStop)
-			.join(reservation.departureStation, departureStation)
-			.join(reservation.arrivalStation, arrivalStation)
+			.join(departureStop.station, departureStation)
+			.join(arrivalStop.station, arrivalStation)
 			.join(stationFare).on(
-				stationFare.departureStation.id.eq(reservation.departureStation.id)
-					.and(stationFare.arrivalStation.id.eq(reservation.arrivalStation.id))
+				stationFare.departureStation.id.eq(departureStation.id)
+					.and(stationFare.arrivalStation.id.eq(arrivalStation.id))
 			)
 			.where(
 				reservation.member.id.eq(memberId),
