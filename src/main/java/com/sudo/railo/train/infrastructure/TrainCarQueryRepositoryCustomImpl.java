@@ -91,7 +91,7 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 			.join(reservation.arrivalStop.station, arrivalStation)
 			.where(
 				sr.trainSchedule.id.eq(trainScheduleId), // trainSchedule 직접 참조
-				sr.isStanding.isFalse(),
+				sr.seat.isNotNull(),
 				overlapCondition  // 구간 겹침 조건
 			)
 			.groupBy(tc.id)

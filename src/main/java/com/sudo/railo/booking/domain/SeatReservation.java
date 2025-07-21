@@ -67,12 +67,11 @@ public class SeatReservation extends BaseEntity {
 	@Comment("승객 유형")
 	private PassengerType passengerType;
 
-	@Builder.Default
-	@Column(name = "is_standing", nullable = false)
-	@Comment("입석 여부")
-	private boolean isStanding = false;
-
 	@Version
 	@Comment("테이블 버전")
 	private Long version;
+
+	public boolean isStanding() {
+		return seat == null;
+	}
 }

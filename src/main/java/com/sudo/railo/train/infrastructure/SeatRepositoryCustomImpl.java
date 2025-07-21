@@ -80,7 +80,7 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 			.leftJoin(seatReservation)
 			.on(seatReservation.seat.id.eq(seat.id)
 				.and(seatReservation.trainSchedule.id.eq(trainScheduleId))
-				.and(seatReservation.isStanding.isFalse())
+				.and(seatReservation.seat.isNotNull())
 			)
 			.leftJoin(reservation)
 			.on(reservation.id.eq(seatReservation.id)

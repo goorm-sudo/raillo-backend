@@ -72,7 +72,7 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 			.join(reservation.arrivalStop.station, arrivalStation)
 			.where(
 				seatReservation.trainSchedule.id.eq(trainScheduleId),
-				seatReservation.isStanding.isFalse(),
+				seatReservation.seat.isNotNull(),
 				overlapCondition  // 구간 겹침 조건
 			)
 			.fetch();
@@ -120,7 +120,7 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 				.and(searchArrivalStop.station.id.eq(arrivalStationId)))
 			.where(
 				seatReservation.trainSchedule.id.eq(trainScheduleId),
-				seatReservation.isStanding.isTrue(),
+				seatReservation.seat.isNull(),
 
 				// 구간 겹침 조건 (Interval Overlap Algorithm)
 				// NOT(end1 <= start2 OR start1 >= end2) = NOT(안겹침)
