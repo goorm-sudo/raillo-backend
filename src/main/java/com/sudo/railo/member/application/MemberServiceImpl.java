@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.MemberRedisRepository;
 import com.sudo.railo.global.security.jwt.TokenProvider;
-import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
@@ -69,11 +68,9 @@ public class MemberServiceImpl implements MemberService {
 	// 회원 삭제 로직
 	@Override
 	@Transactional
-	public void memberDelete(String accessToken) {
+	public void memberDelete(String accessToken, String memberNo) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member currentMember = memberRepository.findByMemberNo(currentMemberNo)
+		Member currentMember = memberRepository.findByMemberNo(memberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		try {
@@ -84,17 +81,15 @@ public class MemberServiceImpl implements MemberService {
 		}
 
 		// 로그아웃 수행
-		memberAuthService.logout(accessToken);
+		memberAuthService.logout(accessToken, memberNo);
 	}
 
 	// 회원 조회 로직
 	@Override
 	@Transactional(readOnly = true)
-	public MemberInfoResponse getMemberInfo() {
+	public MemberInfoResponse getMemberInfo(String memberNo) {
 
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-
-		Member member = memberRepository.findByMemberNo(currentMemberNo)
+		Member member = memberRepository.findByMemberNo(memberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		MemberDetail memberDetail = member.getMemberDetail();
@@ -104,9 +99,10 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public SendCodeResponse requestUpdateEmail(SendCodeRequest request) {
+	public SendCodeResponse requestUpdateEmail(SendCodeRequest request, String memberNo) {
 
-		Member member = getCurrentMember();
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		MemberDetail memberDetail = member.getMemberDetail();
 
 		String newEmail = request.email();
@@ -131,9 +127,10 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void verifyUpdateEmail(UpdateEmailRequest request) {
+	public void verifyUpdateEmail(UpdateEmailRequest request, String memberNo) {
 
-		Member member = getCurrentMember();
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		MemberDetail memberDetail = member.getMemberDetail();
 
 		String newEmail = request.newEmail();
@@ -151,9 +148,10 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatePhoneNumber(UpdatePhoneNumberRequest request) {
+	public void updatePhoneNumber(UpdatePhoneNumberRequest request, String memberNo) {
 
-		Member member = getCurrentMember();
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		// 이미 본인이 사용하는 번호와 동일하게 입력했을 경우 예외
 		if (member.getPhoneNumber().equals(request.newPhoneNumber())) {
@@ -171,9 +169,10 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	@Transactional
-	public void updatePassword(UpdatePasswordRequest request) {
+	public void updatePassword(UpdatePasswordRequest request, String memberNo) {
 
-		Member member = getCurrentMember();
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		if (passwordEncoder.matches(request.newPassword(), member.getPassword())) {
 			throw new BusinessException(MemberError.SAME_PASSWORD);
@@ -243,12 +242,6 @@ public class MemberServiceImpl implements MemberService {
 		String temporaryToken = tokenProvider.generateTemporaryToken(memberNo); // 5분 동안 유효한 임시토큰 발급
 
 		return new TemporaryTokenResponse(temporaryToken);
-	}
-
-	private Member getCurrentMember() {
-		String currentMemberNo = SecurityUtil.getCurrentMemberNo();
-		return memberRepository.findByMemberNo(currentMemberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 	}
 
 	private String verifyCodeAndGetMemberNo(VerifyCodeRequest request) {

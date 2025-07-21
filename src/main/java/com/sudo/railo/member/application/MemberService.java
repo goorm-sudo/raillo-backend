@@ -18,17 +18,17 @@ public interface MemberService {
 
 	GuestRegisterResponse guestRegister(GuestRegisterRequest request);
 
-	void memberDelete(String accessToken);
+	void memberDelete(String accessToken, String memberNo);
 
-	MemberInfoResponse getMemberInfo();
+	MemberInfoResponse getMemberInfo(String memberNo);
 
-	SendCodeResponse requestUpdateEmail(SendCodeRequest request);
+	SendCodeResponse requestUpdateEmail(SendCodeRequest request, String memberNo);
 
-	void verifyUpdateEmail(UpdateEmailRequest request);
+	void verifyUpdateEmail(UpdateEmailRequest request, String memberNo);
 
-	void updatePhoneNumber(UpdatePhoneNumberRequest request);
+	void updatePhoneNumber(UpdatePhoneNumberRequest request, String memberNo);
 
-	void updatePassword(UpdatePasswordRequest request);
+	void updatePassword(UpdatePasswordRequest request, String memberNo);
 
 	String getMemberEmail(String memberNo);
 

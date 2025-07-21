@@ -13,9 +13,9 @@ public interface MemberAuthService {
 
 	TokenResponse memberNoLogin(MemberNoLoginRequest request);
 
-	void logout(String accessToken);
+	void logout(String accessToken, String memberNo);
 
-	ReissueTokenResponse reissueAccessToken(String refreshToken);
+	ReissueTokenResponse reissueAccessToken(String refreshToken, String memberNo);
 
 	SendCodeResponse sendAuthCode(String email);
 
