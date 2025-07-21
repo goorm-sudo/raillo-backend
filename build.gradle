@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'com.sudo'
@@ -37,6 +38,9 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
+    testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
+    testImplementation "com.navercorp.fixturemonkey:fixture-monkey-starter:1.1.14"
 
     /* JWT */
     // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
@@ -81,5 +85,48 @@ tasks.withType(JavaCompile) {
 // QueryDSL 추가, 자동 생성된 Q 클래스 gradle clean 으로 제거
 clean {
     delete file(querydslSrcDir)
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy 'jacocoTestReport'
+}
+
+jacoco {
+    toolVersion = '0.8.13'
+}
+
+jacocoTestReport {
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(
+                sourceSets.main.output.asFileTree.matching {
+                    include "**/application/**"
+                    include "**/infrastructure/*RepositoryCustomImpl.class"
+                    exclude "**/train/infrastructure/excel/**"
+                    exclude "**/application/dto/**"
+                }
+        )
+    }
+
+    finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'CLASS'
+
+            excludes = [
+                    '*.test.*',
+                    '*.Q*'
+            ]
+        }
+    }
 }
 
