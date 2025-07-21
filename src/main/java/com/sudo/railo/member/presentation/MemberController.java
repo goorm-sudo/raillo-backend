@@ -1,5 +1,6 @@
 package com.sudo.railo.member.presentation;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,35 +41,39 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@DeleteMapping("/members")
-	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
+	public SuccessResponse<?> memberDelete(HttpServletRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
-		memberService.memberDelete(accessToken);
+		memberService.memberDelete(accessToken, memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_DELETE_SUCCESS);
 	}
 
 	@GetMapping("/members/me")
-	public SuccessResponse<MemberInfoResponse> getMemberInfo() {
+	public SuccessResponse<MemberInfoResponse> getMemberInfo(
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		MemberInfoResponse response = memberService.getMemberInfo();
+		MemberInfoResponse response = memberService.getMemberInfo(memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_INFO_SUCCESS, response);
 	}
 
 	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request) {
+	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		memberService.updatePhoneNumber(request);
+		memberService.updatePhoneNumber(request, memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
 	}
 
 	@PutMapping("/members/password")
-	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
+	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		memberService.updatePassword(request);
+		memberService.updatePassword(request, memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
 	}
