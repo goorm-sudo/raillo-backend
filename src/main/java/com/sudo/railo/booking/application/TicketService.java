@@ -17,7 +17,7 @@ import com.sudo.railo.booking.infrastructure.ticket.TicketRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
-import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.train.domain.Seat;
 
 import lombok.RequiredArgsConstructor;
