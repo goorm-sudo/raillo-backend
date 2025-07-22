@@ -2,7 +2,7 @@ package com.sudo.railo.booking.application.dto.request;
 
 import java.math.BigDecimal;
 
-import com.sudo.railo.booking.domain.PassengerType;
+import com.sudo.railo.booking.domain.type.PassengerType;
 
 import jakarta.validation.constraints.NotNull;
 

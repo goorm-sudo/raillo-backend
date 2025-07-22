@@ -1,6 +1,6 @@
 package com.sudo.railo.booking.application.dto.response;
 
-import com.sudo.railo.booking.domain.PassengerType;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.train.domain.type.CarType;
 
 import io.swagger.v3.oas.annotations.media.Schema;

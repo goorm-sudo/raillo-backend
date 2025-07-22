@@ -1,4 +1,4 @@
-package com.sudo.railo.booking.domain;
+package com.sudo.railo.booking.domain.type;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

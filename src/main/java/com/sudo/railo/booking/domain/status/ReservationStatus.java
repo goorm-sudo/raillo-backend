@@ -1,4 +1,4 @@
-package com.sudo.railo.booking.domain;
+package com.sudo.railo.booking.domain.status;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

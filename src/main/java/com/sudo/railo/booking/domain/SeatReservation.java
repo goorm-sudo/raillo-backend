@@ -4,6 +4,7 @@ import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.global.domain.BaseEntity;
 import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.domain.TrainSchedule;

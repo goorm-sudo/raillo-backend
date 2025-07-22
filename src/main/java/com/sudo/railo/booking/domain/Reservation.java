@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.Comment;
 
+import com.sudo.railo.booking.domain.status.ReservationStatus;
+import com.sudo.railo.booking.domain.type.TripType;
 import com.sudo.railo.global.domain.BaseEntity;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.train.domain.ScheduleStop;
