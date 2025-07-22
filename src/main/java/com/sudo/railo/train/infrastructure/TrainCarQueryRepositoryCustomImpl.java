@@ -75,7 +75,7 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 			))
 			.from(ts)
 			.join(ts.train, t)
-			.join(t.trainCars, tc)
+			.join(tc).on(tc.train.id.eq(t.id))
 			.where(ts.id.eq(trainScheduleId))
 			.orderBy(tc.carNumber.asc())
 			.fetch();
