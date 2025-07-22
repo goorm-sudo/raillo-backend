@@ -3,11 +3,11 @@ package com.sudo.railo.booking.application;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
-import com.sudo.railo.booking.domain.PassengerType;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.SeatReservationRepository;
+import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.infrastructure.SeatRepository;

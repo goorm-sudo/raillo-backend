@@ -1,4 +1,4 @@
-package com.sudo.railo.booking.infra;
+package com.sudo.railo.booking.infrastructure.reservation;
 
 import static com.sudo.railo.booking.domain.QReservation.*;
 import static com.sudo.railo.booking.domain.QSeatReservation.*;
@@ -22,7 +22,7 @@ import com.sudo.railo.booking.application.dto.projection.QReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.QSeatReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.ReservationProjection;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
-import com.sudo.railo.booking.domain.ReservationStatus;
+import com.sudo.railo.booking.domain.status.ReservationStatus;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.type.CarType;

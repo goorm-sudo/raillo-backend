@@ -1,5 +1,7 @@
 package com.sudo.railo.booking.domain;
 
+import com.sudo.railo.booking.domain.type.PassengerType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

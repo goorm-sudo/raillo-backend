@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.domain.Qr;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.QrRepository;
+import com.sudo.railo.booking.infrastructure.QrRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 
 import lombok.RequiredArgsConstructor;

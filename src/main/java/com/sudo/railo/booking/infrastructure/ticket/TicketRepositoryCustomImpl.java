@@ -1,4 +1,4 @@
-package com.sudo.railo.booking.infra;
+package com.sudo.railo.booking.infrastructure.ticket;
 
 import static com.sudo.railo.booking.domain.QReservation.*;
 import static com.sudo.railo.booking.domain.QTicket.*;
@@ -15,7 +15,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
-import com.sudo.railo.booking.domain.TicketStatus;
+import com.sudo.railo.booking.domain.status.TicketStatus;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 

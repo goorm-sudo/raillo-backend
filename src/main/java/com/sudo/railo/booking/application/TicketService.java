@@ -6,14 +6,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
-import com.sudo.railo.booking.domain.PassengerType;
 import com.sudo.railo.booking.domain.Qr;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.Ticket;
-import com.sudo.railo.booking.domain.TicketStatus;
+import com.sudo.railo.booking.domain.status.TicketStatus;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.TicketRepository;
-import com.sudo.railo.booking.infra.TicketRepositoryCustom;
+import com.sudo.railo.booking.infrastructure.ticket.TicketRepository;
+import com.sudo.railo.booking.infrastructure.ticket.TicketRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;

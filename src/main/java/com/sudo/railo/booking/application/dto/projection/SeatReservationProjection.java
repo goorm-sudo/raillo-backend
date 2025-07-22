@@ -1,7 +1,7 @@
 package com.sudo.railo.booking.application.dto.projection;
 
 import com.querydsl.core.annotations.QueryProjection;
-import com.sudo.railo.booking.domain.PassengerType;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.train.domain.type.CarType;
 
 import lombok.Getter;

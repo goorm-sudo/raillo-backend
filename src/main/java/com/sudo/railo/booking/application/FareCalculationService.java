@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.request.FareCalculateRequest;
-import com.sudo.railo.booking.domain.PassengerType;
+import com.sudo.railo.booking.domain.type.PassengerType;
 
 @Service
 public class FareCalculationService {
