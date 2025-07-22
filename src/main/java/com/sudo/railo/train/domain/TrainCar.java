@@ -9,7 +9,6 @@ import org.hibernate.annotations.Comment;
 
 import com.sudo.railo.train.domain.type.CarType;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +19,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,7 +38,7 @@ public class TrainCar {
 
 	@Enumerated(EnumType.STRING)
 	private CarType carType;
-	
+
 	private int seatRowCount;
 
 	private int totalSeats;
@@ -52,9 +50,6 @@ public class TrainCar {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_id")
 	private Train train;
-
-	@OneToMany(mappedBy = "trainCar", cascade = CascadeType.ALL)
-	private final List<Seat> seats = new ArrayList<>();
 
 	/* 생성 메서드 */
 

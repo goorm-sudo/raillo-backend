@@ -29,7 +29,7 @@ public class TrainService {
 
 	@Transactional(readOnly = true)
 	public Map<Integer, Train> getTrainMap() {
-		return trainRepository.findAllWithCars().stream()
+		return trainRepository.findAll().stream()
 			.collect(Collectors.toMap(Train::getTrainNumber, Function.identity()));
 	}
 
@@ -38,7 +38,7 @@ public class TrainService {
 	 */
 	@Transactional
 	public Map<Integer, Train> findOrCreateTrains(List<TrainData> trainData) {
-		Map<Integer, Train> trainMap = findExistingTrains();
+		Map<Integer, Train> trainMap = getTrainMap();
 
 		// 열차 생성
 		List<Train> trains = trainData.stream()
@@ -60,14 +60,6 @@ public class TrainService {
 
 		// 열차 ID가 없어서 다시 조회
 		return getTrainMap();
-	}
-
-	/**
-	 * 이미 존재하는 열차 조회
-	 */
-	private Map<Integer, Train> findExistingTrains() {
-		return trainRepository.findAllWithCars().stream()
-			.collect(Collectors.toMap(Train::getTrainNumber, Function.identity()));
 	}
 
 	/**

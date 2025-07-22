@@ -1,21 +1,11 @@
 package com.sudo.railo.train.domain;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import com.sudo.railo.train.domain.status.OperationStatus;
-import com.sudo.railo.train.domain.type.CarType;
-import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,9 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.MapKeyEnumerated;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -86,18 +73,6 @@ public class TrainSchedule {
 	@JoinColumn(name = "arrival_station_id")
 	private Station arrivalStation;
 
-	// 좌석 타입별 잔여 좌석 수 (Map 형태로 저장)
-	@ElementCollection
-	@CollectionTable(name = "schedule_available_seats",
-		joinColumns = @JoinColumn(name = "train_schedule_id"))
-	@MapKeyColumn(name = "car_type")
-	@MapKeyEnumerated(EnumType.STRING)
-	@Column(name = "available_seats")
-	private Map<CarType, Integer> availableSeatsMap = new HashMap<>();
-
-	@OneToMany(mappedBy = "trainSchedule", cascade = CascadeType.ALL)
-	private final List<ScheduleStop> scheduleStops = new ArrayList<>();
-
 	/* 생성 메서드 */
 
 	/**
@@ -123,9 +98,6 @@ public class TrainSchedule {
 		this.train = train;
 		this.departureStation = departureStation;
 		this.arrivalStation = arrivalStation;
-
-		// 초기 좌석 수 설정
-		initializeAvailableSeats();
 	}
 
 	/**
@@ -142,14 +114,6 @@ public class TrainSchedule {
 			template.getDepartureStation(),
 			template.getArrivalStation()
 		);
-	}
-
-	/** 초기 좌석 수 설정 */
-	private void initializeAvailableSeats() {
-		for (CarType carType : train.getSupportedCarTypes()) {
-			int totalSeats = train.getTotalSeatsByType(carType);
-			availableSeatsMap.put(carType, totalSeats);
-		}
 	}
 
 	/* 비즈니스 메서드 */
@@ -176,74 +140,5 @@ public class TrainSchedule {
 	public void recoverDelay() {
 		this.delayMinutes = 0;
 		this.operationStatus = OperationStatus.ACTIVE;
-	}
-
-	/* 조회 로직 */
-
-	// 특정 타입 잔여 좌석 수 조회
-	public int getAvailableSeats(CarType carType) {
-		return availableSeatsMap.getOrDefault(carType, 0);
-	}
-
-	// 특정 타입 총 좌석 수 조회
-	public int getTotalSeats(CarType carType) {
-		return train.getTotalSeatsByType(carType);
-	}
-
-	// 예약 가능 여부 확인
-	public boolean canReserveSeats(CarType carType, int seatCount) {
-		if (!isOperational())
-			return false;
-		if (!train.getSupportedCarTypes().contains(carType))
-			return false;
-		return getAvailableSeats(carType) >= seatCount;
-	}
-
-	// 좌석 가용성 상태 확인
-	public SeatAvailabilityStatus getSeatAvailabilityStatus(CarType carType) {
-		int available = getAvailableSeats(carType);
-
-		if (available == 0) {
-			return SeatAvailabilityStatus.SOLD_OUT;
-		} else if (available <= 5) {
-			return SeatAvailabilityStatus.FEW_REMAINING;
-		} else if (available <= 10) {
-			return SeatAvailabilityStatus.LIMITED;
-		} else {
-			return SeatAvailabilityStatus.AVAILABLE;
-		}
-	}
-
-	// 운행 가능 여부
-	public boolean isOperational() {
-		return operationStatus == OperationStatus.ACTIVE ||
-			operationStatus == OperationStatus.DELAYED;
-	}
-
-	// 소요 시간 계산
-	public Duration getTravelDuration() {
-		return Duration.between(departureTime, arrivalTime);
-	}
-
-	/* 검증 로직 */
-
-	// 좌석 예약 검증
-	private void validateSeatReservation(CarType carType, int seatCount) {
-		if (seatCount <= 0) {
-			throw new IllegalArgumentException("좌석 수는 1 이상이어야 합니다");
-		}
-
-		if (!isOperational()) {
-			throw new IllegalStateException("운행이 중단된 열차입니다");
-		}
-
-		if (!train.getSupportedCarTypes().contains(carType)) {
-			throw new IllegalArgumentException("지원하지 않는 좌석 타입입니다: " + carType);
-		}
-
-		if (getAvailableSeats(carType) < seatCount) {
-			throw new IllegalStateException(
-				"좌석이 부족합니다. 요청: " + seatCount + "석, 잔여: " + getAvailableSeats(carType) + "석");
-		}
 	}
 }
