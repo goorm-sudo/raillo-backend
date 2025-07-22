@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.response.ReservationCreateResponse;
-import com.sudo.railo.booking.domain.PassengerSummary;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
+import com.sudo.railo.booking.domain.type.PassengerSummary;
 import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.global.exception.error.BusinessException;
