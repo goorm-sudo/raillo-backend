@@ -1,6 +1,5 @@
 package com.sudo.railo.member.application;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,7 +19,6 @@ import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
 import com.sudo.railo.member.domain.Member;
@@ -28,23 +26,21 @@ import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Membership;
 import com.sudo.railo.member.domain.Role;
 import com.sudo.railo.member.exception.MemberError;
-import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.member.infrastructure.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class MemberAuthServiceImpl implements MemberAuthService {
+public class AuthService {
 
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final MemberNoGenerator memberNoGenerator;
-	private final EmailAuthService emailAuthService;
 	private final AuthenticationManager authenticationManager;
 	private final TokenProvider tokenProvider;
 	private final AuthRedisRepository authRedisRepository;
 
-	@Override
 	@Transactional
 	public SignUpResponse signUp(SignUpRequest request) {
 
@@ -65,7 +61,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		return new SignUpResponse(memberNo);
 	}
 
-	@Override
 	@Transactional
 	public TokenResponse memberNoLogin(MemberNoLoginRequest request) {
 
@@ -81,7 +76,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		return tokenResponse;
 	}
 
-	@Override
 	@Transactional
 	public void logout(String accessToken, String memberNo) {
 
@@ -96,7 +90,6 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		authRedisRepository.saveLogoutToken(accessToken, logoutToken, expiration);
 	}
 
-	@Override
 	@Transactional
 	public ReissueTokenResponse reissueAccessToken(String refreshToken, String memberNo) {
 
@@ -109,32 +102,4 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 		return tokenProvider.reissueAccessToken(refreshToken);
 	}
 
-	/* 이메일 인증 관련 */
-	@Override
-	public SendCodeResponse sendAuthCode(String email) {
-		String code = createAuthCode();
-		emailAuthService.sendEmail(email, code);
-		// redis 에 유효시간 설정해서 인증코드 저장
-		authRedisRepository.saveAuthCode(email, code);
-
-		return new SendCodeResponse(email);
-	}
-
-	@Override
-	public boolean verifyAuthCode(String email, String authCode) {
-		// redis 에서 저장해둔 인증 코드 get
-		String findCode = authRedisRepository.getAuthCode(email);
-		boolean isVerified = authCode.equals(findCode);
-
-		if (isVerified) {
-			authRedisRepository.deleteAuthCode(email);
-		}
-
-		return isVerified;
-	}
-
-	private String createAuthCode() {
-		SecureRandom random = new SecureRandom();
-		return String.format("%06d", random.nextInt(1000000));
-	}
 }

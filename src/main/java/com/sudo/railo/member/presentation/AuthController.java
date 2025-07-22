@@ -2,32 +2,20 @@ package com.sudo.railo.member.presentation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.member.application.MemberAuthService;
-import com.sudo.railo.member.application.MemberService;
-import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
-import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
+import com.sudo.railo.member.application.AuthService;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
-import com.sudo.railo.member.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
-import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
-import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.SignUpResponse;
-import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.member.application.dto.response.TokenResponse;
-import com.sudo.railo.member.application.dto.response.VerifyCodeResponse;
-import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.docs.AuthControllerDocs;
 import com.sudo.railo.member.success.AuthSuccess;
-import com.sudo.railo.member.success.MemberSuccess;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -40,14 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthController implements AuthControllerDocs {
 
-	private final MemberAuthService memberAuthService;
+	private final AuthService authService;
 	private final TokenExtractor tokenExtractor;
-	private final MemberService memberService;
 
 	@PostMapping("/signup")
 	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
 
-		SignUpResponse response = memberAuthService.signUp(request);
+		SignUpResponse response = authService.signUp(request);
 
 		return SuccessResponse.of(AuthSuccess.SIGN_UP_SUCCESS, response);
 	}
@@ -55,7 +42,7 @@ public class AuthController implements AuthControllerDocs {
 	@PostMapping("/login")
 	public SuccessResponse<TokenResponse> memberNoLogin(@RequestBody @Valid MemberNoLoginRequest request) {
 
-		TokenResponse tokenResponse = memberAuthService.memberNoLogin(request);
+		TokenResponse tokenResponse = authService.memberNoLogin(request);
 
 		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, tokenResponse);
 	}
@@ -66,7 +53,7 @@ public class AuthController implements AuthControllerDocs {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
-		memberAuthService.logout(accessToken, memberNo);
+		authService.logout(accessToken, memberNo);
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
@@ -77,98 +64,9 @@ public class AuthController implements AuthControllerDocs {
 
 		String refreshToken = tokenExtractor.resolveToken(request);
 
-		ReissueTokenResponse tokenResponse = memberAuthService.reissueAccessToken(refreshToken, memberNo);
+		ReissueTokenResponse tokenResponse = authService.reissueAccessToken(refreshToken, memberNo);
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
-	}
-
-	/* 이메일 인증 (인증되지 않은 사용자) */
-	@PostMapping("/emails")
-	public SuccessResponse<SendCodeResponse> sendAuthCode(@RequestBody @Valid SendCodeRequest request) {
-
-		String email = request.email();
-		SendCodeResponse response = memberAuthService.sendAuthCode(email);
-
-		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
-	}
-
-	/* 이메일 인증 (인증된 사용자) */
-	@PostMapping("/members/emails")
-	public SuccessResponse<SendCodeResponse> sendAuthCodeWithMember(
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
-
-		log.info("memberNo: {}", memberNo);
-
-		String email = memberService.getMemberEmail(memberNo);
-		SendCodeResponse response = memberAuthService.sendAuthCode(email);
-
-		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
-	}
-
-	/* 이메일 인증 (인증된 사용자, 인증되지 않은 사용자 모두 사용) */
-	@PostMapping("/emails/verify")
-	public SuccessResponse<VerifyCodeResponse> verifyAuthCode(@RequestBody @Valid VerifyCodeRequest request) {
-
-		String email = request.email();
-		String authCode = request.authCode();
-
-		boolean isVerified = memberAuthService.verifyAuthCode(email, authCode);
-		VerifyCodeResponse response = new VerifyCodeResponse(isVerified);
-
-		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS_FINISH, response);
-	}
-
-	/* 회원 번호 찾기 with 이메일 인증 */
-	@PostMapping("/member-no")
-	public SuccessResponse<SendCodeResponse> requestFindMemberNo(@RequestBody @Valid FindMemberNoRequest request) {
-
-		SendCodeResponse response = memberService.requestFindMemberNo(request);
-
-		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
-	}
-
-	@PostMapping("/member-no/verify")
-	public SuccessResponse<VerifyMemberNoResponse> verifyFindMemberNo(@RequestBody @Valid VerifyCodeRequest request) {
-
-		VerifyMemberNoResponse response = memberService.verifyFindMemberNo(request);
-
-		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
-	}
-
-	/* 비밀번호 찾기 with 이메일 인증 */
-	@PostMapping("/password")
-	public SuccessResponse<SendCodeResponse> requestFindPassword(@RequestBody @Valid FindPasswordRequest request) {
-
-		SendCodeResponse response = memberService.requestFindPassword(request);
-
-		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
-	}
-
-	@PostMapping("/password/verify")
-	public SuccessResponse<TemporaryTokenResponse> verifyFindPassword(@RequestBody @Valid VerifyCodeRequest request) {
-
-		TemporaryTokenResponse response = memberService.verifyFindPassword(request);
-
-		return SuccessResponse.of(AuthSuccess.VERIFY_CODE_SUCCESS, response);
-	}
-
-	/* 이메일 변경 with 이메일 인증 */
-	@PostMapping("/members/me/email-code")
-	public SuccessResponse<SendCodeResponse> requestUpdateEmail(@RequestBody @Valid SendCodeRequest request,
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
-
-		SendCodeResponse response = memberService.requestUpdateEmail(request, memberNo);
-
-		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
-	}
-
-	@PutMapping("/members/me/email-code")
-	public SuccessResponse<?> verifyUpdateEmail(@RequestBody @Valid UpdateEmailRequest request,
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
-
-		memberService.verifyUpdateEmail(request, memberNo);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
 
 }

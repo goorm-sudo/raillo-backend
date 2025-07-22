@@ -4,7 +4,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,8 +12,6 @@ import com.sudo.railo.global.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
-import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.docs.MemberControllerDocs;
@@ -60,21 +57,4 @@ public class MemberController implements MemberControllerDocs {
 		return SuccessResponse.of(MemberSuccess.MEMBER_INFO_SUCCESS, response);
 	}
 
-	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request,
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
-
-		memberService.updatePhoneNumber(request, memberNo);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
-	}
-
-	@PutMapping("/members/password")
-	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request,
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
-
-		memberService.updatePassword(request, memberNo);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
-	}
 }
