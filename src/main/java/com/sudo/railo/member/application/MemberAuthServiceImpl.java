@@ -17,7 +17,6 @@ import com.sudo.railo.global.redis.AuthRedisRepository;
 import com.sudo.railo.global.redis.LogoutToken;
 import com.sudo.railo.global.security.TokenError;
 import com.sudo.railo.global.security.jwt.TokenProvider;
-import com.sudo.railo.global.security.util.SecurityUtil;
 import com.sudo.railo.member.application.dto.request.MemberNoLoginRequest;
 import com.sudo.railo.member.application.dto.request.SignUpRequest;
 import com.sudo.railo.member.application.dto.response.ReissueTokenResponse;
@@ -84,10 +83,7 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
 	@Override
 	@Transactional
-	public void logout(String accessToken) {
-
-		// 현재 로그인된 사용자의 회원번호를 가져옴
-		String memberNo = SecurityUtil.getCurrentMemberNo();
+	public void logout(String accessToken, String memberNo) {
 
 		// Redis 에서 해당 memberNo 로 저장된 RefreshToken 이 있는지 여부 확인 후, 존재할 경우 삭제
 		if (authRedisRepository.getRefreshToken(memberNo) != null) {
@@ -102,9 +98,8 @@ public class MemberAuthServiceImpl implements MemberAuthService {
 
 	@Override
 	@Transactional
-	public ReissueTokenResponse reissueAccessToken(String refreshToken) {
+	public ReissueTokenResponse reissueAccessToken(String refreshToken, String memberNo) {
 
-		String memberNo = SecurityUtil.getCurrentMemberNo();
 		String restoredRefreshToken = authRedisRepository.getRefreshToken(memberNo);
 
 		if (!refreshToken.equals(restoredRefreshToken)) {

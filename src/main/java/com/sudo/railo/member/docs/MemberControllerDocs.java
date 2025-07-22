@@ -33,7 +33,7 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "200", description = "회원 탈퇴가 성공적으로 완료되었습니다."),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> memberDelete(HttpServletRequest request);
+	SuccessResponse<?> memberDelete(HttpServletRequest request, String memberNo);
 
 	@Operation(method = "GET", summary = "단일 회원 정보 조회", description = "로그인 되어 있는 회원의 정보를 조회합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
@@ -41,7 +41,7 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "200", description = "회원 정보 조회에 성공했습니다."),
 		@ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<MemberInfoResponse> getMemberInfo();
+	SuccessResponse<MemberInfoResponse> getMemberInfo(String memberNo);
 
 	@Operation(method = "PUT", summary = "휴대폰 번호 변경", description = "요청으로 변경할 휴대폰 번호를 받아 회원 정보의 휴대폰 번호를 새로운 번호로 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
@@ -50,7 +50,7 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "409", description = "현재 사용하는 휴대폰 번호와 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
 		@ApiResponse(responseCode = "409", description = "이미 사용중인 이메일입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> updatePhoneNumber(UpdatePhoneNumberRequest request);
+	SuccessResponse<?> updatePhoneNumber(UpdatePhoneNumberRequest request, String memberNo);
 
 	@Operation(method = "PUT", summary = "비밀번호 변경", description = "요청으로 변경할 비밀번호를 받아 회원 정보의 비밀번호를 새로운 비밀번호로 변경합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
@@ -58,6 +58,6 @@ public interface MemberControllerDocs {
 		@ApiResponse(responseCode = "200", description = "비밀번호 변경에 성공했습니다."),
 		@ApiResponse(responseCode = "409", description = "현재 사용하는 비밀번호와 동일합니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> updatePassword(UpdatePasswordRequest request);
+	SuccessResponse<?> updatePassword(UpdatePasswordRequest request, String memberNo);
 
 }

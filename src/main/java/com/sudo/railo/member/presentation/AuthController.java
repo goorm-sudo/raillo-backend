@@ -61,21 +61,23 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/logout")
-	public SuccessResponse<?> logout(HttpServletRequest request) {
+	public SuccessResponse<?> logout(HttpServletRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
-		memberAuthService.logout(accessToken);
+		memberAuthService.logout(accessToken, memberNo);
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
 
 	@PostMapping("/reissue")
-	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request) {
+	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String refreshToken = tokenExtractor.resolveToken(request);
 
-		ReissueTokenResponse tokenResponse = memberAuthService.reissueAccessToken(refreshToken);
+		ReissueTokenResponse tokenResponse = memberAuthService.reissueAccessToken(refreshToken, memberNo);
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}
@@ -152,17 +154,19 @@ public class AuthController implements AuthControllerDocs {
 
 	/* 이메일 변경 with 이메일 인증 */
 	@PostMapping("/members/me/email-code")
-	public SuccessResponse<SendCodeResponse> requestUpdateEmail(@RequestBody @Valid SendCodeRequest request) {
+	public SuccessResponse<SendCodeResponse> requestUpdateEmail(@RequestBody @Valid SendCodeRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		SendCodeResponse response = memberService.requestUpdateEmail(request);
+		SendCodeResponse response = memberService.requestUpdateEmail(request, memberNo);
 
 		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
 	}
 
 	@PutMapping("/members/me/email-code")
-	public SuccessResponse<?> verifyUpdateEmail(@RequestBody @Valid UpdateEmailRequest request) {
+	public SuccessResponse<?> verifyUpdateEmail(@RequestBody @Valid UpdateEmailRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		memberService.verifyUpdateEmail(request);
+		memberService.verifyUpdateEmail(request, memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_EMAIL_UPDATE_SUCCESS);
 	}
