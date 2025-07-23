@@ -14,8 +14,6 @@ public class SeatProjection {
 
 	private final Long seatId;
 	private final String seatNumber;
-	private final int seatRow;
-	private final String seatColumn;
 	private final SeatType seatType;
 	private final String directionCode;
 	private final boolean isReserved;
@@ -25,8 +23,6 @@ public class SeatProjection {
 	public SeatProjection(
 		Long seatId,
 		String seatNumber,
-		int seatRow,
-		String seatColumn,
 		SeatType seatType,
 		String directionCode,
 		boolean isReserved,
@@ -34,19 +30,10 @@ public class SeatProjection {
 	) {
 		this.seatId = seatId;
 		this.seatNumber = seatNumber;
-		this.seatRow = seatRow;
-		this.seatColumn = seatColumn;
 		this.seatType = seatType;
 		this.directionCode = directionCode;
 		this.isReserved = isReserved;
 		this.specialMessage = specialMessage;
-	}
-
-	/**
-	 * 좌석 위치 반환 (예: "1D")
-	 */
-	public String getSeatPosition() {
-		return seatRow + seatColumn;
 	}
 
 	/**

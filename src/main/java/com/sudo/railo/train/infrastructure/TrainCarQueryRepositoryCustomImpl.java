@@ -8,15 +8,14 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.QSeatReservation;
 import com.sudo.railo.train.application.dto.projection.QTrainCarProjection;
 import com.sudo.railo.train.application.dto.projection.TrainCarProjection;
 import com.sudo.railo.train.application.dto.response.TrainCarInfo;
+import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QSeat;
-import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrain;
 import com.sudo.railo.train.domain.QTrainCar;
 import com.sudo.railo.train.domain.QTrainSchedule;
@@ -40,28 +39,12 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 		QTrainCar tc = QTrainCar.trainCar;
 		QSeat s = QSeat.seat;
 		QSeatReservation sr = QSeatReservation.seatReservation;
-		// QScheduleStop departureStop = new QScheduleStop("departureStop");
-		// QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
-		QStation departureStation = new QStation("departureStation");
-		QStation arrivalStation = new QStation("arrivalStation");
 
-		/**
-		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
-		 * 역 ID가 낮은 쪽 → 높은 쪽: 하행 (예: 서울(10) → 부산(50))
-		 * 역 ID가 높은 쪽 → 낮은 쪽: 상행 (예: 부산(50) → 서울(10))
-		 */
-		boolean isDownward = departureStationId < arrivalStationId;
-
-		// 구간 겹침 조건 정의
-		// 예약 구간: [기존출발 ~ 기존도착]
-		// 요청 구간: [검색출발 ~ 검색도착]
-		// 겹침 조건: 기존출발 < 검색도착 AND 기존도착 > 검색출발 (하행 기준)
-		//           기존출발 > 검색도착 AND 기존도착 < 검색출발 (상행 기준)
-		BooleanExpression overlapCondition = isDownward
-			? departureStation.id.lt(arrivalStationId)
-			.and(arrivalStation.id.gt(departureStationId)) // 하행
-			: departureStation.id.gt(arrivalStationId)
-			.and(arrivalStation.id.lt(departureStationId)); // 상행
+		// stopOrder 기반 구간 겹침을 위한 ScheduleStop 조인
+		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
+		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
+		QScheduleStop searchDepartureStop = new QScheduleStop("searchDepartureStop");
+		QScheduleStop searchArrivalStop = new QScheduleStop("searchArrivalStop");
 
 		// 1. 해당 trainScheduleId의 객차(trainCar) 조회
 		List<TrainCarProjection> carProjections = queryFactory
@@ -87,12 +70,25 @@ public class TrainCarQueryRepositoryCustomImpl implements TrainCarQueryRepositor
 			.join(sr.seat, s)
 			.join(s.trainCar, tc)
 			.join(sr.reservation, reservation)
-			.join(reservation.departureStop.station, departureStation)
-			.join(reservation.arrivalStop.station, arrivalStation)
+			// stopOrder 기반 구간 겹침 조건
+			.join(reservation.departureStop, reservedDepartureStop)
+			.join(reservation.arrivalStop, reservedArrivalStop)
+			.join(searchDepartureStop).on(
+				searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
+					.and(searchDepartureStop.station.id.eq(departureStationId))
+			)
+			.join(searchArrivalStop).on(
+				searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
+					.and(searchArrivalStop.station.id.eq(arrivalStationId))
+			)
 			.where(
-				sr.trainSchedule.id.eq(trainScheduleId), // trainSchedule 직접 참조
+				sr.trainSchedule.id.eq(trainScheduleId),
 				sr.seat.isNotNull(),
-				overlapCondition  // 구간 겹침 조건
+				// stopOrder 기반 구간 겹침 조건
+				// 구간 겹침: NOT(예약종료 <= 검색시작 OR 예약시작 >= 검색종료)
+				// = 예약종료 > 검색시작 AND 예약시작 < 검색종료
+				reservedArrivalStop.stopOrder.gt(searchDepartureStop.stopOrder)
+					.and(reservedDepartureStop.stopOrder.lt(searchArrivalStop.stopOrder))
 			)
 			.groupBy(tc.id)
 			.fetch()

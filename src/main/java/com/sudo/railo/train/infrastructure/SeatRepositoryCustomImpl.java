@@ -11,12 +11,12 @@ import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.train.application.TrainCarSeatInfo;
 import com.sudo.railo.train.application.dto.projection.QSeatProjection;
 import com.sudo.railo.train.application.dto.projection.SeatProjection;
+import com.sudo.railo.train.domain.QScheduleStop;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,43 +34,30 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 
 		// 1. 객차 기본 정보 조회
 		Tuple carInfo = queryFactory.select(trainCar.carNumber, trainCar.carType, trainCar.seatArrangement,
-			trainCar.totalSeats).from(trainCar).where(trainCar.id.eq(trainCarId)).fetchOne();
+			trainCar.totalSeats, trainCar.seatRowCount).from(trainCar).where(trainCar.id.eq(trainCarId)).fetchOne();
 
-		Integer maxSeatRow = queryFactory.select(seat.seatRow.max())
-			.from(seat)
-			.where(seat.trainCar.id.eq(trainCarId))
-			.fetchOne();
-
-		int middleRow = (maxSeatRow != null) ? (maxSeatRow + 1) / 2 : 8; // 중간 지점 계산
+		// seatRowCount 로 middleRow 계산
+		Integer seatRowCount = carInfo.get(trainCar.seatRowCount);
+		int middleRow = (seatRowCount != null) ? (seatRowCount + 1) / 2 : 8; // 중간 지점 계산
 
 		// 2. 좌석별 상세 정보 조회 (예약 상태 포함)
-
-		/**
-		 * 상행 / 하행 방향 판단 : 출발역 < 도착역이면 하행, 아니면 상행
-		 * 역 ID가 낮은 쪽 → 높은 쪽: 하행 (예: 서울(10) → 부산(50))
-		 * 역 ID가 높은 쪽 → 낮은 쪽: 상행 (예: 부산(50) → 서울(10))
-		 */
-		boolean isDownward = departureStationId < arrivalStationId;
-
-		// 구간 겹침 조건 정의
-		BooleanExpression overlapCondition = isDownward
-			? reservation.departureStop.station.id.lt(arrivalStationId)
-			.and(reservation.arrivalStop.station.id.gt(departureStationId)) // 하행: 기존출발 < 검색도착 && 기존도착 > 검색출발
-			: reservation.departureStop.station.id.gt(arrivalStationId)
-			.and(reservation.arrivalStop.station.id.lt(departureStationId)); // 상행: 기존출발 > 검색도착 && 기존도착 < 검색출발
+		// stopOrder 기반 구간 겹침을 위한 ScheduleStop 조인
+		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
+		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
+		QScheduleStop searchDepartureStop = new QScheduleStop("searchDepartureStop");
+		QScheduleStop searchArrivalStop = new QScheduleStop("searchArrivalStop");
 
 		List<SeatProjection> seatProjections = queryFactory.select(
-				new QSeatProjection(seat.id, seat.seatRow.stringValue().concat(seat.seatColumn), seat.seatRow,
-					seat.seatColumn, seat.seatType,
+				new QSeatProjection(seat.id,
+					seat.seatRow.stringValue().concat(seat.seatColumn),
+					seat.seatType,
 					// directionCode
 					new CaseBuilder().when(seat.seatRow.loe(middleRow)) // 중간 이하 : 순방향
 						.then("009")  // 순방향
 						.otherwise("010"), // 역방향
-					// 해당 구간에 예약이 있는지 확인
-					new CaseBuilder().when(seatReservation.id.isNotNull().and(reservation.id.isNotNull()))
-						.then(true)
-						.otherwise(false),
-					// 4인 동반석 안내 메시지
+					// isReserved
+					new CaseBuilder().when(seatReservation.id.isNotNull()).then(true).otherwise(false),
+					// specialMessage
 					new CaseBuilder().when(seat.seatRow.between(middleRow, middleRow + 1))
 						.then(new CaseBuilder().when(seat.seatRow.eq(middleRow))
 							.then("KTX 4인동반석 순방향 좌석 입니다. 맞은편 좌석에 다른 승객이 승차할 수 있습니다.")
@@ -85,9 +72,28 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 				.and(seatReservation.seat.isNotNull())
 			)
 			.leftJoin(reservation)
-			.on(reservation.id.eq(seatReservation.reservation.id)
-				.and(seatReservation.id.isNotNull().and(overlapCondition))) // 구간 겹침 확인
-			.where(seat.trainCar.id.eq(trainCarId))
+			.on(reservation.id.eq(seatReservation.id))
+
+			.leftJoin(reservation.departureStop, reservedDepartureStop)
+			.leftJoin(reservation.arrivalStop, reservedArrivalStop)
+			.leftJoin(searchDepartureStop).on(
+				searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
+					.and(searchDepartureStop.station.id.eq(departureStationId))
+			)
+			.leftJoin(searchArrivalStop).on(
+				searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
+					.and(searchArrivalStop.station.id.eq(arrivalStationId))
+			)
+			.where(
+				seat.trainCar.id.eq(trainCarId),
+				// stopOrder 기반 구간 겹침 조건
+				// 구간 겹침: NOT(예약종료 <= 검색시작 OR 예약시작 >= 검색종료)
+				// = 예약종료 > 검색시작 AND 예약시작 < 검색종료
+				reservation.id.isNull().or(
+					reservedArrivalStop.stopOrder.gt(searchDepartureStop.stopOrder)
+						.and(reservedDepartureStop.stopOrder.lt(searchArrivalStop.stopOrder))
+				)
+			)
 			.orderBy(seat.seatRow.asc(), seat.seatColumn.asc())
 			.fetch();
 

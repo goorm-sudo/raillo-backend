@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.global.util.MonitorPerformance;
+import com.sudo.railo.global.util.TrackQuery;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
@@ -115,11 +117,9 @@ public class TrainScheduleService {
 	 * 3. 각 열차별 좌석 상태 계산 및 응답 생성
 	 * 4. 최종 조회 결과 반환
 	 */
+	@MonitorPerformance(value = "통합 열차 조회", enableN1Detection = true)
 	public TrainSearchSlicePageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
-		log.info("열차 조회 시작: {} -> {}, {}, 승객: {}명, 출발 시간: {}시 이후",
-			request.departureStationId(), request.arrivalStationId(),
-			request.operationDate(), request.passengerCount(), request.departureHour());
-
+		// request 검증 (route, operationDate, departureTime)
 		trainSearchValidator.validateTrainSearchRequest(request);
 
 		// 1.  조회 조건에 맞는 기본 열차 정보 조회
@@ -183,6 +183,7 @@ public class TrainScheduleService {
 	/**
 	 * 구간별 요금 정보 조회
 	 */
+	@TrackQuery(queryName = "findStationFare")
 	private StationFare findStationFare(Long departureStationId, Long arrivalStationId) {
 		log.debug("요금 정보 조회: {} -> {}", departureStationId, arrivalStationId);
 		return stationFareRepository.findByDepartureStationIdAndArrivalStationId(departureStationId, arrivalStationId)
@@ -201,6 +202,8 @@ public class TrainScheduleService {
 	 */
 	private List<TrainSearchResponse> processTrainSearchResults(List<TrainBasicInfo> trainInfos, StationFare fare,
 		TrainSearchRequest request) {
+
+		log.info("🔍 N+1 체크 포인트: {}건의 열차 처리 시작", trainInfos.size());
 
 		List<TrainSearchResponse> results = trainInfos.stream()
 			.map(trainInfo -> processIndividualTrain(trainInfo, fare, request)) // 각 개별 열차 처리
