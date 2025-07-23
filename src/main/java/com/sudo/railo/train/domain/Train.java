@@ -11,7 +11,6 @@ import org.hibernate.annotations.Comment;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.domain.type.TrainType;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +18,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,9 +41,6 @@ public class Train {
 	private String trainName;
 
 	private int totalCars;
-
-	@OneToMany(mappedBy = "train", cascade = CascadeType.ALL)
-	private final List<TrainCar> trainCars = new ArrayList<>();
 
 	/* 생성 메서드 */
 
@@ -85,36 +80,5 @@ public class Train {
 			trainCar.setTrain(this);
 		}
 		return trainCars;
-	}
-
-	/* 조회 로직 */
-
-	/**
-	 * 좌석 타입별 총 좌석 수 계산
-	 */
-	public int getTotalSeatsByType(CarType carType) {
-		return trainCars.stream()
-			.filter(car -> car.getCarType() == carType)
-			.mapToInt(TrainCar::getTotalSeats)
-			.sum();
-	}
-
-	/**
-	 * 좌석 타입별 칸 목록
-	 */
-	public List<TrainCar> getCarsByType(CarType carType) {
-		return trainCars.stream()
-			.filter(car -> car.getCarType() == carType)
-			.toList();
-	}
-
-	/**
-	 * 지원하는 좌석 타입
-	 */
-	public List<CarType> getSupportedCarTypes() {
-		return trainCars.stream()
-			.map(TrainCar::getCarType)
-			.distinct()
-			.toList();
 	}
 }

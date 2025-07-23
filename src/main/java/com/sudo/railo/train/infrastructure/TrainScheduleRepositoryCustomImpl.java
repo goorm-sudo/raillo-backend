@@ -82,8 +82,8 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 		JPAQuery<Long> validScheduleSubQuery = queryFactory
 			.select(ts.id)
 			.from(ts)
-			.join(ts.scheduleStops, departureStop)
-			.join(ts.scheduleStops, arrivalStop)
+			.join(departureStop).on(departureStop.trainSchedule.id.eq(ts.id))
+			.join(arrivalStop).on(arrivalStop.trainSchedule.id.eq(ts.id))
 			.where(
 				ts.operationDate.eq(operationDate)
 					.and(ts.operationStatus.eq(OperationStatus.ACTIVE))
@@ -110,9 +110,9 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 				arrivalStation.stationName))
 			.from(ts)
 			.join(ts.train, t)
-			.join(ts.scheduleStops, depStop2)
+			.join(depStop2).on(depStop2.trainSchedule.id.eq(ts.id))
 			.join(depStop2.station, departureStation)
-			.join(ts.scheduleStops, arrStop2)
+			.join(arrStop2).on(arrStop2.trainSchedule.id.eq(ts.id))
 			.join(arrStop2.station, arrivalStation)
 			.where(
 				ts.id.in(validScheduleSubQuery)
@@ -162,7 +162,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			.select(tc.carType, tc.totalSeats.sum())    // 객차타입별 좌석수 합계
 			.from(ts)
 			.join(ts.train, t)                          // 열차 조인
-			.join(t.trainCars, tc)                      // 객차 조인
+			.join(tc).on(tc.train.eq(t))                // 객차 조인
 			.where(ts.id.eq(trainScheduleId))           // 특정 열차 스케줄
 			.groupBy(tc.carType)                        // 객차 타입별 그룹화
 			.fetch();
@@ -188,7 +188,7 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			.select(tc.totalSeats.sum())
 			.from(ts)
 			.join(ts.train, t)
-			.join(t.trainCars, tc)
+			.join(tc).on(tc.train.eq(t))
 			.where(ts.id.eq(trainScheduleId))
 			.fetchOne();
 
