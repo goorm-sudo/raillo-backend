@@ -28,19 +28,32 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 
 	private final JPAQueryFactory queryFactory;
 
+	/**
+	 * 특정 객차의 모든 좌석 상세 정보 및 예약 상태 조회
+	 * - LEFT JOIN으로 예약 정보 연결 (예약 없는 좌석도 포함)
+	 * - stopOrder 기반으로 해당 구간에서의 예약 상태 판단
+	 * - 좌석별 방향성, 특별 메시지 등 부가 정보 포함
+	 */
 	@Override
 	public TrainCarSeatInfo findTrainCarSeatDetail(Long trainCarId, Long trainScheduleId, Long departureStationId,
 		Long arrivalStationId) {
 
 		// 1. 객차 기본 정보 조회
-		Tuple carInfo = queryFactory.select(trainCar.carNumber, trainCar.carType, trainCar.seatArrangement,
-			trainCar.totalSeats, trainCar.seatRowCount).from(trainCar).where(trainCar.id.eq(trainCarId)).fetchOne();
+		Tuple carInfo = queryFactory.select(
+				trainCar.carNumber,
+				trainCar.carType,
+				trainCar.seatArrangement,
+				trainCar.totalSeats,
+				trainCar.seatRowCount)
+			.from(trainCar)
+			.where(trainCar.id.eq(trainCarId))
+			.fetchOne();
 
 		// seatRowCount 로 middleRow 계산
 		Integer seatRowCount = carInfo.get(trainCar.seatRowCount);
 		int middleRow = (seatRowCount != null) ? (seatRowCount + 1) / 2 : 8; // 중간 지점 계산
 
-		// 2. 좌석별 상세 정보 조회 (예약 상태 포함)
+		// 2. 객차 내 모든 좌석 상세 정보 조회 (예약 상태 포함)
 		// stopOrder 기반 구간 겹침을 위한 ScheduleStop 조인
 		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
 		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
@@ -66,16 +79,16 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 							.otherwise(""))
 						.otherwise("")))
 			.from(seat)
-			.leftJoin(seatReservation)
-			.on(seatReservation.seat.id.eq(seat.id)
-				.and(seatReservation.trainSchedule.id.eq(trainScheduleId))
-				.and(seatReservation.seat.isNotNull())
+			.leftJoin(seatReservation).on(
+				seatReservation.seat.id.eq(seat.id)
+					.and(seatReservation.trainSchedule.id.eq(trainScheduleId))
+					.and(seatReservation.seat.isNotNull())  // 실제 좌석 예약 (입석 X)
 			)
-			.leftJoin(reservation)
-			.on(reservation.id.eq(seatReservation.id))
-
+			.leftJoin(seatReservation.reservation, reservation)
+			// 기존 예약 정보 left join
 			.leftJoin(reservation.departureStop, reservedDepartureStop)
 			.leftJoin(reservation.arrivalStop, reservedArrivalStop)
+			// 검색 구간 정보 left join
 			.leftJoin(searchDepartureStop).on(
 				searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
 					.and(searchDepartureStop.station.id.eq(departureStationId))
@@ -98,7 +111,9 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 			.fetch();
 
 		// 3. 잔여 좌석 수 계산
-		long remainingSeats = seatProjections.stream().mapToLong(projection -> projection.isAvailable() ? 1 : 0).sum();
+		long remainingSeats = seatProjections.stream()
+			.mapToLong(projection -> projection.isAvailable() ? 1 : 0)
+			.sum();
 
 		return new TrainCarSeatInfo(String.valueOf(carInfo.get(trainCar.carNumber)), carInfo.get(trainCar.carType),
 			carInfo.get(trainCar.seatArrangement), Optional.ofNullable(carInfo.get(trainCar.totalSeats)).orElse(0),
