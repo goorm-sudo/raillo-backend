@@ -11,17 +11,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.auth.application.dto.request.LoginRequest;
+import com.sudo.railo.auth.application.dto.request.SignUpRequest;
+import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
+import com.sudo.railo.auth.application.dto.response.SignUpResponse;
+import com.sudo.railo.auth.application.dto.response.TokenResponse;
 import com.sudo.railo.auth.security.TokenError;
 import com.sudo.railo.auth.security.jwt.TokenProvider;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.AuthRedisRepository;
 import com.sudo.railo.global.redis.LogoutToken;
 import com.sudo.railo.member.application.MemberNoGenerator;
-import com.sudo.railo.auth.application.dto.request.MemberNoLoginRequest;
-import com.sudo.railo.auth.application.dto.request.SignUpRequest;
-import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
-import com.sudo.railo.auth.application.dto.response.SignUpResponse;
-import com.sudo.railo.auth.application.dto.response.TokenResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
 import com.sudo.railo.member.domain.Membership;
@@ -63,7 +63,7 @@ public class AuthService {
 	}
 
 	@Transactional
-	public TokenResponse memberNoLogin(MemberNoLoginRequest request) {
+	public TokenResponse login(LoginRequest request) {
 
 		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
 			request.memberNo(), request.password());

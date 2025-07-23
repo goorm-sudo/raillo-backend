@@ -6,18 +6,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sudo.railo.auth.security.jwt.TokenExtractor;
-import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.auth.application.AuthService;
-import com.sudo.railo.auth.application.dto.request.MemberNoLoginRequest;
+import com.sudo.railo.auth.application.dto.request.LoginRequest;
 import com.sudo.railo.auth.application.dto.request.SignUpRequest;
+import com.sudo.railo.auth.application.dto.response.LoginResponse;
 import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.SignUpResponse;
 import com.sudo.railo.auth.application.dto.response.TokenResponse;
 import com.sudo.railo.auth.docs.AuthControllerDocs;
+import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.auth.success.AuthSuccess;
+import com.sudo.railo.global.success.SuccessResponse;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +43,22 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/login")
-	public SuccessResponse<TokenResponse> memberNoLogin(@RequestBody @Valid MemberNoLoginRequest request) {
+	public SuccessResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request,
+		HttpServletResponse response) {
 
-		TokenResponse tokenResponse = authService.memberNoLogin(request);
+		TokenResponse tokenResponse = authService.login(request);
+		LoginResponse loginResponse = new LoginResponse(tokenResponse.grantType(), tokenResponse.accessToken(),
+			tokenResponse.accessTokenExpiresIn());
 
-		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, tokenResponse);
+		Cookie cookie = new Cookie("refreshToken", tokenResponse.refreshToken());
+		cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+		cookie.setSecure(true); // secure cookie 적용
+		cookie.setHttpOnly(true); // JavaScript 에서 접근 금지
+		cookie.setPath("/"); // 모든 경로에서 쿠키 전송 가능
+
+		response.addCookie(cookie); // 쿠키 전달
+
+		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, loginResponse);
 	}
 
 	@PostMapping("/logout")

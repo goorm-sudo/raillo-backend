@@ -1,12 +1,12 @@
 package com.sudo.railo.auth.docs;
 
-import com.sudo.railo.global.exception.error.ErrorResponse;
-import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.auth.application.dto.request.MemberNoLoginRequest;
+import com.sudo.railo.auth.application.dto.request.LoginRequest;
 import com.sudo.railo.auth.application.dto.request.SignUpRequest;
+import com.sudo.railo.auth.application.dto.response.LoginResponse;
 import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.SignUpResponse;
-import com.sudo.railo.auth.application.dto.response.TokenResponse;
+import com.sudo.railo.global.exception.error.ErrorResponse;
+import com.sudo.railo.global.success.SuccessResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Tag(name = "Authentication", description = "🔐 인증 API - 회원 로그인, 회원가입, 토큰 관리 API")
 public interface AuthControllerDocs {
@@ -33,7 +34,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "로그인에 성공하였습니다."),
 		@ApiResponse(responseCode = "401", description = "비밀번호가 일치하지 않습니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<TokenResponse> memberNoLogin(MemberNoLoginRequest request);
+	SuccessResponse<LoginResponse> login(LoginRequest request, HttpServletResponse response);
 
 	@Operation(method = "POST", summary = "로그아웃", description = "로그인 되어있는 회원을 로그아웃 처리합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
