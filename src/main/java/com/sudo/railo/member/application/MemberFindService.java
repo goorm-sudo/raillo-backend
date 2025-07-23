@@ -3,17 +3,18 @@ package com.sudo.railo.member.application;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.auth.application.EmailAuthService;
+import com.sudo.railo.auth.security.jwt.TokenProvider;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.MemberRedisRepository;
-import com.sudo.railo.global.security.jwt.TokenProvider;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
-import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.request.VerifyCodeRequest;
+import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.domain.Member;
-import com.sudo.railo.member.exception.AuthError;
+import com.sudo.railo.auth.exception.AuthError;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 

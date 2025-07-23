@@ -9,12 +9,12 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberFindService;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
 import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
-import com.sudo.railo.member.application.dto.request.VerifyCodeRequest;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.request.VerifyCodeRequest;
+import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.docs.MemberFindControllerDocs;
-import com.sudo.railo.member.success.AuthSuccess;
+import com.sudo.railo.auth.success.AuthSuccess;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

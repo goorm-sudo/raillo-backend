@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.auth.application.AuthService;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;

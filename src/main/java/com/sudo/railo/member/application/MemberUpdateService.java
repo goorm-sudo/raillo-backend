@@ -4,16 +4,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.auth.application.EmailAuthService;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.MemberRedisRepository;
-import com.sudo.railo.member.application.dto.request.SendCodeRequest;
+import com.sudo.railo.auth.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.domain.MemberDetail;
-import com.sudo.railo.member.exception.AuthError;
+import com.sudo.railo.auth.exception.AuthError;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 

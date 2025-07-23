@@ -2,11 +2,11 @@ package com.sudo.railo.member.docs;
 
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.member.application.dto.request.SendCodeRequest;
+import com.sudo.railo.auth.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
