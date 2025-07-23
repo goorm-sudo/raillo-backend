@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
-import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.member.infrastructure.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

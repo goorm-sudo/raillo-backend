@@ -1,4 +1,4 @@
-package com.sudo.railo.member.infra;
+package com.sudo.railo.member.infrastructure;
 
 import java.util.Optional;
 
