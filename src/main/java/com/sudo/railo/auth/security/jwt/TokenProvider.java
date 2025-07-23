@@ -16,10 +16,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.sudo.railo.auth.security.TokenError;
-import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.TokenResponse;
+import com.sudo.railo.auth.exception.TokenError;
+import com.sudo.railo.global.exception.error.BusinessException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;

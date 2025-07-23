@@ -16,7 +16,7 @@ import com.sudo.railo.auth.application.dto.request.SignUpRequest;
 import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.SignUpResponse;
 import com.sudo.railo.auth.application.dto.response.TokenResponse;
-import com.sudo.railo.auth.security.TokenError;
+import com.sudo.railo.auth.exception.TokenError;
 import com.sudo.railo.auth.security.jwt.TokenProvider;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.AuthRedisRepository;
