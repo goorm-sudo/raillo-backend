@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudo.railo.booking.application.dto.ReservationInfo;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
-import com.sudo.railo.booking.application.dto.request.FareCalculateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationDeleteRequest;
 import com.sudo.railo.booking.application.dto.response.ReservationDetail;
@@ -205,9 +204,9 @@ public class ReservationService {
 				p.getSeatNumber(),
 				p.getFare(),
 				// 운임 계산
-				fareCalculationService.calculateFare(new FareCalculateRequest(
+				fareCalculationService.calculateFare(
 					p.getPassengerType(),
-					BigDecimal.valueOf(p.getFare()))
+					BigDecimal.valueOf(p.getFare())
 				).intValue()
 			))
 			.toList();

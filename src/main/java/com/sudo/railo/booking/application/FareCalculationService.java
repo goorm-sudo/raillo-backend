@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.sudo.railo.booking.application.dto.request.FareCalculateRequest;
 import com.sudo.railo.booking.domain.type.PassengerType;
 
 @Service
@@ -23,11 +22,12 @@ public class FareCalculationService {
 
 	/***
 	 * 승객 유형별로 내야 할 금액을 계산하는 메서드
-	 * @param request 승객 유형, 원래 운임을 포함하는 DTO
+	 * @param passengerType 승객 유형
+	 * @param fare 운임
 	 * @return 할인이 적용 된 운임
 	 */
-	public BigDecimal calculateFare(FareCalculateRequest request) {
-		BigDecimal discountRate = DISCOUNT_RATES.get(request.passengerType());
-		return request.fare().multiply(discountRate);
+	public BigDecimal calculateFare(PassengerType passengerType, BigDecimal fare) {
+		BigDecimal discountRate = DISCOUNT_RATES.get(passengerType);
+		return fare.multiply(discountRate);
 	}
 }
