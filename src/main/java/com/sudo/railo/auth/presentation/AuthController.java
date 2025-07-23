@@ -58,7 +58,7 @@ public class AuthController implements AuthControllerDocs {
 		cookie.setHttpOnly(true); // JavaScript 에서 접근 금지
 		cookie.setPath("/"); // 모든 경로에서 쿠키 전송 가능
 
-		response.addCookie(cookie); // 쿠키 전달
+		response.addCookie(cookie);
 
 		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, loginResponse);
 	}
@@ -75,10 +75,9 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/reissue")
-	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request,
-		@AuthenticationPrincipal(expression = "username") String memberNo) {
+	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request) {
 
-		// refreshToken Cookie 에서 추출
+		// refreshToken 을 Cookie 에서 추출
 		String refreshToken = null;
 		if (request.getCookies() != null) {
 			for (Cookie cookie : request.getCookies()) {
@@ -93,7 +92,9 @@ public class AuthController implements AuthControllerDocs {
 			throw new BusinessException(TokenError.INVALID_REFRESH_TOKEN);
 		}
 
-		ReissueTokenResponse tokenResponse = authService.reissueAccessToken(refreshToken, memberNo);
+		log.info("refreshToken: {}", refreshToken);
+
+		ReissueTokenResponse tokenResponse = authService.reissueAccessToken(refreshToken);
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}

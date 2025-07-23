@@ -92,7 +92,9 @@ public class AuthService {
 	}
 
 	@Transactional
-	public ReissueTokenResponse reissueAccessToken(String refreshToken, String memberNo) {
+	public ReissueTokenResponse reissueAccessToken(String refreshToken) {
+
+		String memberNo = tokenProvider.getMemberNo(refreshToken);
 
 		String restoredRefreshToken = authRedisRepository.getRefreshToken(memberNo);
 

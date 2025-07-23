@@ -137,11 +137,11 @@ public class TokenProvider {
 	}
 
 	// 토큰에 등록된 클레임의 sub에서 해당 회원 번호 추출
-	public String getMemberNo(String accessToken) {
+	public String getMemberNo(String token) {
 		return Jwts.parserBuilder()
 			.setSigningKey(key)
 			.build()
-			.parseClaimsJws(accessToken)
+			.parseClaimsJws(token)
 			.getBody()
 			.getSubject();
 	}

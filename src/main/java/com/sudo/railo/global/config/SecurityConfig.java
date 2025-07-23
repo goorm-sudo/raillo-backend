@@ -61,7 +61,7 @@ public class SecurityConfig {
 			.cors(cors -> cors.configurationSource(corsConfigurationSource))
 			// HTTP 요청에 대한 접근 권한 설정
 			.authorizeHttpRequests(auth -> {
-				auth.requestMatchers("/", "/auth/signup", "/auth/login").permitAll()
+				auth.requestMatchers("/", "/auth/signup", "/auth/login", "/auth/reissue").permitAll()
 					.requestMatchers(HttpMethod.POST, "/auth/emails/**").permitAll()
 					.requestMatchers(HttpMethod.POST, "/auth/member-no/**", "/auth/password/**").permitAll()
 					.requestMatchers("/api/v1/guest/register", "/api/v1/trains/**").permitAll()

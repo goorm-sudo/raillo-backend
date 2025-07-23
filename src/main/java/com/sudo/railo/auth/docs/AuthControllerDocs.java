@@ -50,6 +50,6 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "accessToken 이 성공적으로 재발급되었습니다."),
 		@ApiResponse(responseCode = "401", description = "유효하지 않은 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request, String memberNo);
+	SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request);
 
 }
