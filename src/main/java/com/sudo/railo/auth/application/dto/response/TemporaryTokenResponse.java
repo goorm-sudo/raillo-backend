@@ -1,4 +1,4 @@
-package com.sudo.railo.member.application.dto.response;
+package com.sudo.railo.auth.application.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
