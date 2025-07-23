@@ -8,13 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberUpdateService;
-import com.sudo.railo.member.application.dto.request.SendCodeRequest;
+import com.sudo.railo.auth.application.dto.request.SendCodeRequest;
 import com.sudo.railo.member.application.dto.request.UpdateEmailRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
 import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
-import com.sudo.railo.member.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 import com.sudo.railo.member.docs.MemberUpdateControllerDocs;
-import com.sudo.railo.member.success.AuthSuccess;
+import com.sudo.railo.auth.success.AuthSuccess;
 import com.sudo.railo.member.success.MemberSuccess;
 
 import jakarta.validation.Valid;

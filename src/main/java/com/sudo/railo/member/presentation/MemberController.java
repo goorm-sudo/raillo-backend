@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sudo.railo.global.security.jwt.TokenExtractor;
+import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;

@@ -18,11 +18,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
+import com.sudo.railo.auth.security.TokenError;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.exception.error.ErrorResponse;
 import com.sudo.railo.global.exception.error.GlobalError;
 import com.sudo.railo.global.redis.RedisError;
-import com.sudo.railo.global.security.TokenError;
 
 import io.jsonwebtoken.io.SerializationException;
 import jakarta.servlet.http.HttpServletRequest;
