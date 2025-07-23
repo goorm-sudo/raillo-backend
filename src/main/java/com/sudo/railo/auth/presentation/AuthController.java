@@ -1,6 +1,7 @@
 package com.sudo.railo.auth.presentation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,9 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -75,24 +74,11 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/reissue")
-	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request) {
-
-		// refreshToken 을 Cookie 에서 추출
-		String refreshToken = null;
-		if (request.getCookies() != null) {
-			for (Cookie cookie : request.getCookies()) {
-				if (cookie.getName().equals("refreshToken")) {
-					refreshToken = cookie.getValue();
-					break;
-				}
-			}
-		}
+	public SuccessResponse<ReissueTokenResponse> reissue(@CookieValue("refreshToken") String refreshToken) {
 
 		if (refreshToken == null || refreshToken.isEmpty()) {
 			throw new BusinessException(TokenError.INVALID_REFRESH_TOKEN);
 		}
-
-		log.info("refreshToken: {}", refreshToken);
 
 		ReissueTokenResponse tokenResponse = authService.reissueAccessToken(refreshToken);
 
