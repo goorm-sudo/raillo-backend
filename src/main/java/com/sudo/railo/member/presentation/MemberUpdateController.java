@@ -28,7 +28,7 @@ public class MemberUpdateController implements MemberUpdateControllerDocs {
 
 	private final MemberUpdateService memberUpdateService;
 
-	@PostMapping("auth/members/me/email-code")
+	@PostMapping("/auth/members/me/email-code")
 	public SuccessResponse<SendCodeResponse> requestUpdateEmail(@RequestBody @Valid SendCodeRequest request,
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
@@ -37,7 +37,7 @@ public class MemberUpdateController implements MemberUpdateControllerDocs {
 		return SuccessResponse.of(AuthSuccess.SEND_CODE_SUCCESS, response);
 	}
 
-	@PutMapping("auth/members/me/email-code")
+	@PutMapping("/auth/members/me/email-code")
 	public SuccessResponse<?> verifyUpdateEmail(@RequestBody @Valid UpdateEmailRequest request,
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
