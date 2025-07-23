@@ -14,8 +14,10 @@ import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.SignUpResponse;
 import com.sudo.railo.auth.application.dto.response.TokenResponse;
 import com.sudo.railo.auth.docs.AuthControllerDocs;
+import com.sudo.railo.auth.exception.TokenError;
 import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.auth.success.AuthSuccess;
+import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.success.SuccessResponse;
 
 import jakarta.servlet.http.Cookie;
@@ -76,7 +78,20 @@ public class AuthController implements AuthControllerDocs {
 	public SuccessResponse<ReissueTokenResponse> reissue(HttpServletRequest request,
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		String refreshToken = tokenExtractor.resolveToken(request);
+		// refreshToken Cookie 에서 추출
+		String refreshToken = null;
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				if (cookie.getName().equals("refreshToken")) {
+					refreshToken = cookie.getValue();
+					break;
+				}
+			}
+		}
+
+		if (refreshToken == null || refreshToken.isEmpty()) {
+			throw new BusinessException(TokenError.INVALID_REFRESH_TOKEN);
+		}
 
 		ReissueTokenResponse tokenResponse = authService.reissueAccessToken(refreshToken, memberNo);
 
