@@ -1,14 +1,26 @@
 package com.sudo.railo.booking.application;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.sudo.railo.booking.domain.type.PassengerSummary;
 import com.sudo.railo.booking.domain.type.PassengerType;
+import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.train.domain.StationFare;
+import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.train.exception.TrainErrorCode;
+import com.sudo.railo.train.infrastructure.StationFareRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class FareCalculationService {
+
+	private final StationFareRepository stationFareRepository;
 
 	private static final Map<PassengerType, BigDecimal> DISCOUNT_RATES = Map.of(
 		PassengerType.ADULT, BigDecimal.valueOf(1.0), // 정상가
@@ -20,14 +32,41 @@ public class FareCalculationService {
 		PassengerType.VETERAN, BigDecimal.valueOf(0.5) // 연 6회 무임, 6회 초과 시 50% 할인
 	);
 
-	/***
-	 * 승객 유형별로 내야 할 금액을 계산하는 메서드
-	 * @param passengerType 승객 유형
-	 * @param fare 운임
-	 * @return 할인이 적용 된 운임
+	/**
+	 * 총 운임을 계산하는 메서드
+	 * @param departureStationId 출발역 ID
+	 * @param arrivalStationId 도착역 ID
+	 * @param passengers 승객 정보
+	 * @param carType 객차 타입
+	 * @return 할인이 적용 된 총 운임
 	 */
-	public BigDecimal calculateFare(PassengerType passengerType, BigDecimal fare) {
-		BigDecimal discountRate = DISCOUNT_RATES.get(passengerType);
-		return fare.multiply(discountRate);
+	public BigDecimal calculateFare(
+		Long departureStationId,
+		Long arrivalStationId,
+		List<PassengerSummary> passengers,
+		CarType carType
+	) {
+		// 요금 정보 조회
+		StationFare stationFare = findStationFare(departureStationId, arrivalStationId);
+
+		BigDecimal fare = BigDecimal.valueOf(carType == CarType.STANDARD
+			? stationFare.getStandardFare() : stationFare.getFirstClassFare());
+
+		return passengers.stream()
+			.filter(summary -> summary.getCount() > 0)
+			.map(summary -> fare
+				.multiply(DISCOUNT_RATES.get(summary.getPassengerType())) // 할인 적용
+				.multiply(BigDecimal.valueOf(summary.getCount())) // 할인이 적용 된 운임 * 승객 수
+			)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	/**
+	 * 구간 요금 정보 조회
+	 */
+	private StationFare findStationFare(Long departureStationId, Long arrivalStationId) {
+		return stationFareRepository
+			.findByDepartureStationIdAndArrivalStationId(departureStationId, arrivalStationId)
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_FARE_NOT_FOUND));
 	}
 }
