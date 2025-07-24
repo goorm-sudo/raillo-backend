@@ -35,6 +35,7 @@ public class AuthController implements AuthControllerDocs {
 	private final AuthService authService;
 	private final TokenExtractor tokenExtractor;
 
+	private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 	private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 	private static final String COOKIE_PATH = "/";
 
@@ -61,7 +62,7 @@ public class AuthController implements AuthControllerDocs {
 
 	private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
 		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-		cookie.setMaxAge(7 * 24 * 60 * 6);
+		cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
 		cookie.setSecure(true); // HTTPS 환경에서만 전송
 		cookie.setHttpOnly(true); // JavaScript 접근 차단
 		cookie.setPath(COOKIE_PATH); // 모든 경로에서 쿠키 전송 가능
