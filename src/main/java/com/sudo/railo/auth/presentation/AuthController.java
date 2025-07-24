@@ -74,7 +74,8 @@ public class AuthController implements AuthControllerDocs {
 	}
 
 	@PostMapping("/reissue")
-	public SuccessResponse<ReissueTokenResponse> reissue(@CookieValue("refreshToken") String refreshToken) {
+	public SuccessResponse<ReissueTokenResponse> reissue(
+		@CookieValue(value = "refreshToken", required = false) String refreshToken) {
 
 		if (refreshToken == null || refreshToken.isEmpty()) {
 			throw new BusinessException(TokenError.INVALID_REFRESH_TOKEN);
