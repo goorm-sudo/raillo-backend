@@ -35,6 +35,9 @@ public class AuthController implements AuthControllerDocs {
 	private final AuthService authService;
 	private final TokenExtractor tokenExtractor;
 
+	private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+	private static final String COOKIE_PATH = "/";
+
 	@PostMapping("/signup")
 	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
 
@@ -51,15 +54,19 @@ public class AuthController implements AuthControllerDocs {
 		LoginResponse loginResponse = new LoginResponse(tokenResponse.grantType(), tokenResponse.accessToken(),
 			tokenResponse.accessTokenExpiresIn());
 
-		Cookie cookie = new Cookie("refreshToken", tokenResponse.refreshToken());
-		cookie.setMaxAge(7 * 24 * 60 * 60); // 7일
-		cookie.setSecure(true); // secure cookie 적용
-		cookie.setHttpOnly(true); // JavaScript 에서 접근 금지
-		cookie.setPath("/"); // 모든 경로에서 쿠키 전송 가능
+		setRefreshTokenCookie(response, tokenResponse.refreshToken());
+
+		return SuccessResponse.of(AuthSuccess.LOGIN_SUCCESS, loginResponse);
+	}
+
+	private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+		cookie.setMaxAge(7 * 24 * 60 * 6);
+		cookie.setSecure(true); // HTTPS 환경에서만 전송
+		cookie.setHttpOnly(true); // JavaScript 접근 차단
+		cookie.setPath(COOKIE_PATH); // 모든 경로에서 쿠키 전송 가능
 
 		response.addCookie(cookie);
-
-		return SuccessResponse.of(AuthSuccess.MEMBER_NO_LOGIN_SUCCESS, loginResponse);
 	}
 
 	@PostMapping("/logout")
