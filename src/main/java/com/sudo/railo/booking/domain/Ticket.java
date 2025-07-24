@@ -66,10 +66,6 @@ public class Ticket extends BaseEntity {
 	@Comment("승객 유형")
 	private PassengerType passengerType;
 
-	@Column(nullable = false)
-	@Comment("운임")
-	private int fare;
-
 	@Comment("결제 위치 번호 (예: 온라인 (01), ~~역(02...))")
 	private String vendorCode;
 
