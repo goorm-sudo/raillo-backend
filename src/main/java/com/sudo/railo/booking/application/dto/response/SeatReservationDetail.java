@@ -21,13 +21,7 @@ public record SeatReservationDetail(
 	CarType carType,
 
 	@Schema(description = "좌석 번호 (행 + 열)", example = "1D")
-	String seatNumber,
-
-	@Schema(description = "기본 요금 (원)", example = "59800")
-	int baseFare,
-
-	@Schema(description = "요금 (원)", example = "29900")
-	int fare
+	String seatNumber
 ) {
 
 	public static SeatReservationDetail of(
@@ -35,18 +29,14 @@ public record SeatReservationDetail(
 		PassengerType passengerType,
 		int carNumber,
 		CarType carType,
-		String seatNumber,
-		int baseFare,
-		int fare
+		String seatNumber
 	) {
 		return new SeatReservationDetail(
 			seatReservationId,
 			passengerType,
 			carNumber,
 			carType,
-			seatNumber,
-			baseFare,
-			fare
+			seatNumber
 		);
 	}
 }

@@ -21,8 +21,7 @@ public class ReservationProjection {
 	private final LocalTime arrivalTime;
 	private final LocalDate operationDate;
 	private final LocalDateTime expiresAt;
-	private final int standardFare;
-	private final int firstClassFare;
+	private final int fare;
 
 	@QueryProjection
 	public ReservationProjection(
@@ -36,8 +35,7 @@ public class ReservationProjection {
 		LocalTime arrivalTime,
 		LocalDate operationDate,
 		LocalDateTime expiresAt,
-		int standardFare,
-		int firstClassFare
+		int fare
 	) {
 		this.reservationId = reservationId;
 		this.reservationCode = reservationCode;
@@ -49,7 +47,6 @@ public class ReservationProjection {
 		this.arrivalTime = arrivalTime;
 		this.operationDate = operationDate;
 		this.expiresAt = expiresAt;
-		this.standardFare = standardFare;
-		this.firstClassFare = firstClassFare;
+		this.fare = fare;
 	}
 }
