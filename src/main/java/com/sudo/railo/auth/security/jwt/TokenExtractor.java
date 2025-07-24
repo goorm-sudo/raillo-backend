@@ -41,6 +41,9 @@ public class TokenExtractor {
 		this.key = Keys.hmacShaKeyFor(keyBytes);
 	}
 
+	/**
+	 * 토큰 추출
+	 * */
 	public String resolveToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
@@ -52,7 +55,9 @@ public class TokenExtractor {
 		return null;
 	}
 
-	// 토큰에 등록된 클레임의 sub에서 해당 회원 번호 추출
+	/**
+	 * 회원번호 추출
+	 * */
 	public String getMemberNo(String token) {
 		return Jwts.parserBuilder()
 			.setSigningKey(key)
@@ -62,7 +67,9 @@ public class TokenExtractor {
 			.getSubject();
 	}
 
-	// accessToken 유효 시간 추출
+	/**
+	 * AccessToken 유효시간 추출
+	 * */
 	public Duration getAccessTokenExpiration(String accessToken) {
 
 		Claims claims = parseClaims(accessToken);
@@ -73,7 +80,9 @@ public class TokenExtractor {
 		return Duration.ofMillis(expiration.getTime() - System.currentTimeMillis());
 	}
 
-	// AccessToken으로 인증 객체 추출
+	/**
+	 * 권한 추출
+	 * */
 	public Authentication getAuthentication(String accessToken) {
 
 		Claims claims = parseClaims(accessToken);
@@ -93,7 +102,9 @@ public class TokenExtractor {
 		return new UsernamePasswordAuthenticationToken(principal, "", authorities);
 	}
 
-	// AccessToken에서 클레임을 추출하는 메서드
+	/**
+	 * 클레임 추출
+	 * */
 	protected Claims parseClaims(String accessToken) {
 		try {
 			return Jwts.parserBuilder()

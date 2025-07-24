@@ -24,7 +24,9 @@ public class TokenValidator {
 		this.key = Keys.hmacShaKeyFor(keyBytes);
 	}
 
-	// 토큰 유효성 검사
+	/**
+	 * 토큰 유효성 검사
+	 * */
 	public boolean validateToken(String token) {
 		try {
 			Jwts.parserBuilder()
