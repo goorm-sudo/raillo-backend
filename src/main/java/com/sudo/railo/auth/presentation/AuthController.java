@@ -18,10 +18,10 @@ import com.sudo.railo.auth.docs.AuthControllerDocs;
 import com.sudo.railo.auth.exception.TokenError;
 import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.auth.success.AuthSuccess;
+import com.sudo.railo.auth.util.CookieManager;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.success.SuccessResponse;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,10 +34,10 @@ public class AuthController implements AuthControllerDocs {
 
 	private final AuthService authService;
 	private final TokenExtractor tokenExtractor;
+	private final CookieManager cookieManager;
 
 	private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 	private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-	private static final String COOKIE_PATH = "/";
 
 	@PostMapping("/signup")
 	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
@@ -55,7 +55,8 @@ public class AuthController implements AuthControllerDocs {
 		LoginResponse loginResponse = new LoginResponse(tokenResponse.grantType(), tokenResponse.accessToken(),
 			tokenResponse.accessTokenExpiresIn());
 
-		setCookie(response, tokenResponse.refreshToken());
+		cookieManager.setCookie(response, REFRESH_TOKEN_COOKIE_NAME, tokenResponse.refreshToken(),
+			REFRESH_TOKEN_MAX_AGE);
 
 		return SuccessResponse.of(AuthSuccess.LOGIN_SUCCESS, loginResponse);
 	}
@@ -68,7 +69,7 @@ public class AuthController implements AuthControllerDocs {
 
 		authService.logout(accessToken, memberNo);
 
-		removeCookie(response);
+		cookieManager.removeCookie(response, REFRESH_TOKEN_COOKIE_NAME);
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
@@ -85,27 +86,5 @@ public class AuthController implements AuthControllerDocs {
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}
-
-	/**
-	 * Cookie 생성 및 제거 메서드
-	 * */
-	private Cookie createCookie(String name, String value, int maxAge) {
-		Cookie cookie = new Cookie(name, value);
-		cookie.setMaxAge(maxAge);
-		cookie.setSecure(true);
-		cookie.setHttpOnly(true);
-		cookie.setPath(COOKIE_PATH);
-
-		return cookie;
-	}
-
-	private void setCookie(HttpServletResponse response, String refreshToken) {
-		Cookie cookie = createCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, REFRESH_TOKEN_MAX_AGE);
-		response.addCookie(cookie);
-	}
-
-	private void removeCookie(HttpServletResponse response) {
-		Cookie cookie = createCookie(REFRESH_TOKEN_COOKIE_NAME, null, 0);
-		response.addCookie(cookie);
-	}
+	
 }
