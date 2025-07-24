@@ -300,20 +300,18 @@ public class TrainScheduleService {
 
 		// 1. 좌석 타입별 정보 생성 (일반실 / 특실)
 		SeatTypeInfo standardSeatInfo = SeatTypeInfo.create(
-			sectionStatus.standardAvailable(),
-			sectionStatus.standardTotal(),
+			sectionStatus.standardAvailable(),   // 일반실 잔여 좌석 수
+			sectionStatus.standardTotal(),         // 일반실 전체 좌석 수
 			fare.getStandardFare(),
 			passengerCount,
-			"일반실",
-			hasStanding
+			"일반실"
 		);
 		SeatTypeInfo firstClassSeatInfo = SeatTypeInfo.create(
-			sectionStatus.firstClassAvailable(),
-			sectionStatus.firstClassTotal(),
+			sectionStatus.firstClassAvailable(), // 특실 잔여 좌석 수
+			sectionStatus.firstClassTotal(),     // 특실 전체 좌석 수
 			fare.getFirstClassFare(),
 			passengerCount,
-			"특실",
-			false
+			"특실"
 		);
 
 		// 2. 입석 정보 생성
