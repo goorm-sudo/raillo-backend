@@ -8,7 +8,7 @@ import com.sudo.railo.auth.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
 import com.sudo.railo.auth.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.auth.exception.AuthError;
-import com.sudo.railo.auth.security.jwt.TokenProvider;
+import com.sudo.railo.auth.security.jwt.TokenGenerator;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.MemberRedisRepository;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class MemberFindService {
 
 	private final MemberRepository memberRepository;
-	private final TokenProvider tokenProvider;
+	private final TokenGenerator tokenGenerator;
 	private final EmailAuthService emailAuthService;
 	private final MemberRedisRepository memberRedisRepository;
 
@@ -77,7 +77,7 @@ public class MemberFindService {
 	public TemporaryTokenResponse verifyFindPassword(VerifyCodeRequest request) {
 
 		String memberNo = verifyCodeAndGetMemberNo(request);
-		String temporaryToken = tokenProvider.generateTemporaryToken(memberNo);
+		String temporaryToken = tokenGenerator.generateTemporaryToken(memberNo);
 
 		return new TemporaryTokenResponse(temporaryToken);
 	}

@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtFilter extends OncePerRequestFilter {
 
 	private final TokenExtractor tokenExtractor;
-	private final TokenProvider tokenProvider;
+	private final TokenValidator tokenValidator;
 	private final AuthRedisRepository authRedisRepository;
 
 	// 각 요청에 대해 JWT 토큰을 검사하고 유효한 경우 SecurityContext에 인증 정보를 설정
@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 		String jwt = tokenExtractor.resolveToken(request);
 
-		if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+		if (StringUtils.hasText(jwt) && tokenValidator.validateToken(jwt)) {
 
 			String tokenType = getTokenType(jwt);
 			String requestUri = request.getRequestURI();
@@ -51,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
 			// 로그아웃이 되어 있지 않은 경우 토큰 정상 작동
 			if (ObjectUtils.isEmpty(isLogout)) {
-				Authentication authentication = tokenProvider.getAuthentication(jwt);
+				Authentication authentication = tokenExtractor.getAuthentication(jwt);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} else {
 				throw new BusinessException(TokenError.ALREADY_LOGOUT);
@@ -62,7 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
 	}
 
 	private String getTokenType(String jwt) {
-		Claims claims = tokenProvider.parseClaims(jwt);
+		Claims claims = tokenExtractor.parseClaims(jwt);
 		return claims.get("auth", String.class);
 	}
 
