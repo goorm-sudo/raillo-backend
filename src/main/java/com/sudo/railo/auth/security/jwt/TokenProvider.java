@@ -16,10 +16,10 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.sudo.railo.auth.security.TokenError;
-import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.auth.application.dto.response.ReissueTokenResponse;
 import com.sudo.railo.auth.application.dto.response.TokenResponse;
+import com.sudo.railo.auth.exception.TokenError;
+import com.sudo.railo.global.exception.error.BusinessException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -137,11 +137,11 @@ public class TokenProvider {
 	}
 
 	// 토큰에 등록된 클레임의 sub에서 해당 회원 번호 추출
-	public String getMemberNo(String accessToken) {
+	public String getMemberNo(String token) {
 		return Jwts.parserBuilder()
 			.setSigningKey(key)
 			.build()
-			.parseClaimsJws(accessToken)
+			.parseClaimsJws(token)
 			.getBody()
 			.getSubject();
 	}

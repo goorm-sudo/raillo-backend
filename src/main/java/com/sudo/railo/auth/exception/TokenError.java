@@ -1,4 +1,4 @@
-package com.sudo.railo.auth.security;
+package com.sudo.railo.auth.exception;
 
 import org.springframework.http.HttpStatus;
 

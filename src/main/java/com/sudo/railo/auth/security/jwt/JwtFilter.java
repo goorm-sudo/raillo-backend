@@ -8,7 +8,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.sudo.railo.auth.security.TokenError;
+import com.sudo.railo.auth.exception.TokenError;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.AuthRedisRepository;
 
