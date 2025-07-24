@@ -60,23 +60,15 @@ public class AuthController implements AuthControllerDocs {
 		return SuccessResponse.of(AuthSuccess.LOGIN_SUCCESS, loginResponse);
 	}
 
-	private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-		cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
-		cookie.setSecure(true); // HTTPS 환경에서만 전송
-		cookie.setHttpOnly(true); // JavaScript 접근 차단
-		cookie.setPath(COOKIE_PATH); // 모든 경로에서 쿠키 전송 가능
-
-		response.addCookie(cookie);
-	}
-
 	@PostMapping("/logout")
-	public SuccessResponse<?> logout(HttpServletRequest request,
+	public SuccessResponse<?> logout(HttpServletRequest request, HttpServletResponse response,
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
 		authService.logout(accessToken, memberNo);
+
+		removeRefreshTokenCookie(response);
 
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
@@ -93,4 +85,23 @@ public class AuthController implements AuthControllerDocs {
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}
 
+	private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+		cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
+		cookie.setSecure(true); // HTTPS 환경에서만 전송
+		cookie.setHttpOnly(true); // JavaScript 접근 차단
+		cookie.setPath(COOKIE_PATH); // 모든 경로에서 쿠키 전송 가능
+
+		response.addCookie(cookie);
+	}
+
+	private void removeRefreshTokenCookie(HttpServletResponse response) {
+		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, null);
+		cookie.setMaxAge(0);
+		cookie.setSecure(true);
+		cookie.setHttpOnly(true);
+		cookie.setPath(COOKIE_PATH);
+
+		response.addCookie(cookie);
+	}
 }
