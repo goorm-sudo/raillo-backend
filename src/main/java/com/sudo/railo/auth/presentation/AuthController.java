@@ -18,10 +18,10 @@ import com.sudo.railo.auth.docs.AuthControllerDocs;
 import com.sudo.railo.auth.exception.TokenError;
 import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.auth.success.AuthSuccess;
+import com.sudo.railo.auth.util.CookieManager;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.success.SuccessResponse;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,10 +34,10 @@ public class AuthController implements AuthControllerDocs {
 
 	private final AuthService authService;
 	private final TokenExtractor tokenExtractor;
+	private final CookieManager cookieManager;
 
 	private static final int REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 	private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-	private static final String COOKIE_PATH = "/";
 
 	@PostMapping("/signup")
 	public SuccessResponse<SignUpResponse> signUp(@RequestBody @Valid SignUpRequest request) {
@@ -55,34 +55,28 @@ public class AuthController implements AuthControllerDocs {
 		LoginResponse loginResponse = new LoginResponse(tokenResponse.grantType(), tokenResponse.accessToken(),
 			tokenResponse.accessTokenExpiresIn());
 
-		setRefreshTokenCookie(response, tokenResponse.refreshToken());
+		cookieManager.setCookie(response, REFRESH_TOKEN_COOKIE_NAME, tokenResponse.refreshToken(),
+			REFRESH_TOKEN_MAX_AGE);
 
 		return SuccessResponse.of(AuthSuccess.LOGIN_SUCCESS, loginResponse);
 	}
 
-	private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-		Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
-		cookie.setMaxAge(REFRESH_TOKEN_MAX_AGE);
-		cookie.setSecure(true); // HTTPS 환경에서만 전송
-		cookie.setHttpOnly(true); // JavaScript 접근 차단
-		cookie.setPath(COOKIE_PATH); // 모든 경로에서 쿠키 전송 가능
-
-		response.addCookie(cookie);
-	}
-
 	@PostMapping("/logout")
-	public SuccessResponse<?> logout(HttpServletRequest request,
+	public SuccessResponse<?> logout(HttpServletRequest request, HttpServletResponse response,
 		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
 		authService.logout(accessToken, memberNo);
 
+		cookieManager.removeCookie(response, REFRESH_TOKEN_COOKIE_NAME);
+
 		return SuccessResponse.of(AuthSuccess.LOGOUT_SUCCESS);
 	}
 
 	@PostMapping("/reissue")
-	public SuccessResponse<ReissueTokenResponse> reissue(@CookieValue("refreshToken") String refreshToken) {
+	public SuccessResponse<ReissueTokenResponse> reissue(
+		@CookieValue(value = "refreshToken", required = false) String refreshToken) {
 
 		if (refreshToken == null || refreshToken.isEmpty()) {
 			throw new BusinessException(TokenError.INVALID_REFRESH_TOKEN);
@@ -92,5 +86,5 @@ public class AuthController implements AuthControllerDocs {
 
 		return SuccessResponse.of(AuthSuccess.REISSUE_TOKEN_SUCCESS, tokenResponse);
 	}
-
+	
 }

@@ -42,7 +42,7 @@ public interface AuthControllerDocs {
 		@ApiResponse(responseCode = "200", description = "로그아웃에 성공하였습니다."),
 		@ApiResponse(responseCode = "401", description = "이미 로그아웃된 토큰입니다.", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
 	})
-	SuccessResponse<?> logout(HttpServletRequest request, String memberNo);
+	SuccessResponse<?> logout(HttpServletRequest request, HttpServletResponse response, String memberNo);
 
 	@Operation(method = "POST", summary = "accessToken 재발급", description = "accessToken 이 만료되었을 때, 토큰을 재발급 받을 수 있도록 합니다.",
 		security = {@SecurityRequirement(name = "bearerAuth")})
