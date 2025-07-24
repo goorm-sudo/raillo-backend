@@ -158,59 +158,6 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	}
 
 	/**
-	 * 특정 구간에서 겹치는 입석(Standing) 예약 개수 조회
-	 */
-	@Override
-	public int countOverlappingStandingReservations(Long trainScheduleId, Long departureStationId,
-		Long arrivalStationId) {
-		QSeatReservation seatReservation = QSeatReservation.seatReservation;
-
-		// 예약된 구간의 정차역 정보
-		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
-		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
-		QStation reservedDepartureStation = new QStation("reservedDepartureStation");
-		QStation reservedArrivalStation = new QStation("reservedArrivalStation");
-
-		// 검색 구간의 정차역 정보
-		QScheduleStop searchDepartureStop = new QScheduleStop("searchDepartureStop");
-		QScheduleStop searchArrivalStop = new QScheduleStop("searchArrivalStop");
-
-		Long count = queryFactory
-			.select(seatReservation.count())
-			.from(seatReservation)
-			.join(seatReservation.reservation, reservation)
-
-			// 기존 예약의 구간 정보 조인
-			.join(reservation.departureStop, reservedDepartureStop)
-			.join(reservation.arrivalStop, reservedArrivalStop)
-			.join(reservedDepartureStop.station, reservedDepartureStation)
-			.join(reservedArrivalStop.station, reservedArrivalStation)
-
-			// 검색 구간 정보 조인
-			.join(searchDepartureStop).on(
-				searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
-					.and(searchDepartureStop.station.id.eq(departureStationId))
-			)
-			.join(searchArrivalStop).on(
-				searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
-					.and(searchArrivalStop.station.id.eq(arrivalStationId))
-			)
-			.where(
-				seatReservation.trainSchedule.id.eq(trainScheduleId),
-				seatReservation.seat.isNull(), // 입석 예약만
-
-				// stopOrder 기반 구간 겹침 조건
-				// 구간 겹침: NOT(예약종료 <= 검색시작 OR 예약시작 >= 검색종료)
-				// = 예약종료 > 검색시작 AND 예약시작 < 검색종료
-				reservedArrivalStop.stopOrder.gt(searchDepartureStop.stopOrder)
-					.and(reservedDepartureStop.stopOrder.lt(searchArrivalStop.stopOrder))
-			)
-			.fetchOne();
-
-		return count != null ? count.intValue() : 0;
-	}
-
-	/**
 	 * 여러 열차의 특정 구간에서 겹치는 입석 예약 수를 일괄 조회
 	 */
 	@Override
@@ -258,52 +205,5 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 				tuple -> tuple.get(seatReservation.trainSchedule.id),
 				tuple -> tuple.get(seatReservation.count()).intValue()
 			));
-	}
-
-	/**
-	 * 특정 좌석의 특정 구간 예약 충돌 여부 확인
-	 * - 해당 구간에서 좌석이 이미 점유되어 있는지 확인
-	 */
-	@Override
-	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
-		Long arrivalStationId) {
-		QSeatReservation seatReservation = QSeatReservation.seatReservation;
-
-		// stopOrder 기반 구간 겹침을 위한 ScheduleStop 조인
-		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
-		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
-		QScheduleStop searchDepartureStop = new QScheduleStop("searchDepartureStop");
-		QScheduleStop searchArrivalStop = new QScheduleStop("searchArrivalStop");
-
-		Long count = queryFactory
-			.select(seatReservation.count())
-			.from(seatReservation)
-			.join(seatReservation.reservation, reservation)
-			// 기존 예약의 구간 정보 조인
-			.join(reservation.departureStop, reservedDepartureStop)
-			.join(reservation.arrivalStop, reservedArrivalStop)
-
-			// 검색 구간 정보 조인
-			.join(searchDepartureStop).on(
-				searchDepartureStop.trainSchedule.id.eq(trainScheduleId)
-					.and(searchDepartureStop.station.id.eq(departureStationId))
-			)
-			.join(searchArrivalStop).on(
-				searchArrivalStop.trainSchedule.id.eq(trainScheduleId)
-					.and(searchArrivalStop.station.id.eq(arrivalStationId))
-			)
-			.where(
-				seatReservation.trainSchedule.id.eq(trainScheduleId),
-				seatReservation.seat.id.eq(seatId),
-
-				// stopOrder 기반 구간 겹침 조건
-				// 구간 겹침: NOT(예약종료 <= 검색시작 OR 예약시작 >= 검색종료)
-				// = 예약종료 > 검색시작 AND 예약시작 < 검색종료
-				reservedArrivalStop.stopOrder.gt(searchDepartureStop.stopOrder)
-					.and(reservedDepartureStop.stopOrder.lt(searchArrivalStop.stopOrder))
-			)
-			.fetchOne();
-
-		return count == null || count == 0;
 	}
 }

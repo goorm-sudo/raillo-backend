@@ -36,15 +36,6 @@ public interface SeatReservationRepositoryCustom {
 	);
 
 	/**
-	 * 특정 구간에서 겹치는 입석(Standing) 예약 수 조회
-	 */
-	int countOverlappingStandingReservations(
-		Long trainScheduleId,
-		Long departureStationId,
-		Long arrivalStationId
-	);
-
-	/**
 	 * 여러 열차의 입석 예약 수를 일괄 조회
 	 * @param trainScheduleIds 조회할 열차 스케줄 ID 목록
 	 * @param departureStationId 출발역 ID
@@ -56,11 +47,4 @@ public interface SeatReservationRepositoryCustom {
 		Long departureStationId,
 		Long arrivalStationId
 	);
-
-	/**
-	 * 특정 좌석의 예약 가능 여부 확인
-	 * 해당 구간에서 좌석이 이미 점유되어있는지 확인
-	 */
-	boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId,
-		Long departureStationId, Long arrivalStationId);
 }

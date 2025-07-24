@@ -404,35 +404,6 @@ public class TrainScheduleService {
 		);
 	}
 
-	/**
-	 * 입석 가능 여부 및 수량 계산
-	 */
-	private StandingCalculationResult calculateStandingAvailability(Long trainScheduleId, Long departureStationId,
-		Long arrivalStationId, int passengerCount) {
-		try {
-			int totalSeats = trainScheduleRepositoryCustom.findTotalSeatsByTrainScheduleId(trainScheduleId);
-
-			int maxAllowedStandingCount = (int)(totalSeats * standingRatio);
-
-			// 현재 구간에서 예약된 입석 수 조회, 추가 입석 가능 인원 수 계산
-			int currentStandingReservations = seatReservationRepositoryCustom.countOverlappingStandingReservations(
-				trainScheduleId, departureStationId, arrivalStationId);
-			int maxAdditionalStanding = Math.max(0, maxAllowedStandingCount - currentStandingReservations);
-
-			boolean standingAvailable = maxAdditionalStanding > 0;
-			boolean canReserveStanding = maxAdditionalStanding >= passengerCount;
-
-			log.debug("입석 계산 완료: 총허용={}, 현재예약={}, 추가가능={}, 예약가능={}",
-				maxAllowedStandingCount, currentStandingReservations, maxAdditionalStanding, canReserveStanding);
-
-			return new StandingCalculationResult(standingAvailable, maxAdditionalStanding, canReserveStanding,
-				currentStandingReservations);
-		} catch (Exception e) {
-			log.warn("입석 계산 중 오류: trainScheduleId={}", trainScheduleId, e);
-			return new StandingCalculationResult(false, 0, false, 0);
-		}
-	}
-
 	// ============================================
 	// Service Layer 전용 내부 Records
 	// ============================================
