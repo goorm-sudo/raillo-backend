@@ -26,8 +26,12 @@ public record SeatTypeInfo(
 	String displayText
 ) {
 	// 입석 정보 포함
-	public static SeatTypeInfo create(int availableSeats, int totalSeats, int fare,
-		int passengerCount, String seatTypeName, boolean hasStanding) {
+	public static SeatTypeInfo create(int availableSeats,
+		int totalSeats,
+		int fare,
+		int passengerCount,
+		String seatTypeName,
+		boolean hasStanding) {
 
 		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount, hasStanding);
 		boolean canReserve = availableSeats >= passengerCount;

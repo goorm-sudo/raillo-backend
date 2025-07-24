@@ -44,9 +44,9 @@ public record SectionSeatStatus(
 	@Schema(description = "입석 예약 가능 여부", example = "true")
 	boolean canReserveStanding,
 
-	// 구간 분석 정보
-	@Schema(description = "해당 구간 내 최대 탑승 인원", example = "340")
-	int maxOccupancyInRoute
+	@Schema(description = "현재 예약된 입석 인원", example = "15")
+	int currentStandingReservations
+
 ) {
 	/**
 	 * 정적 팩토리 메서드
@@ -56,12 +56,12 @@ public record SectionSeatStatus(
 		int firstClassAvailable, int firstClassTotal,
 		boolean canReserveStandard, boolean canReserveFirstClass,
 		boolean standingAvailable, int maxAdditionalStanding,
-		boolean canReserveStanding, int maxOccupancyInRoute) {
+		boolean canReserveStanding, int currentStandingReservations) {
 
 		return new SectionSeatStatus(
 			standardAvailable, standardTotal, firstClassAvailable, firstClassTotal,
 			canReserveStandard, canReserveFirstClass,
-			standingAvailable, maxAdditionalStanding, canReserveStanding, maxOccupancyInRoute
+			standingAvailable, maxAdditionalStanding, canReserveStanding, currentStandingReservations
 		);
 	}
 }
