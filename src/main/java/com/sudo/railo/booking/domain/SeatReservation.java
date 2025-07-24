@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
 @Table(
 	name = "seat_reservation",
 	indexes = {@Index(name = "idx_seat_reservation_seat", columnList = "train_schedule_id, seat_id")},
-	uniqueConstraints = {@UniqueConstraint(columnNames = {"train_schedule_id", "seat_id"})}
+	uniqueConstraints = {@UniqueConstraint(columnNames = {"train_schedule_id", "seat_id", "reservation_id"})}
 )
 public class SeatReservation extends BaseEntity {
 

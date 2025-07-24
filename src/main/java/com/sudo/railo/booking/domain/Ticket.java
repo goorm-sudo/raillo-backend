@@ -39,7 +39,7 @@ public class Ticket extends BaseEntity {
 	@Comment("승차권 ID")
 	private Long id;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "seat_id")
 	@OnDelete(action = OnDeleteAction.SET_NULL)
 	@Comment("좌석 ID")
