@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.global.util.MonitorPerformance;
 import com.sudo.railo.train.application.TrainScheduleService;
 import com.sudo.railo.train.application.TrainSearchApplicationService;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
@@ -61,7 +60,6 @@ public class TrainSearchController {
 		summary = "열차 스케줄 검색",
 		description = "출발역, 도착역, 운행 날짜로 열차 스케줄 검색"
 	)
-	@MonitorPerformance("열차 스케줄 검색 API")
 	public SuccessResponse<TrainSearchSlicePageResponse> searchTrainSchedules(
 		@Valid @RequestBody TrainSearchRequest request,
 		@PageableDefault(size = 20, sort = "departureTime")

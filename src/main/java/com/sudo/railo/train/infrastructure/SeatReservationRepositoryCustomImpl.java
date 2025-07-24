@@ -12,7 +12,6 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.domain.QSeatReservation;
-import com.sudo.railo.global.util.TrackQuery;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QSeat;
@@ -31,7 +30,6 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	 * 특정 열차 구간과 겹치는 좌석 예약 조회
 	 * - 요청한 출발역~도착역 구간과 겹치는 예약 찾기
 	 */
-	@TrackQuery(queryName = "findOverlappingReservations")
 	@Override
 	public List<SeatReservationInfo> findOverlappingReservations(
 		Long trainScheduleId, Long departureStationId, Long arrivalStationId
@@ -162,7 +160,6 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	/**
 	 * 특정 구간에서 겹치는 입석(Standing) 예약 개수 조회
 	 */
-	@TrackQuery(queryName = "countOverlappingStandingReservations")
 	@Override
 	public int countOverlappingStandingReservations(Long trainScheduleId, Long departureStationId,
 		Long arrivalStationId) {
@@ -267,7 +264,6 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	 * 특정 좌석의 특정 구간 예약 충돌 여부 확인
 	 * - 해당 구간에서 좌석이 이미 점유되어 있는지 확인
 	 */
-	@TrackQuery(queryName = "isSeatAvailableForSection")
 	@Override
 	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
 		Long arrivalStationId) {

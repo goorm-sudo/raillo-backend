@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.global.util.MonitorPerformance;
-import com.sudo.railo.global.util.TrackQuery;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
@@ -120,7 +118,6 @@ public class TrainScheduleService {
 	 * 3. 각 열차별 좌석 상태 계산 및 응답 생성
 	 * 4. 최종 조회 결과 반환
 	 */
-	@MonitorPerformance(value = "통합 열차 조회", enableN1Detection = true)
 	public TrainSearchSlicePageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
 		// request 검증 (route, operationDate, departureTime)
 		trainSearchValidator.validateTrainSearchRequest(request);
@@ -186,7 +183,6 @@ public class TrainScheduleService {
 	/**
 	 * 구간별 요금 정보 조회
 	 */
-	@TrackQuery(queryName = "findStationFare")
 	private StationFare findStationFare(Long departureStationId, Long arrivalStationId) {
 		log.debug("요금 정보 조회: {} -> {}", departureStationId, arrivalStationId);
 		return stationFareRepository.findByDepartureStationIdAndArrivalStationId(departureStationId, arrivalStationId)

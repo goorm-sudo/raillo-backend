@@ -17,7 +17,6 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sudo.railo.global.util.TrackQuery;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
@@ -67,7 +66,6 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	 * 열차 기본 정보 조회
 	 * - 출발역, 도착역을 경유하는 모든 열차 조회
 	 */
-	@TrackQuery(queryName = "findTrainBasicInfo")
 	@Override
 	public Slice<TrainBasicInfo> findTrainBasicInfo(
 		Long departureStationId, Long arrivalStationId, LocalDate operationDate,
@@ -186,7 +184,6 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	/**
 	 *  열차 최대 수용 인원 조회
 	 */
-	@TrackQuery(queryName = "findTotalSeatsByTrainScheduleId")
 	@Override
 	public int findTotalSeatsByTrainScheduleId(Long trainScheduleId) {
 		QTrainSchedule ts = QTrainSchedule.trainSchedule;
