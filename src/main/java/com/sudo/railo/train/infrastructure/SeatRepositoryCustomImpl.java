@@ -67,7 +67,9 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 						.then("009")  // 순방향
 						.otherwise("010"), // 역방향
 					// 해당 구간에 예약이 있는지 확인
-					new CaseBuilder().when(seatReservation.id.isNotNull()).then(true).otherwise(false),
+					new CaseBuilder().when(seatReservation.id.isNotNull().and(reservation.id.isNotNull()))
+						.then(true)
+						.otherwise(false),
 					// 4인 동반석 안내 메시지
 					new CaseBuilder().when(seat.seatRow.between(middleRow, middleRow + 1))
 						.then(new CaseBuilder().when(seat.seatRow.eq(middleRow))
@@ -83,8 +85,8 @@ public class SeatRepositoryCustomImpl implements SeatRepositoryCustom {
 				.and(seatReservation.seat.isNotNull())
 			)
 			.leftJoin(reservation)
-			.on(reservation.id.eq(seatReservation.id)
-				.and(overlapCondition)) // 구간 겹침 확인
+			.on(reservation.id.eq(seatReservation.reservation.id)
+				.and(seatReservation.id.isNotNull().and(overlapCondition))) // 구간 겹침 확인
 			.where(seat.trainCar.id.eq(trainCarId))
 			.orderBy(seat.seatRow.asc(), seat.seatColumn.asc())
 			.fetch();
