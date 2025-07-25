@@ -49,8 +49,7 @@ public class FareCalculationService {
 		// 요금 정보 조회
 		StationFare stationFare = findStationFare(departureStationId, arrivalStationId);
 
-		BigDecimal fare = BigDecimal.valueOf(carType == CarType.STANDARD
-			? stationFare.getStandardFare() : stationFare.getFirstClassFare());
+		BigDecimal fare = getFareByCarType(stationFare, carType);
 
 		return passengers.stream()
 			.filter(summary -> summary.getCount() > 0)
@@ -68,5 +67,15 @@ public class FareCalculationService {
 		return stationFareRepository
 			.findByDepartureStationIdAndArrivalStationId(departureStationId, arrivalStationId)
 			.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_FARE_NOT_FOUND));
+	}
+
+	/**
+	 * 객차 타입에 해당하는 운임 선택
+	 */
+	private static BigDecimal getFareByCarType(StationFare stationFare, CarType carType) {
+		return switch (carType) {
+			case STANDARD -> BigDecimal.valueOf(stationFare.getStandardFare());
+			case FIRST_CLASS -> BigDecimal.valueOf(stationFare.getFirstClassFare());
+		};
 	}
 }
