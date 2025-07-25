@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudo.railo.booking.application.dto.ReservationInfo;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
-import com.sudo.railo.booking.application.dto.request.FareCalculateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.request.ReservationDeleteRequest;
 import com.sudo.railo.booking.application.dto.response.ReservationDetail;
@@ -32,9 +31,10 @@ import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.TrainSchedule;
 import com.sudo.railo.train.domain.status.OperationStatus;
+import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
-import com.sudo.railo.train.infrastructure.StationRepository;
+import com.sudo.railo.train.infrastructure.SeatRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,10 +48,10 @@ public class ReservationService {
 	private final FareCalculationService fareCalculationService;
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final MemberRepository memberRepository;
-	private final StationRepository stationRepository;
 	private final ScheduleStopRepository scheduleStopRepository;
 	private final ReservationRepository reservationRepository;
 	private final ReservationRepositoryCustom reservationRepositoryCustom;
+	private final SeatRepository seatRepository;
 
 	/***
 	 * 고객용 예매번호를 생성하는 메서드
@@ -99,6 +99,17 @@ public class ReservationService {
 				trainSchedule.getId(), request.arrivalStationId()
 			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
 
+			// 객차 타입 조회
+			CarType carType = findCarType(request.seatIds());
+
+			// 총 운임 계산
+			BigDecimal totalFare = fareCalculationService.calculateFare(
+				request.departureStationId(),
+				request.arrivalStationId(),
+				request.passengers(),
+				carType
+			);
+
 			List<PassengerSummary> passengerSummary = request.passengers();
 			LocalDateTime now = LocalDateTime.now();
 			Reservation reservation = Reservation.builder()
@@ -112,11 +123,29 @@ public class ReservationService {
 				.expiresAt(now.plusMinutes(bookingConfig.getExpiration().getReservation()))
 				.departureStop(departureStop)
 				.arrivalStop(arrivalStop)
+				.fare(totalFare.intValue())
 				.build();
 			return reservationRepository.save(reservation);
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
 		}
+	}
+
+	/**
+	 * 객차 타입 조회
+	 */
+	private CarType findCarType(List<Long> seatIds) {
+		List<CarType> carTypes = seatRepository.findCarTypes(seatIds);
+
+		// 입석 체크
+		if (seatIds.isEmpty() && carTypes.isEmpty()) {
+			return CarType.STANDARD;
+		}
+
+		if (carTypes.size() != 1) {
+			throw new BusinessException(BookingError.INVALID_CAR_TYPE);
+		}
+		return carTypes.get(0);
 	}
 
 	/***
@@ -190,6 +219,7 @@ public class ReservationService {
 				info.arrivalTime(),
 				info.operationDate(),
 				info.expiresAt(),
+				info.fare(),
 				convertToSeatReservationDetail(info.seats())
 			))
 			.toList();
@@ -202,13 +232,7 @@ public class ReservationService {
 				p.getPassengerType(),
 				p.getCarNumber(),
 				p.getCarType(),
-				p.getSeatNumber(),
-				p.getFare(),
-				// 운임 계산
-				fareCalculationService.calculateFare(new FareCalculateRequest(
-					p.getPassengerType(),
-					BigDecimal.valueOf(p.getFare()))
-				).intValue()
+				p.getSeatNumber()
 			))
 			.toList();
 	}

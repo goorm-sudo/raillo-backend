@@ -3,7 +3,6 @@ package com.sudo.railo.booking.infrastructure.reservation;
 import static com.sudo.railo.booking.domain.QReservation.*;
 import static com.sudo.railo.booking.domain.QSeatReservation.*;
 import static com.sudo.railo.train.domain.QSeat.*;
-import static com.sudo.railo.train.domain.QStationFare.*;
 import static com.sudo.railo.train.domain.QTrain.*;
 import static com.sudo.railo.train.domain.QTrainCar.*;
 import static com.sudo.railo.train.domain.QTrainSchedule.*;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.booking.application.dto.ReservationInfo;
@@ -25,7 +23,6 @@ import com.sudo.railo.booking.application.dto.projection.SeatReservationProjecti
 import com.sudo.railo.booking.domain.status.ReservationStatus;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
-import com.sudo.railo.train.domain.type.CarType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,8 +57,7 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 				arrivalStop.arrivalTime,
 				trainSchedule.operationDate,
 				reservation.expiresAt,
-				stationFare.standardFare,
-				stationFare.firstClassFare
+				reservation.fare
 			))
 			.from(reservation)
 			.join(reservation.trainSchedule, trainSchedule)
@@ -70,10 +66,6 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 			.join(trainSchedule.train, train)
 			.join(departureStop.station, departureStation)
 			.join(arrivalStop.station, arrivalStation)
-			.join(stationFare).on(
-				stationFare.departureStation.id.eq(departureStation.id)
-					.and(stationFare.arrivalStation.id.eq(arrivalStation.id))
-			)
 			.where(
 				reservation.member.id.eq(memberId),
 				reservation.reservationStatus.eq(ReservationStatus.RESERVED),
@@ -98,8 +90,7 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 				seatReservation.passengerType,
 				trainCar.carNumber,
 				trainCar.carType,
-				seat.seatRow.stringValue().concat(seat.seatColumn),
-				Expressions.constant(0) // 임시 운임
+				seat.seatRow.stringValue().concat(seat.seatColumn)
 			))
 			.from(seatReservation)
 			.leftJoin(seatReservation.seat, seat)
@@ -116,10 +107,7 @@ public class ReservationRepositoryCustomImpl implements ReservationRepositoryCus
 		return reservations.stream()
 			.map(reservation -> ReservationInfo.of(
 				reservation,
-				seats.get(reservation.getReservationId()).stream()
-					.map(seat -> seat.withFare(CarType.STANDARD.equals(seat.getCarType())
-						? reservation.getStandardFare() : reservation.getFirstClassFare())
-					).toList()
+				seats.get(reservation.getReservationId())
 			)).toList();
 	}
 }

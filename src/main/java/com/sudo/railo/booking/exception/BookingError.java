@@ -27,6 +27,9 @@ public enum BookingError implements ErrorCode {
 	TICKET_CREATE_FAILED("티켓 생성에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "B_014"),
 	TICKET_LIST_GET_FAILED("티켓을 가져올 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR, "B_015"),
 
+	// 예약 요청 Request 관련
+	INVALID_CAR_TYPE("좌석의 객차 타입은 동일해야 합니다.", HttpStatus.BAD_REQUEST, "B_016"),
+
 	// 예약 조회 관련
 	RESERVATION_NOT_FOUND("예약 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND, "B_101"),
 
