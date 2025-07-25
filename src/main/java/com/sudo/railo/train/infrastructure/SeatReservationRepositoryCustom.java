@@ -8,21 +8,6 @@ import com.sudo.railo.train.application.dto.SeatReservationInfo;
 public interface SeatReservationRepositoryCustom {
 
 	/**
-	 * 특정 구간과 겹치는 좌석 예약 조회
-	 * - 요청한 출발역~도착역 구간과 겹치는 예약 찾기
-	 *
-	 * @param trainScheduleId 기차 스케줄 ID
-	 * @param departureStationId 출발역 ID
-	 * @param arrivalStationId 도착역 ID
-	 * @return 겹치는 좌석 예약 정보 리스트
-	 */
-	List<SeatReservationInfo> findOverlappingReservations(
-		Long trainScheduleId,
-		Long departureStationId,
-		Long arrivalStationId
-	);
-
-	/**
 	 * 여러 열차의 겹치는 예약 정보를 일괄 조회
 	 * @param trainScheduleIds 조회할 열차 스케줄 ID 목록
 	 * @param departureStationId 출발역 ID
