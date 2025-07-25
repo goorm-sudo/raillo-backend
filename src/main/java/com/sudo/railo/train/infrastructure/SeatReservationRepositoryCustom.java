@@ -1,35 +1,35 @@
 package com.sudo.railo.train.infrastructure;
 
 import java.util.List;
+import java.util.Map;
 
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 
 public interface SeatReservationRepositoryCustom {
 
 	/**
-	 * 특정 구간과 겹치는 좌석 예약 조회
-	 * - 요청한 출발역~도착역 구간과 겹치는 예약 찾기
-	 *
-	 * @param trainScheduleId 기차 스케줄 ID
+	 * 여러 열차의 겹치는 예약 정보를 일괄 조회
+	 * @param trainScheduleIds 조회할 열차 스케줄 ID 목록
 	 * @param departureStationId 출발역 ID
 	 * @param arrivalStationId 도착역 ID
-	 * @return 겹치는 좌석 예약 정보 리스트
+	 * @return Map<열차스케줄ID, 예약정보리스트>
 	 */
-	List<SeatReservationInfo> findOverlappingReservations(
-		Long trainScheduleId,
+	Map<Long, List<SeatReservationInfo>> findOverlappingReservationsBatch(
+		List<Long> trainScheduleIds,
 		Long departureStationId,
 		Long arrivalStationId
 	);
 
 	/**
-	 * 특정 구간에서 겹치는 입석(Standing) 예약 수 조회
+	 * 여러 열차의 입석 예약 수를 일괄 조회
+	 * @param trainScheduleIds 조회할 열차 스케줄 ID 목록
+	 * @param departureStationId 출발역 ID
+	 * @param arrivalStationId 도착역 ID
+	 * @return Map<열차스케줄ID, 입석예약수>
 	 */
-	int countOverlappingStandingReservations(Long trainScheduleId, Long departureStationId, Long arrivalStationId);
-
-	/**
-	 * 특정 좌석의 예약 가능 여부 확인
-	 * 해당 구간에서 좌석이 이미 점유되어있는지 확인
-	 */
-	boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId,
-		Long departureStationId, Long arrivalStationId);
+	Map<Long, Integer> countOverlappingStandingReservationsBatch(
+		List<Long> trainScheduleIds,
+		Long departureStationId,
+		Long arrivalStationId
+	);
 }

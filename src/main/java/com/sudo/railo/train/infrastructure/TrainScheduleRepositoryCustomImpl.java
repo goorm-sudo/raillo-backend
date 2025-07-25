@@ -146,32 +146,39 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 		return new SliceImpl<>(trainBasicInfos, pageable, hasNext);
 	}
 
-	/**
-	 *  열차의 좌석 타입별 전체 좌석 수 조회
-	 * - 일반실/특실별 총 좌석 수 계산
-	 * - 좌석 상태 계산의 기준 데이터
-	 */
 	@Override
-	public Map<CarType, Integer> findTotalSeatsByCarType(Long trainScheduleId) {
-		QTrainSchedule ts = QTrainSchedule.trainSchedule;
-		QTrain t = QTrain.train;
-		QTrainCar tc = QTrainCar.trainCar;
+	public Map<Long, Map<CarType, Integer>> findTotalSeatsByCarTypeBatch(List<Long> trainScheduleIds) {
 
-		// 객차별 좌석 수를 타입별로 합계 계산
+		if (trainScheduleIds.isEmpty()) {
+			return Map.of();
+		}
+
+		QTrainSchedule trainSchedule = QTrainSchedule.trainSchedule;
+		QTrain train = QTrain.train;
+		QTrainCar trainCar = QTrainCar.trainCar;
+
+		// Tuple[trainScheduleId=1, carType=STANDARD,    totalSeats=120]
 		List<Tuple> results = queryFactory
-			.select(tc.carType, tc.totalSeats.sum())    // 객차타입별 좌석수 합계
-			.from(ts)
-			.join(ts.train, t)                          // 열차 조인
-			.join(tc).on(tc.train.eq(t))                // 객차 조인
-			.where(ts.id.eq(trainScheduleId))           // 특정 열차 스케줄
-			.groupBy(tc.carType)                        // 객차 타입별 그룹화
+			.select(
+				trainSchedule.id,
+				trainCar.carType,
+				trainCar.totalSeats.sum()
+			)
+			.from(trainSchedule)
+			.join(trainSchedule.train, train)
+			.join(trainCar).on(trainCar.train.id.eq(train.id))
+			.where(trainSchedule.id.in(trainScheduleIds))
+			.groupBy(trainSchedule.id, trainCar.carType)
 			.fetch();
 
-		// Map으로 변환: {STANDARD=246, FIRST_CLASS=117}
-		return results.stream().collect(Collectors.toMap(
-			tuple -> tuple.get(tc.carType),                    // Key: 객차타입
-			tuple -> tuple.get(tc.totalSeats.sum()).intValue() // Value: 좌석수
-		));
+		return results.stream()
+			.collect(Collectors.groupingBy(
+				tuple -> tuple.get(trainSchedule.id),                          // 1차 그룹핑: 열차별
+				Collectors.toMap(                                              // 2차 Map 변환: 객차타입별 Map
+					tuple -> tuple.get(trainCar.carType),                      // Key : 객차 타입
+					tuple -> tuple.get(trainCar.totalSeats.sum()).intValue()   // Value : 좌석 수
+				)
+			));
 	}
 
 	/**
@@ -193,6 +200,36 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 			.fetchOne();
 
 		return totalSeats != null ? totalSeats : 0;
+	}
+
+	@Override
+	public Map<Long, Integer> findTotalSeatsByTrainScheduleIdBatch(List<Long> trainScheduleIds) {
+
+		if (trainScheduleIds.isEmpty()) {
+			return Map.of();
+		}
+
+		QTrainSchedule trainSchedule = QTrainSchedule.trainSchedule;
+		QTrain train = QTrain.train;
+		QTrainCar trainCar = QTrainCar.trainCar;
+
+		List<Tuple> results = queryFactory
+			.select(
+				trainSchedule.id,
+				trainCar.totalSeats.sum()
+			)
+			.from(trainSchedule)
+			.join(trainSchedule.train, train)
+			.join(trainCar).on(trainCar.train.id.eq(train.id))
+			.where(trainSchedule.id.in(trainScheduleIds))
+			.groupBy(trainSchedule.id)
+			.fetch();
+
+		return results.stream()
+			.collect(Collectors.toMap(
+				tuple -> tuple.get(trainSchedule.id),
+				tuple -> tuple.get(trainCar.totalSeats.sum()).intValue()
+			));
 	}
 
 	@Getter

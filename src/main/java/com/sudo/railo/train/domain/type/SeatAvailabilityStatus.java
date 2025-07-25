@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum SeatAvailabilityStatus {
 
-	AVAILABLE("여유"),        // 11석 이상
-	LIMITED("좌석부족"),          // 6~10석
-	FEW_REMAINING("매진임박"),    // 1~5석
-	STANDING_AVAILABLE("입석+좌석"), // 좌석이 부족하지만 입석 가능
-	SOLD_OUT("매진");            // 0석 (매진)
+	AVAILABLE("여유", "충분한 좌석이 있습니다"),
+	LIMITED("매진임박", "좌석이 얼마 남지 않았습니다"),
+	INSUFFICIENT("좌석부족", "요청하신 인원보다 좌석이 부족합니다"),
+	SOLD_OUT("매진", "모든 좌석이 매진되었습니다");
 
+	private final String text;
 	private final String description;
 }

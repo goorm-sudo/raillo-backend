@@ -23,16 +23,13 @@ import lombok.Setter;
 @Table(
 	name = "schedule_stop",
 	indexes = {
-		// 1. 경로 검색 최적화 인덱스
-		@Index(name = "idx_schedule_stop_route",
+		// 1. 출발역 필터 + 시간 조건 + 조인 및 stop_order 비교
+		@Index(name = "idx_stop_depart_filter",
 			columnList = "station_id, departure_time, train_schedule_id, stop_order"),
 
-		// 2. FK 조인 성능용 인덱스
-		@Index(name = "idx_schedule_stop_schedule_fk",
-			columnList = "train_schedule_id"),
-
-		@Index(name = "idx_schedule_stop_station_fk",
-			columnList = "station_id"),
+		// 2. 도착역 필터 + 조인 + stop_order 비교
+		@Index(name = "idx_stop_arrival_filter",
+			columnList = "station_id, train_schedule_id, stop_order"),
 	}
 )
 public class ScheduleStop {
