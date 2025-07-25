@@ -20,7 +20,7 @@ import com.sudo.railo.auth.security.jwt.JwtAccessDeniedHandler;
 import com.sudo.railo.auth.security.jwt.JwtAuthenticationEntryPoint;
 import com.sudo.railo.auth.security.jwt.JwtFilter;
 import com.sudo.railo.auth.security.jwt.TokenExtractor;
-import com.sudo.railo.auth.security.jwt.TokenProvider;
+import com.sudo.railo.auth.security.jwt.TokenValidator;
 import com.sudo.railo.global.redis.AuthRedisRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -32,8 +32,8 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	private final AuthRedisRepository authRedisRepository;
-	private final TokenProvider tokenProvider;
 	private final TokenExtractor tokenExtractor;
+	private final TokenValidator tokenValidator;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
@@ -69,7 +69,7 @@ public class SecurityConfig {
 					.requestMatchers("/actuator/**", "/health").permitAll()
 					.anyRequest().authenticated();
 			})
-			.addFilterBefore(new JwtFilter(tokenExtractor, tokenProvider, authRedisRepository),
+			.addFilterBefore(new JwtFilter(tokenExtractor, tokenValidator, authRedisRepository),
 				UsernamePasswordAuthenticationFilter.class)
 			.build();
 	}
