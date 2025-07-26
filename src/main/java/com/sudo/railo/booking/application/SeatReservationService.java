@@ -33,7 +33,16 @@ public class SeatReservationService {
 	@Transactional
 	public SeatReservation reserveNewSeat(Reservation reservation, Seat seat, PassengerType passengerType) {
 		try {
-			validateConflictSeats(reservation, List.of(seat.getId()));
+			Long trainScheduleId = reservation.getTrainSchedule().getId();
+			Long seatId = seat.getId();
+
+			// 비관적 락으로 해당 좌석의 모든 예약을 조회 (다른 트랜잭션의 접근 차단)
+			List<SeatReservation> existingReservations = seatReservationRepository
+				.findByTrainScheduleAndSeatWithLock(trainScheduleId, seatId);
+
+			// 락이 걸린 상태에서 충돌 검증 (원자성 보장)
+			validateConflictWithExistingReservations(reservation, existingReservations);
+
 			SeatReservation seatReservation = SeatReservation.builder()
 				.trainSchedule(reservation.getTrainSchedule())
 				.seat(seat)
@@ -47,16 +56,17 @@ public class SeatReservationService {
 		}
 	}
 
-	private void validateConflictSeats(Reservation reservation, List<Long> seatIds) {
-		Long trainScheduleId = reservation.getTrainSchedule().getId();
-		Long departureStationId = reservation.getDepartureStop().getStation().getId();
-		Long arrivalStationId = reservation.getArrivalStop().getStation().getId();
+	/**
+	 * 기존 예약들과 충돌 검증 (락이 걸린 상태에서 수행)
+	 */
+	private void validateConflictWithExistingReservations(Reservation newReservation, List<SeatReservation> existingReservations) {
+		int newDepartureOrder = newReservation.getDepartureStop().getStopOrder();
+		int newArrivalOrder = newReservation.getArrivalStop().getStopOrder();
 
-		seatIds.forEach(seatId -> {
-			boolean isAvailable = seatReservationRepositoryCustom.isSeatAvailableForSection(
-				trainScheduleId, seatId, departureStationId, arrivalStationId
-			);
-			if (!isAvailable) {
+		existingReservations.forEach(existingReservation -> {
+			int existingDepartureOrder = existingReservation.getReservation().getDepartureStop().getStopOrder();
+			int existingArrivalOrder = existingReservation.getReservation().getArrivalStop().getStopOrder();
+			if (existingDepartureOrder < newArrivalOrder && existingArrivalOrder > newDepartureOrder) {
 				throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
 			}
 		});
