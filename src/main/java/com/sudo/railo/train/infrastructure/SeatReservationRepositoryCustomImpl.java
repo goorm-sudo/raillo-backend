@@ -141,20 +141,29 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 	public boolean isSeatAvailableForSection(Long trainScheduleId, Long seatId, Long departureStationId,
 		Long arrivalStationId) {
 		QSeatReservation sr = QSeatReservation.seatReservation;
-		QScheduleStop departureStop = new QScheduleStop("departureStop");
-		QScheduleStop arrivalStop = new QScheduleStop("arrivalStop");
-		QStation departureStation = new QStation("departureStation");
-		QStation arrivalStation = new QStation("arrivalStation");
+		QScheduleStop requestDepartureStop = new QScheduleStop("requestDepartureStop");
+		QScheduleStop requestArrivalStop = new QScheduleStop("requestArrivalStop");
+		QScheduleStop reservedDepartureStop = new QScheduleStop("reservedDepartureStop");
+		QScheduleStop reservedArrivalStop = new QScheduleStop("reservedArrivalStop");
+
 		Long count = queryFactory.select(sr.count())
 			.from(sr)
 			.join(sr.reservation, reservation)
-			.join(reservation.departureStop, departureStop)
-			.join(reservation.arrivalStop, arrivalStop)
-			.join(departureStop.station, departureStation)
-			.join(arrivalStop.station, arrivalStation)
-			.where(sr.trainSchedule.id.eq(trainScheduleId), sr.seat.id.eq(seatId),
-				// 구간 겹침 확인
-				departureStation.id.lt(arrivalStationId).and(arrivalStation.id.gt(departureStationId)))
+			.join(reservation.departureStop, reservedDepartureStop)
+			.join(reservation.arrivalStop, reservedArrivalStop)
+
+			.join(requestDepartureStop).on(requestDepartureStop.trainSchedule.id.eq(trainScheduleId)
+				.and(requestDepartureStop.station.id.eq(departureStationId)))
+			.join(requestArrivalStop).on(requestArrivalStop.trainSchedule.id.eq(trainScheduleId)
+				.and(requestArrivalStop.station.id.eq(arrivalStationId)))
+			.where(
+				sr.trainSchedule.id.eq(trainScheduleId),
+				sr.seat.id.eq(seatId),
+				// stop_order 기반 구간 겹침 확인
+				// 기존예약출발 < 요청도착 AND 기존예약도착 > 요청출발
+				reservedDepartureStop.stopOrder.lt(requestArrivalStop.stopOrder)
+					.and(reservedArrivalStop.stopOrder.gt(requestDepartureStop.stopOrder))
+			)
 			.fetchOne();
 
 		return count == null || count == 0;

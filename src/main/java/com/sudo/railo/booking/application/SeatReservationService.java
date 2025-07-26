@@ -10,8 +10,9 @@ import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
-import com.sudo.railo.train.infrastructure.SeatRepository;
+import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 
+import java.util.List;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SeatReservationService {
 
-	private final SeatRepository seatRepository;
 	private final SeatReservationRepository seatReservationRepository;
+	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 
 	/***
 	 * 새로운 좌석 예약 현황을 생성하고 예약하는 메서드
@@ -32,6 +33,7 @@ public class SeatReservationService {
 	@Transactional
 	public SeatReservation reserveNewSeat(Reservation reservation, Seat seat, PassengerType passengerType) {
 		try {
+			validateConflictSeats(reservation, List.of(seat.getId()));
 			SeatReservation seatReservation = SeatReservation.builder()
 				.trainSchedule(reservation.getTrainSchedule())
 				.seat(seat)
@@ -42,9 +44,21 @@ public class SeatReservationService {
 		} catch (OptimisticLockException | DataIntegrityViolationException e) {
 			// 동시성 문제 및 유니크 제약 위반 발생
 			throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
-		} catch (Exception e) {
-			// 알 수 없는 모든 경우는 실패 처리
-			throw new BusinessException(BookingError.SEAT_RESERVATION_FAILED);
 		}
+	}
+
+	private void validateConflictSeats(Reservation reservation, List<Long> seatIds) {
+		Long trainScheduleId = reservation.getTrainSchedule().getId();
+		Long departureStationId = reservation.getDepartureStop().getStation().getId();
+		Long arrivalStationId = reservation.getArrivalStop().getStation().getId();
+
+		seatIds.forEach(seatId -> {
+			boolean isAvailable = seatReservationRepositoryCustom.isSeatAvailableForSection(
+				trainScheduleId, seatId, departureStationId, arrivalStationId
+			);
+			if (!isAvailable) {
+				throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
+			}
+		});
 	}
 }
