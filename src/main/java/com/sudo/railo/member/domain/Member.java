@@ -1,5 +1,7 @@
 package com.sudo.railo.member.domain;
 
+import org.hibernate.annotations.SoftDelete;
+
 import com.sudo.railo.global.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -19,6 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@SoftDelete(columnName = "is_deleted")
 public class Member extends BaseEntity {
 
 	@Id
