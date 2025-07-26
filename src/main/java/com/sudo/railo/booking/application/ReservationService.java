@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudo.railo.booking.application.dto.ReservationInfo;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
@@ -27,14 +28,12 @@ import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.booking.infrastructure.reservation.ReservationRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
-import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.TrainSchedule;
 import com.sudo.railo.train.domain.status.OperationStatus;
 import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
-import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,30 +47,9 @@ public class ReservationService {
 	private final FareCalculationService fareCalculationService;
 	private final TrainScheduleRepository trainScheduleRepository;
 	private final MemberRepository memberRepository;
-	private final StationRepository stationRepository;
 	private final ScheduleStopRepository scheduleStopRepository;
 	private final ReservationRepository reservationRepository;
 	private final ReservationRepositoryCustom reservationRepositoryCustom;
-
-	/***
-	 * 고객용 예매번호를 생성하는 메서드
-	 * @return 고객용 예매번호
-	 */
-	private String generateReservationCode() {
-		// yyyyMMddHHmmss<랜덤4자리> 형식
-		LocalDateTime now = LocalDateTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		String dateTimeStr = now.format(formatter);
-
-		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		StringBuilder randomStr = new StringBuilder();
-		SecureRandom secureRandom = new SecureRandom();
-		for (int i = 0; i < 4; i++) {
-			int idx = secureRandom.nextInt(chars.length());
-			randomStr.append(chars.charAt(idx));
-		}
-		return dateTimeStr + randomStr;
-	}
 
 	/***
 	 * 예약을 생성하는 메서드
@@ -80,43 +58,15 @@ public class ReservationService {
 	 */
 	@Transactional
 	public Reservation createReservation(ReservationCreateRequest request, UserDetails userDetails) {
-		try {
-			TrainSchedule trainSchedule = trainScheduleRepository.findById(request.trainScheduleId())
-				.orElseThrow(() -> new BusinessException((TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND)));
+		TrainSchedule trainSchedule = getTrainSchedule(request);
+		Member member = memberRepository.getMember(userDetails.getUsername());
+		ScheduleStop departureStop = getStopStation(trainSchedule, request.departureStationId());
+		ScheduleStop arrivalStop = getStopStation(trainSchedule, request.arrivalStationId());
 
-			if (trainSchedule.getOperationStatus() == OperationStatus.CANCELLED) {
-				throw new BusinessException(TrainErrorCode.TRAIN_OPERATION_CANCELLED);
-			}
+		validateTrainOperating(trainSchedule);
 
-			Member member = memberRepository.findByMemberNo(userDetails.getUsername())
-				.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
-
-			ScheduleStop departureStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
-				trainSchedule.getId(), request.departureStationId()
-			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
-
-			ScheduleStop arrivalStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
-				trainSchedule.getId(), request.arrivalStationId()
-			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
-
-			List<PassengerSummary> passengerSummary = request.passengers();
-			LocalDateTime now = LocalDateTime.now();
-			Reservation reservation = Reservation.builder()
-				.trainSchedule(trainSchedule)
-				.member(member)
-				.reservationCode(generateReservationCode())
-				.tripType(request.tripType())
-				.totalPassengers(passengerSummary.stream().mapToInt(PassengerSummary::getCount).sum())
-				.passengerSummary(objectMapper.writeValueAsString(passengerSummary))
-				.reservationStatus(ReservationStatus.RESERVED)
-				.expiresAt(now.plusMinutes(bookingConfig.getExpiration().getReservation()))
-				.departureStop(departureStop)
-				.arrivalStop(arrivalStop)
-				.build();
-			return reservationRepository.save(reservation);
-		} catch (Exception e) {
-			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
-		}
+		Reservation reservation = generateReservation(request, trainSchedule, member, departureStop, arrivalStop);
+		return reservationRepository.save(reservation);
 	}
 
 	/***
@@ -149,8 +99,7 @@ public class ReservationService {
 	 */
 	@Transactional(readOnly = true)
 	public ReservationDetail getReservation(String memberNo, Long reservationId) {
-		Member member = memberRepository.findByMemberNo(memberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = memberRepository.getMember(memberNo);
 
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(
 			member.getId(), List.of(reservationId));
@@ -169,8 +118,7 @@ public class ReservationService {
 	 */
 	@Transactional(readOnly = true)
 	public List<ReservationDetail> getReservations(String memberNo) {
-		Member member = memberRepository.findByMemberNo(memberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = memberRepository.getMember(memberNo);
 
 		// 예약 조회
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(member.getId());
@@ -195,6 +143,23 @@ public class ReservationService {
 			.toList();
 	}
 
+	private ScheduleStop getStopStation(TrainSchedule trainSchedule, Long request) {
+		return scheduleStopRepository.findByTrainScheduleIdAndStationId(
+			trainSchedule.getId(), request
+		).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
+	}
+
+	private TrainSchedule getTrainSchedule(ReservationCreateRequest request) {
+		return trainScheduleRepository.findById(request.trainScheduleId())
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND));
+	}
+
+	private static void validateTrainOperating(TrainSchedule trainSchedule) {
+		if (trainSchedule.getOperationStatus() == OperationStatus.CANCELLED) {
+			throw new BusinessException(TrainErrorCode.TRAIN_OPERATION_CANCELLED);
+		}
+	}
+
 	private List<SeatReservationDetail> convertToSeatReservationDetail(List<SeatReservationProjection> projection) {
 		return projection.stream()
 			.map(p -> SeatReservationDetail.of(
@@ -211,5 +176,50 @@ public class ReservationService {
 				).intValue()
 			))
 			.toList();
+	}
+
+	private Reservation generateReservation(ReservationCreateRequest request, TrainSchedule trainSchedule,
+		Member member,
+		ScheduleStop departureStop, ScheduleStop arrivalStop) {
+		return Reservation.builder()
+			.trainSchedule(trainSchedule)
+			.member(member)
+			.reservationCode(generateReservationCode())
+			.tripType(request.tripType())
+			.totalPassengers(request.passengers().stream().mapToInt(PassengerSummary::getCount).sum())
+			.passengerSummary(convertPassengersToJson(request))
+			.reservationStatus(ReservationStatus.RESERVED)
+			.expiresAt(LocalDateTime.now().plusMinutes(bookingConfig.getExpiration().getReservation()))
+			.departureStop(departureStop)
+			.arrivalStop(arrivalStop)
+			.build();
+	}
+
+	/***
+	 * 고객용 예매번호를 생성하는 메서드
+	 * @return 고객용 예매번호
+	 */
+	private String generateReservationCode() {
+		// yyyyMMddHHmmss<랜덤4자리> 형식
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		String dateTimeStr = now.format(formatter);
+
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		StringBuilder randomStr = new StringBuilder();
+		SecureRandom secureRandom = new SecureRandom();
+		for (int i = 0; i < 4; i++) {
+			int idx = secureRandom.nextInt(chars.length());
+			randomStr.append(chars.charAt(idx));
+		}
+		return dateTimeStr + randomStr;
+	}
+
+	private String convertPassengersToJson(ReservationCreateRequest request) {
+		try {
+			return objectMapper.writeValueAsString(request.passengers());
+		} catch (JsonProcessingException e) {
+			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
+		}
 	}
 }
