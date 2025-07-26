@@ -22,7 +22,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,10 +66,6 @@ public class SeatReservation extends BaseEntity {
 	@Column(name = "passenger_type", nullable = false)
 	@Comment("승객 유형")
 	private PassengerType passengerType;
-
-	@Version
-	@Comment("테이블 버전")
-	private Long version;
 
 	public boolean isStanding() {
 		return seat == null;

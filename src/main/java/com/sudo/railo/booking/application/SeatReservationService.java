@@ -10,7 +10,6 @@ import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
-import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 
 import java.util.List;
 import jakarta.persistence.OptimisticLockException;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class SeatReservationService {
 
 	private final SeatReservationRepository seatReservationRepository;
-	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 
 	/***
 	 * 새로운 좌석 예약 현황을 생성하고 예약하는 메서드
