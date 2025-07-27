@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,27 +56,7 @@ public class ReservationService {
 	private final ReservationRepositoryCustom reservationRepositoryCustom;
 	private final SeatRepository seatRepository;
 
-	/***
-	 * 고객용 예매번호를 생성하는 메서드
-	 * @return 고객용 예매번호
-	 */
-	private String generateReservationCode() {
-		// yyyyMMddHHmmss<랜덤4자리> 형식
-		LocalDateTime now = LocalDateTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-		String dateTimeStr = now.format(formatter);
-
-		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-		StringBuilder randomStr = new StringBuilder();
-		SecureRandom secureRandom = new SecureRandom();
-		for (int i = 0; i < 4; i++) {
-			int idx = secureRandom.nextInt(chars.length());
-			randomStr.append(chars.charAt(idx));
-		}
-		return dateTimeStr + randomStr;
-	}
-
-	/***
+	/**
 	 * 예약을 생성하는 메서드
 	 * @param request 예약 생성 요청 DTO
 	 * @return 예약 레코드
@@ -148,35 +131,13 @@ public class ReservationService {
 		return carTypes.get(0);
 	}
 
-	/***
-	 * 예약 번호로 예약을 삭제하는 메서드
-	 * @param request 예약 삭제 요청 DTO
-	 */
-	@Transactional
-	public void deleteReservation(ReservationDeleteRequest request) {
-		try {
-			reservationRepository.deleteById(request.reservationId());
-		} catch (Exception e) {
-			throw new BusinessException(BookingError.RESERVATION_DELETE_FAILED);
-		}
-	}
-
-	/***
-	 * 만료된 예약을 일괄삭제하는 메서드
-	 */
-	@Transactional
-	public void expireReservations() {
-		LocalDateTime now = LocalDateTime.now();
-		reservationRepository.deleteAllByExpiresAtBeforeAndReservationStatusNot(now, ReservationStatus.PAID);
-	}
-
 	/**
 	 * 예약을 조회하는 메서드
 	 * @param memberNo 회원 번호
 	 * @param reservationId 예약 ID
 	 * @return 예약
 	 */
-	@Transactional(readOnly = true)
+	@Transactional
 	public ReservationDetail getReservation(String memberNo, Long reservationId) {
 		Member member = memberRepository.findByMemberNo(memberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
@@ -188,7 +149,16 @@ public class ReservationService {
 			throw new BusinessException(BookingError.RESERVATION_NOT_FOUND);
 		}
 
-		return convertToReservationDetail(reservationInfos).get(0);
+		ReservationInfo reservationInfo = reservationInfos.get(0);
+
+		// 만료된 예약이면 삭제 처리
+		LocalDateTime now = LocalDateTime.now();
+		if (isExpired(reservationInfo, now)) {
+			deleteReservation(reservationId);
+			throw new BusinessException(BookingError.RESERVATION_EXPIRED);
+		}
+
+		return convertToReservationDetail(reservationInfo);
 	}
 
 	/**
@@ -196,33 +166,136 @@ public class ReservationService {
 	 * @param memberNo 회원 번호
 	 * @return 예약 목록
 	 */
-	@Transactional(readOnly = true)
+	@Transactional
 	public List<ReservationDetail> getReservations(String memberNo) {
 		Member member = memberRepository.findByMemberNo(memberNo)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		// 예약 조회
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(member.getId());
-		return convertToReservationDetail(reservationInfos);
+
+		// 만료된 예약이면 삭제 처리
+		LocalDateTime now = LocalDateTime.now();
+		List<Long> expiredReservationIds = new ArrayList<>();
+		List<ReservationInfo> validReservations = reservationInfos.stream()
+			.filter(info -> {
+				if (isExpired(info, now)) {
+					expiredReservationIds.add(info.reservationId());
+					return false;
+				}
+				return true;
+			})
+			.toList();
+
+		if (!expiredReservationIds.isEmpty()) {
+			deleteReservation(expiredReservationIds);
+		}
+
+		return convertToReservationDetail(validReservations);
+	}
+
+	/**
+	 * 특정 예약을 삭제하는 메서드 - DTO 사용
+	 * @param request 예약 삭제 요청 DTO
+	 */
+	@Transactional
+	public void deleteReservation(ReservationDeleteRequest request) {
+		try {
+			reservationRepository.deleteById(request.reservationId());
+		} catch (Exception e) {
+			throw new BusinessException(BookingError.RESERVATION_DELETE_FAILED);
+		}
+	}
+
+	/**
+	 * 특정 예약을 삭제하는 메서드 - 단수 예약 ID 사용
+	 * @param reservationId 삭제할 예약의 ID
+	 */
+	@Transactional
+	public void deleteReservation(Long reservationId) {
+		reservationRepository.deleteById(reservationId);
+	}
+
+	/**
+	 * 다수의 예약을 삭제하는 메서드 - 복수 예약 ID 사용
+	 * @param reservationIds 삭제할 예약의 ID를 원소로 하는 리스트
+	 */
+	@Transactional
+	public void deleteReservation(List<Long> reservationIds) {
+		reservationRepository.deleteAllByIdInBatch(reservationIds);
+	}
+
+	/**
+	 * 만료된 예약을 일괄삭제하는 메서드
+	 */
+	@Transactional
+	public void expireReservations() {
+		LocalDateTime now = LocalDateTime.now();
+		Pageable pageable = PageRequest.of(0, 500);
+		List<Reservation> expiredReservations = reservationRepository
+			.findAllByExpiresAtBeforeAndReservationStatus(now, ReservationStatus.RESERVED, pageable);
+
+		if (expiredReservations.isEmpty())
+			return;
+
+		List<Long> expiredList = expiredReservations.stream()
+			.map(Reservation::getId)
+			.toList();
+
+		reservationRepository.deleteAllByIdInBatch(expiredList);
+	}
+
+	/**
+	 * 예약 정보와 주어진 시간을 기준으로 예약이 만료되었는지 판단하는 메서드
+	 * @param reservationInfo 예약 정보
+	 * @param now 판단 기준이 될 시간
+	 * @return 만료 여부
+	 */
+	private boolean isExpired(ReservationInfo reservationInfo, LocalDateTime now) {
+		return reservationInfo.expiresAt().isBefore(now);
+	}
+
+	/***
+	 * 고객용 예매번호를 생성하는 메서드
+	 * @return 고객용 예매번호
+	 */
+	private String generateReservationCode() {
+		// yyyyMMddHHmmss<랜덤4자리> 형식
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+		String dateTimeStr = now.format(formatter);
+
+		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		StringBuilder randomStr = new StringBuilder();
+		SecureRandom secureRandom = new SecureRandom();
+		for (int i = 0; i < 4; i++) {
+			int idx = secureRandom.nextInt(chars.length());
+			randomStr.append(chars.charAt(idx));
+		}
+		return dateTimeStr + randomStr;
 	}
 
 	public List<ReservationDetail> convertToReservationDetail(List<ReservationInfo> reservationInfos) {
 		return reservationInfos.stream()
-			.map(info -> ReservationDetail.of(
-				info.reservationId(),
-				info.reservationCode(),
-				String.format("%03d", info.trainNumber()),
-				info.trainName(),
-				info.departureStationName(),
-				info.arrivalStationName(),
-				info.departureTime(),
-				info.arrivalTime(),
-				info.operationDate(),
-				info.expiresAt(),
-				info.fare(),
-				convertToSeatReservationDetail(info.seats())
-			))
+			.map(this::convertToReservationDetail)
 			.toList();
+	}
+
+	public ReservationDetail convertToReservationDetail(ReservationInfo reservationInfo) {
+		return ReservationDetail.of(
+			reservationInfo.reservationId(),
+			reservationInfo.reservationCode(),
+			String.format("%03d", reservationInfo.trainNumber()),
+			reservationInfo.trainName(),
+			reservationInfo.departureStationName(),
+			reservationInfo.arrivalStationName(),
+			reservationInfo.departureTime(),
+			reservationInfo.arrivalTime(),
+			reservationInfo.operationDate(),
+			reservationInfo.expiresAt(),
+			reservationInfo.fare(),
+			convertToSeatReservationDetail(reservationInfo.seats())
+		);
 	}
 
 	private List<SeatReservationDetail> convertToSeatReservationDetail(List<SeatReservationProjection> projection) {
