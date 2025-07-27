@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -231,18 +232,22 @@ public class ReservationService {
 	@Transactional
 	public void expireReservations() {
 		LocalDateTime now = LocalDateTime.now();
-		Pageable pageable = PageRequest.of(0, 500);
-		List<Reservation> expiredReservations = reservationRepository
-			.findAllByExpiresAtBeforeAndReservationStatus(now, ReservationStatus.RESERVED, pageable);
-
-		if (expiredReservations.isEmpty())
-			return;
-
-		List<Long> expiredList = expiredReservations.stream()
-			.map(Reservation::getId)
-			.toList();
-
-		reservationRepository.deleteAllByIdInBatch(expiredList);
+		int pageNumber = 0;
+		final int pageSize = 500;
+		Page<Reservation> expiredPage;
+		do {
+			Pageable pageable = PageRequest.of(pageNumber, pageSize);
+			expiredPage = reservationRepository
+				.findAllByExpiresAtBeforeAndReservationStatus(now, ReservationStatus.RESERVED, pageable);
+			if (expiredPage.hasContent()) {
+				List<Long> expiredList = expiredPage.getContent()
+					.stream()
+					.map(Reservation::getId)
+					.toList();
+				reservationRepository.deleteAllByIdInBatch(expiredList);
+			}
+			pageNumber++;
+		} while (expiredPage.hasNext());
 	}
 
 	/**
