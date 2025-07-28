@@ -33,9 +33,10 @@ public record SeatTypeInfo(
 		int totalSeats,
 		int fare,
 		int passengerCount,
-		String seatTypeName) {
+		String seatTypeName,
+		boolean hasStandingOption) {
 
-		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount);
+		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount, hasStandingOption);
 		boolean canReserve = availableSeats >= passengerCount;
 
 		String displayText = createDisplayText(status, seatTypeName);
@@ -46,11 +47,12 @@ public record SeatTypeInfo(
 
 	/**
 	 * 좌석 수와 승객 수로 예약 가능한 좌석 상태 결정
-	 * // TODO : 기준 값 변수로 처리
 	 */
-	private static SeatAvailabilityStatus determineSeatStatus(int availableSeats, int passengerCount) {
+	private static SeatAvailabilityStatus determineSeatStatus(int availableSeats, int passengerCount,
+		boolean hasStandingOption) {
 		if (availableSeats == 0) {
-			return SeatAvailabilityStatus.SOLD_OUT;  // 단순하게 매진으로만 처리
+			// 좌석은 매진이지만 입석이 가능한 경우
+			return hasStandingOption ? SeatAvailabilityStatus.STANDING_ONLY : SeatAvailabilityStatus.SOLD_OUT;
 		}
 
 		if (availableSeats < passengerCount) {
@@ -71,9 +73,9 @@ public record SeatTypeInfo(
 		return switch (status) {
 			case SOLD_OUT -> status.getText();           // "매진"
 			case INSUFFICIENT -> status.getText();       // "좌석부족"
+			case STANDING_ONLY -> seatTypeName + "(" + status.getText() + ")";  // "일반실(입석)"
 			case LIMITED -> seatTypeName + "(" + status.getText() + ")";  // "일반실(매진임박)"
 			case AVAILABLE -> seatTypeName;              // "일반실" / "특실"
-			// STANDING_ONLY 케이스 제거
 		};
 	}
 
@@ -83,7 +85,7 @@ public record SeatTypeInfo(
 	private static String createDescription(SeatAvailabilityStatus status, int availableSeats,
 		int passengerCount) {
 		return switch (status) {
-			case SOLD_OUT -> status.getDescription();
+			case SOLD_OUT, STANDING_ONLY -> status.getDescription();
 			case INSUFFICIENT -> String.format("%s (%d명 예약 시 %d석 부족)",
 				status.getDescription(), passengerCount, passengerCount - availableSeats);
 			case LIMITED -> String.format("%s (잔여 %d석)", status.getDescription(), availableSeats);
