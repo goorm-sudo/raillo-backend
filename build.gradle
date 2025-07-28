@@ -41,6 +41,8 @@ dependencies {
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
     testImplementation "com.navercorp.fixturemonkey:fixture-monkey-starter:1.1.14"
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
     /* JWT */
     // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
