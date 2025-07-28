@@ -202,7 +202,7 @@ public class ReservationService {
 	@Transactional
 	public void deleteReservation(ReservationDeleteRequest request) {
 		try {
-			reservationRepository.deleteById(request.reservationId());
+			deleteReservation(request.reservationId());
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.RESERVATION_DELETE_FAILED);
 		}
@@ -212,8 +212,7 @@ public class ReservationService {
 	 * 특정 예약을 삭제하는 메서드 - 단수 예약 ID 사용
 	 * @param reservationId 삭제할 예약의 ID
 	 */
-	@Transactional
-	public void deleteReservation(Long reservationId) {
+	private void deleteReservation(Long reservationId) {
 		reservationRepository.deleteById(reservationId);
 	}
 
@@ -221,8 +220,7 @@ public class ReservationService {
 	 * 다수의 예약을 삭제하는 메서드 - 복수 예약 ID 사용
 	 * @param reservationIds 삭제할 예약의 ID를 원소로 하는 리스트
 	 */
-	@Transactional
-	public void deleteReservation(List<Long> reservationIds) {
+	private void deleteReservation(List<Long> reservationIds) {
 		reservationRepository.deleteAllByIdInBatch(reservationIds);
 	}
 
