@@ -46,6 +46,12 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
 train:
   schedule:
     excel:
