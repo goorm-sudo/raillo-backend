@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudo.railo.booking.application.dto.ReservationInfo;
 import com.sudo.railo.booking.application.dto.projection.SeatReservationProjection;
@@ -30,7 +31,6 @@ import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.booking.infrastructure.reservation.ReservationRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
-import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.TrainSchedule;
@@ -64,72 +64,17 @@ public class ReservationService {
 	 */
 	@Transactional
 	public Reservation createReservation(ReservationCreateRequest request, UserDetails userDetails) {
-		try {
-			TrainSchedule trainSchedule = trainScheduleRepository.findById(request.trainScheduleId())
-				.orElseThrow(() -> new BusinessException((TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND)));
+		TrainSchedule trainSchedule = getTrainSchedule(request);
+		Member member = memberRepository.getMember(userDetails.getUsername());
+		ScheduleStop departureStop = getStopStation(trainSchedule, request.departureStationId());
+		ScheduleStop arrivalStop = getStopStation(trainSchedule, request.arrivalStationId());
+		CarType carType = findCarType(request.seatIds());
+		BigDecimal totalFare = getTotalFare(request, carType);
 
-			if (trainSchedule.getOperationStatus() == OperationStatus.CANCELLED) {
-				throw new BusinessException(TrainErrorCode.TRAIN_OPERATION_CANCELLED);
-			}
+		validateTrainOperating(trainSchedule);
 
-			Member member = memberRepository.findByMemberNo(userDetails.getUsername())
-				.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
-
-			ScheduleStop departureStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
-				trainSchedule.getId(), request.departureStationId()
-			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
-
-			ScheduleStop arrivalStop = scheduleStopRepository.findByTrainScheduleIdAndStationId(
-				trainSchedule.getId(), request.arrivalStationId()
-			).orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
-
-			// 객차 타입 조회
-			CarType carType = findCarType(request.seatIds());
-
-			// 총 운임 계산
-			BigDecimal totalFare = fareCalculationService.calculateFare(
-				request.departureStationId(),
-				request.arrivalStationId(),
-				request.passengers(),
-				carType
-			);
-
-			List<PassengerSummary> passengerSummary = request.passengers();
-			LocalDateTime now = LocalDateTime.now();
-			Reservation reservation = Reservation.builder()
-				.trainSchedule(trainSchedule)
-				.member(member)
-				.reservationCode(generateReservationCode())
-				.tripType(request.tripType())
-				.totalPassengers(passengerSummary.stream().mapToInt(PassengerSummary::getCount).sum())
-				.passengerSummary(objectMapper.writeValueAsString(passengerSummary))
-				.reservationStatus(ReservationStatus.RESERVED)
-				.expiresAt(now.plusMinutes(bookingConfig.getExpiration().getReservation()))
-				.departureStop(departureStop)
-				.arrivalStop(arrivalStop)
-				.fare(totalFare.intValue())
-				.build();
-			return reservationRepository.save(reservation);
-		} catch (Exception e) {
-			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
-		}
-	}
-
-	/**
-	 * 객차 타입 조회
-	 */
-	private CarType findCarType(List<Long> seatIds) {
-		List<CarType> carTypes = seatRepository.findCarTypes(seatIds);
-
-		// 입석 체크
-		if (seatIds.isEmpty() && carTypes.isEmpty()) {
-			return CarType.STANDARD;
-		}
-
-		if (carTypes.size() != 1) {
-			throw new BusinessException(BookingError.INVALID_CAR_TYPE);
-		}
-		return carTypes.get(0);
+		Reservation reservation = generateReservation(request, trainSchedule, member, departureStop, arrivalStop, totalFare);
+		return reservationRepository.save(reservation);
 	}
 
 	/**
@@ -140,8 +85,7 @@ public class ReservationService {
 	 */
 	@Transactional
 	public ReservationDetail getReservation(String memberNo, Long reservationId) {
-		Member member = memberRepository.findByMemberNo(memberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = memberRepository.getMember(memberNo);
 
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(
 			member.getId(), List.of(reservationId));
@@ -169,8 +113,7 @@ public class ReservationService {
 	 */
 	@Transactional
 	public List<ReservationDetail> getReservations(String memberNo) {
-		Member member = memberRepository.findByMemberNo(memberNo)
-			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+		Member member = memberRepository.getMember(memberNo);
 
 		// 예약 조회
 		List<ReservationInfo> reservationInfos = reservationRepositoryCustom.findReservationDetail(member.getId());
@@ -278,6 +221,48 @@ public class ReservationService {
 		return dateTimeStr + randomStr;
 	}
 
+	private ScheduleStop getStopStation(TrainSchedule trainSchedule, Long request) {
+		return scheduleStopRepository.findByTrainScheduleIdAndStationId(trainSchedule.getId(), request)
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.STATION_NOT_FOUND));
+	}
+
+	private TrainSchedule getTrainSchedule(ReservationCreateRequest request) {
+		return trainScheduleRepository.findById(request.trainScheduleId())
+			.orElseThrow(() -> new BusinessException(TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND));
+	}
+
+	private BigDecimal getTotalFare(ReservationCreateRequest request, CarType carType) {
+		return fareCalculationService.calculateFare(
+			request.departureStationId(),
+			request.arrivalStationId(),
+			request.passengers(),
+			carType
+		);
+	}
+
+	/**
+	 * 객차 타입 조회
+	 */
+	private CarType findCarType(List<Long> seatIds) {
+		List<CarType> carTypes = seatRepository.findCarTypes(seatIds);
+
+		// 입석 체크
+		if (seatIds.isEmpty() && carTypes.isEmpty()) {
+			return CarType.STANDARD;
+		}
+
+		if (carTypes.size() != 1) {
+			throw new BusinessException(BookingError.INVALID_CAR_TYPE);
+		}
+		return carTypes.get(0);
+	}
+
+	private static void validateTrainOperating(TrainSchedule trainSchedule) {
+		if (trainSchedule.getOperationStatus() == OperationStatus.CANCELLED) {
+			throw new BusinessException(TrainErrorCode.TRAIN_OPERATION_CANCELLED);
+		}
+	}
+
 	public List<ReservationDetail> convertToReservationDetail(List<ReservationInfo> reservationInfos) {
 		return reservationInfos.stream()
 			.map(this::convertToReservationDetail)
@@ -311,5 +296,36 @@ public class ReservationService {
 				p.getSeatNumber()
 			))
 			.toList();
+	}
+
+	private Reservation generateReservation(
+		ReservationCreateRequest request,
+		TrainSchedule trainSchedule,
+		Member member,
+		ScheduleStop departureStop,
+		ScheduleStop arrivalStop,
+		BigDecimal totalFare
+	) {
+		return Reservation.builder()
+			.trainSchedule(trainSchedule)
+			.member(member)
+			.reservationCode(generateReservationCode())
+			.tripType(request.tripType())
+			.totalPassengers(request.passengers().stream().mapToInt(PassengerSummary::getCount).sum())
+			.passengerSummary(convertPassengersToJson(request))
+			.reservationStatus(ReservationStatus.RESERVED)
+			.expiresAt(LocalDateTime.now().plusMinutes(bookingConfig.getExpiration().getReservation()))
+			.fare(totalFare.intValue())
+			.departureStop(departureStop)
+			.arrivalStop(arrivalStop)
+			.build();
+	}
+
+	private String convertPassengersToJson(ReservationCreateRequest request) {
+		try {
+			return objectMapper.writeValueAsString(request.passengers());
+		} catch (JsonProcessingException e) {
+			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
+		}
 	}
 }

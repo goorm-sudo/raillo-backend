@@ -10,7 +10,8 @@ import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
-import com.sudo.railo.train.infrastructure.SeatRepository;
+
+import java.util.List;
 
 import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
@@ -20,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SeatReservationService {
 
-	private final SeatRepository seatRepository;
 	private final SeatReservationRepository seatReservationRepository;
 
 	/***
@@ -32,6 +32,16 @@ public class SeatReservationService {
 	@Transactional
 	public SeatReservation reserveNewSeat(Reservation reservation, Seat seat, PassengerType passengerType) {
 		try {
+			Long trainScheduleId = reservation.getTrainSchedule().getId();
+			Long seatId = seat.getId();
+
+			// 비관적 락으로 해당 좌석의 모든 예약을 조회 (다른 트랜잭션의 접근 차단)
+			List<SeatReservation> existingReservations = seatReservationRepository
+				.findByTrainScheduleAndSeatWithLock(trainScheduleId, seatId);
+
+			// 락이 걸린 상태에서 충돌 검증 (원자성 보장)
+			validateConflictWithExistingReservations(reservation, existingReservations);
+
 			SeatReservation seatReservation = SeatReservation.builder()
 				.trainSchedule(reservation.getTrainSchedule())
 				.seat(seat)
@@ -42,9 +52,25 @@ public class SeatReservationService {
 		} catch (OptimisticLockException | DataIntegrityViolationException e) {
 			// 동시성 문제 및 유니크 제약 위반 발생
 			throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
-		} catch (Exception e) {
-			// 알 수 없는 모든 경우는 실패 처리
-			throw new BusinessException(BookingError.SEAT_RESERVATION_FAILED);
 		}
+	}
+
+	/**
+	 * 기존 예약들과 충돌 검증 (락이 걸린 상태에서 수행)
+	 */
+	private void validateConflictWithExistingReservations(
+		Reservation newReservation,
+		List<SeatReservation> existingReservations
+	) {
+		int newDepartureOrder = newReservation.getDepartureStop().getStopOrder();
+		int newArrivalOrder = newReservation.getArrivalStop().getStopOrder();
+
+		existingReservations.forEach(existingReservation -> {
+			int existingDepartureOrder = existingReservation.getReservation().getDepartureStop().getStopOrder();
+			int existingArrivalOrder = existingReservation.getReservation().getArrivalStop().getStopOrder();
+			if (existingDepartureOrder < newArrivalOrder && existingArrivalOrder > newDepartureOrder) {
+				throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
+			}
+		});
 	}
 }
