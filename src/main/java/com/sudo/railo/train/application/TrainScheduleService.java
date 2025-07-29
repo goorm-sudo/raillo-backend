@@ -19,6 +19,7 @@ import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
 import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
+import com.sudo.railo.train.application.dto.projection.TrainSeatInfoBatch;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.SeatTypeInfo;
@@ -206,27 +207,19 @@ public class TrainScheduleService {
 		log.info("배치 쿼리 시작: {}건의 열차 일괄 처리", trainScheduleIds.size());
 
 		// 2. 배치 쿼리로 모든 데이터 한번에 조회
-		// 2-1. 겹치는 예약 조회
+		// 2-1. 좌석 정보 통합 조회 (기존 쿼리 2개 → 1개)
+		TrainSeatInfoBatch seatInfoBatch = trainScheduleRepositoryCustom
+			.findTrainSeatInfoBatch(trainScheduleIds);
+
+		// 2-2. 겹치는 예약 조회
 		Map<Long, List<SeatReservationInfo>> overlappingReservationsMap =
 			seatReservationRepositoryCustom.findOverlappingReservationsBatch(
 				trainScheduleIds, request.departureStationId(), request.arrivalStationId());
 
-		// 2-2. 객차 타입별 좌석 수 조회
-		Map<Long, Map<CarType, Integer>> totalSeatsByCarTypeMap =
-			trainScheduleRepositoryCustom.findTotalSeatsByCarTypeBatch(trainScheduleIds);
-
-		// 2-3. 열차의 전체 좌석 수 조회
-		Map<Long, Integer> totalSeatsMap =
-			trainScheduleRepositoryCustom.findTotalSeatsByTrainScheduleIdBatch(trainScheduleIds);
-
-		// 2-4. 열차의 입석 예약 수 조회
+		// 2-3. 열차의 입석 예약 수 조회
 		Map<Long, Integer> standingReservationsMap =
 			seatReservationRepositoryCustom.countOverlappingStandingReservationsBatch(
 				trainScheduleIds, request.departureStationId(), request.arrivalStationId());
-
-		log.info("배치 쿼리 완료: 예약정보={}, 좌석정보={}, 전체좌석={}, 입석={}",
-			overlappingReservationsMap.size(), totalSeatsByCarTypeMap.size(),
-			totalSeatsMap.size(), standingReservationsMap.size());
 
 		// 3. 각 열차별로 배치 조회된 데이터를 사용해 응답 생성
 		List<TrainSearchResponse> results = trainInfoSlice.stream()
@@ -237,8 +230,9 @@ public class TrainScheduleService {
 					List<SeatReservationInfo> overlappingReservations =
 						overlappingReservationsMap.getOrDefault(trainScheduleId, List.of());
 					Map<CarType, Integer> totalSeatsByCarType =
-						totalSeatsByCarTypeMap.getOrDefault(trainScheduleId, Map.of());
-					Integer totalSeatCount = totalSeatsMap.getOrDefault(trainScheduleId, 0);
+						seatInfoBatch.getSeatsCountByCarType(trainScheduleId);
+					Integer totalSeatCount =
+						seatInfoBatch.getTotalSeatsCount(trainScheduleId);
 					Integer standingReservations = standingReservationsMap.getOrDefault(trainScheduleId, 0);
 
 					// 좌석 상태 계산 (일반실, 특실, 입석)
@@ -297,7 +291,8 @@ public class TrainScheduleService {
 			fare.getStandardFare(),
 			passengerCount,
 			"일반실",
-			hasStandingForStandard  // 일반실 매진 시 입석 옵션 고려
+			hasStandingForStandard,  // 일반실 매진 시 입석 옵션 고려
+			sectionStatus.canReserveStandard()
 		);
 		SeatTypeInfo firstClassSeatInfo = SeatTypeInfo.create(
 			sectionStatus.firstClassRemaining(), // 특실 잔여 좌석 수
@@ -305,7 +300,8 @@ public class TrainScheduleService {
 			fare.getFirstClassFare(),
 			passengerCount,
 			"특실",
-			false
+			false,
+			sectionStatus.canReserveFirstClass()
 		);
 
 		// 2. 입석 정보 생성 (일반실 매진 시에만)

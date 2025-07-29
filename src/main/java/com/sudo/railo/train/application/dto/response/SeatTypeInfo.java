@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record SeatTypeInfo(
 
 	@Schema(description = "잔여 좌석 수", example = "45")
-	int availableSeats,
+	int remainingSeats,
 
 	@Schema(description = "전체 좌석 수", example = "300")
 	int totalSeats,
@@ -34,10 +34,10 @@ public record SeatTypeInfo(
 		int fare,
 		int passengerCount,
 		String seatTypeName,
-		boolean hasStandingOption) {
+		boolean hasStandingOption,
+		boolean canReserve) {
 
 		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount, hasStandingOption);
-		boolean canReserve = availableSeats >= passengerCount;
 
 		String displayText = createDisplayText(status, seatTypeName);
 		String description = createDescription(status, availableSeats, passengerCount);
