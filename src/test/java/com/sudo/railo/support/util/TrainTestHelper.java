@@ -6,9 +6,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.support.fixture.TrainFixture;
+import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.TrainCar;
-import com.sudo.railo.train.infrastructure.SeatRepository;
+import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.support.repository.TestSeatRepository;
 import com.sudo.railo.train.infrastructure.TrainCarRepository;
 import com.sudo.railo.train.infrastructure.TrainRepository;
 
@@ -20,7 +22,7 @@ public class TrainTestHelper {
 
 	private final TrainRepository trainRepository;
 	private final TrainCarRepository trainCarRepository;
-	private final SeatRepository seatRepository;
+	private final TestSeatRepository testSeatRepository;
 
 	@Transactional
 	public Train saveKTX() {
@@ -56,8 +58,24 @@ public class TrainTestHelper {
 		savedTrainCars.stream().map(trainCar -> trainCar.generateSeats(
 			trainFixture.getCarSpecByCarNumber(trainCar.getCarNumber()),
 			TrainFixture.getSeatLayoutByCarType(trainCar.getCarType())
-		)).forEach(seatRepository::saveAll);
+		)).forEach(testSeatRepository::saveAll);
 
 		return savedTrain;
+	}
+
+	public List<Long> getSeatIds(Train train, CarType carType, int count) {
+		return testSeatRepository.findByTrainIdAndCarTypeWithTrainCar(train.getId(), carType)
+			.stream()
+			.map(Seat::getId)
+			.limit(count)
+			.toList();
+	}
+
+	public List<Long> getSeatIds(Train train, int count) {
+		return testSeatRepository.findByTrainIdWithTrainCar(train.getId())
+			.stream()
+			.map(Seat::getId)
+			.limit(count)
+			.toList();
 	}
 }
