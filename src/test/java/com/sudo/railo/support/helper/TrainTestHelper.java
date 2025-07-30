@@ -2,6 +2,8 @@ package com.sudo.railo.support.helper;
 
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,18 +66,17 @@ public class TrainTestHelper {
 	}
 
 	public List<Long> getSeatIds(Train train, CarType carType, int count) {
-		return testSeatRepository.findByTrainIdAndCarTypeWithTrainCar(train.getId(), carType)
+		Pageable limit = PageRequest.of(0, count);
+		return testSeatRepository.findByTrainIdAndCarTypeWithTrainCarLimited(train.getId(), carType, limit)
 			.stream()
 			.map(Seat::getId)
-			.limit(count)
 			.toList();
 	}
 
-	public List<Long> getSeatIds(Train train, int count) {
+	public List<Long> getAllSeatIds(Train train) {
 		return testSeatRepository.findByTrainIdWithTrainCar(train.getId())
 			.stream()
 			.map(Seat::getId)
-			.limit(count)
 			.toList();
 	}
 }
