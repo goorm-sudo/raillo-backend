@@ -54,10 +54,11 @@ class ReservationServiceTest {
 		ScheduleStop arrivalStop = trainScheduleTestHelper.getScheduleStopByStationName(scheduleWithStops, "부산");
 		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 60700, 85000);
 
+		Member member = MemberFixture.createStandardMember();
+		memberRepository.save(member);
+
 		// 일반실 좌석 2개 선택
 		List<Long> standardSeatIds = trainTestHelper.getSeatIds(train, CarType.STANDARD, 2);
-
-		Member member = MemberFixture.MEMBER();
 
 		PassengerSummary adult = new PassengerSummary(PassengerType.ADULT, 1);
 		PassengerSummary child = new PassengerSummary(PassengerType.CHILD, 1);
@@ -71,7 +72,6 @@ class ReservationServiceTest {
 		);
 
 		// when
-		memberRepository.save(member);
 		Reservation reservation = reservationService.createReservation(request, member.getMemberDetail().getMemberNo());
 
 		// then
