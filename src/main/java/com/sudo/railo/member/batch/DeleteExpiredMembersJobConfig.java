@@ -14,6 +14,7 @@ import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.batch.item.database.orm.JpaNativeQueryProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -55,6 +56,12 @@ public class DeleteExpiredMembersJobConfig {
 
 	@Bean
 	public JpaPagingItemReader<Member> expiredMembersReader() {
+
+		JpaNativeQueryProvider<Member> queryProvider = new JpaNativeQueryProvider<>();
+		queryProvider.setEntityClass(Member.class);
+
+		queryProvider.setSqlQuery("SELECT * FROM member m WHERE m.is_deleted = true AND m.updated_at < :date");
+
 		// 삭제된지 30일이 지난 회원 조회 파라미터
 		Map<String, Object> parameters = new HashMap<>();
 		parameters.put("date", LocalDateTime.now().minusDays(30));
@@ -64,7 +71,7 @@ public class DeleteExpiredMembersJobConfig {
 			.name("expiredMembersReader")
 			.entityManagerFactory(entityManagerFactory)
 			.pageSize(CHUNK_SIZE)
-			.queryString("SELECT m FROM Member m WHERE m.isDeleted = true AND m.updatedAt < :date")
+			.queryProvider(queryProvider)
 			.parameterValues(parameters)
 			.build();
 	}
