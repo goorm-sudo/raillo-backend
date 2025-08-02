@@ -126,19 +126,19 @@ public enum TrainFixture {
 		return createSeatLayouts().get(carType);
 	}
 
-	public static Train KTX() {
+	public static Train createKtx() {
 		return KTX.create();
 	}
 
-	public static Train KTX_SANCHEON() {
+	public static Train createKtxSancheon() {
 		return KTX_SANCHEON.create();
 	}
 
-	public static Train KTX_CHEONGRYONG() {
+	public static Train createKtxCheongRyong() {
 		return KTX_CHEONGRYONG.create();
 	}
 
-	public static Train KTX_EUM() {
+	public static Train createKtxEum() {
 		return KTX_EUM.create();
 	}
 }
