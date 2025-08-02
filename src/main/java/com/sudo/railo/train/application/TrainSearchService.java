@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class TrainScheduleService {
+public class TrainSearchService {
 
 	@Value("${train.standing.ratio:0.15}") // 기본값 0.15
 	private double standingRatio;  // 입석 좌석 개수 비율

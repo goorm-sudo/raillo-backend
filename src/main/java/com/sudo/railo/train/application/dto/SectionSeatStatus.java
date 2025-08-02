@@ -64,8 +64,7 @@ public record SectionSeatStatus(
 	 * @param standingRatio
 	 * @return
 	 */
-	public int
-	getMaxStandingCapacity(double standingRatio) {
+	public int getMaxStandingCapacity(double standingRatio) {
 		return (int)(totalSeats * standingRatio);
 	}
 

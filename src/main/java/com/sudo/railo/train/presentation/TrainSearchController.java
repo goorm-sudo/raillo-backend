@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sudo.railo.global.success.SuccessResponse;
-import com.sudo.railo.train.application.TrainScheduleService;
 import com.sudo.railo.train.application.TrainSearchApplicationService;
+import com.sudo.railo.train.application.TrainSearchService;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
 import com.sudo.railo.train.application.dto.request.TrainCarSeatDetailRequest;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TrainSearchController {
 
-	private final TrainScheduleService trainScheduleService;
+	private final TrainSearchService trainSearchService;
 	private final TrainSearchApplicationService trainSearchApplicationService;
 
 	/**
@@ -46,7 +46,7 @@ public class TrainSearchController {
 	@Operation(summary = "운행 캘린더 조회", description = "금일로부터 한 달간의 운행 캘린더를 조회합니다.")
 	public SuccessResponse<List<OperationCalendarItem>> getOperationCalendar() {
 		log.info("운행 캘린더 조회");
-		List<OperationCalendarItem> calendar = trainScheduleService.getOperationCalendar();
+		List<OperationCalendarItem> calendar = trainSearchService.getOperationCalendar();
 		log.info("운행 캘린더 조회: {} 건", calendar.size());
 
 		return SuccessResponse.of(TrainSearchSuccess.OPERATION_CALENDAR_SUCCESS, calendar);
@@ -70,7 +70,7 @@ public class TrainSearchController {
 			request.operationDate(), request.passengerCount(), request.departureHour(),
 			pageable.getPageNumber(), pageable.getPageSize());
 
-		TrainSearchSlicePageResponse response = trainScheduleService.searchTrains(request, pageable);
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, pageable);
 
 		return SuccessResponse.of(TrainSearchSuccess.TRAIN_SEARCH_SUCCESS, response);
 	}
