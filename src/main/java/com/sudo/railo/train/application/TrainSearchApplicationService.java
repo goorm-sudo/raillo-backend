@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TrainSearchApplicationService {
 
-	private final TrainScheduleService trainScheduleService;
+	private final TrainSearchService trainSearchService;
 	private final TrainSeatQueryService trainCarService;
 
 	/**
@@ -33,7 +33,7 @@ public class TrainSearchApplicationService {
 			request.arrivalStationId(), request.passengerCount());
 
 		// 1. 열차 스케줄 기본 정보 조회
-		TrainScheduleBasicInfo scheduleInfo = trainScheduleService.getTrainScheduleBasicInfo(request.trainScheduleId());
+		TrainScheduleBasicInfo scheduleInfo = trainSearchService.getTrainScheduleBasicInfo(request.trainScheduleId());
 
 		// 2. 잔여 좌석이 있는 객차 목록 조회
 		List<TrainCarInfo> availableCars = trainCarService.getAvailableTrainCars(

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record StandingTypeInfo(
 
 	@Schema(description = "입석 가능 인원", example = "25")
-	int availableStanding,
+	int remainingStanding,
 
 	@Schema(description = "최대 입석 인원", example = "50")
 	int maxStanding,

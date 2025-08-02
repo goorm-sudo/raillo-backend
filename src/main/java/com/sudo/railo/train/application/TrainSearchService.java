@@ -19,6 +19,7 @@ import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.application.dto.SectionSeatStatus;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
 import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
+import com.sudo.railo.train.application.dto.projection.TrainSeatInfoBatch;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
 import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.SeatTypeInfo;
@@ -43,13 +44,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class TrainScheduleService {
+public class TrainSearchService {
 
 	@Value("${train.standing.ratio:0.15}") // 기본값 0.15
-	private double standingRatio;  //TODO: 열차 종류별 다른 % 적용
-
+	private double standingRatio;  // 입석 좌석 개수 비율
 	private static final double STANDING_FARE_DISCOUNT_RATE = 0.15;
-	private static final int MAX_STANDING_CAPACITY = 50;   // 열차별 최대 입석 인원 임시 하드코딩
+	private static final int SEAT_BUFFER_THRESHOLD = 20; // 여유석 판단 기준
 
 	private final TrainSearchValidator trainSearchValidator;
 	private final TrainScheduleRepository trainScheduleRepository;
@@ -199,10 +199,6 @@ public class TrainScheduleService {
 	private List<TrainSearchResponse> processTrainSearchResults(List<TrainBasicInfo> trainInfoSlice,
 		StationFare fare, TrainSearchRequest request) {
 
-		if (trainInfoSlice.isEmpty()) {
-			return List.of();
-		}
-
 		// 1. trainScheduleId 리스트 추출
 		List<Long> trainScheduleIds = trainInfoSlice.stream()
 			.map(TrainBasicInfo::trainScheduleId)
@@ -211,27 +207,19 @@ public class TrainScheduleService {
 		log.info("배치 쿼리 시작: {}건의 열차 일괄 처리", trainScheduleIds.size());
 
 		// 2. 배치 쿼리로 모든 데이터 한번에 조회
-		// 2-1. 겹치는 예약 조회
+		// 2-1. 좌석 정보 통합 조회 (기존 쿼리 2개 → 1개)
+		TrainSeatInfoBatch seatInfoBatch = trainScheduleRepositoryCustom
+			.findTrainSeatInfoBatch(trainScheduleIds);
+
+		// 2-2. 겹치는 예약 조회
 		Map<Long, List<SeatReservationInfo>> overlappingReservationsMap =
 			seatReservationRepositoryCustom.findOverlappingReservationsBatch(
 				trainScheduleIds, request.departureStationId(), request.arrivalStationId());
 
-		// 2-2. 객차 타입별 좌석 수 조회
-		Map<Long, Map<CarType, Integer>> totalSeatsByCarTypeMap =
-			trainScheduleRepositoryCustom.findTotalSeatsByCarTypeBatch(trainScheduleIds);
-
-		// 2-3. 열차의 전체 좌석 수 조회
-		Map<Long, Integer> totalSeatsMap =
-			trainScheduleRepositoryCustom.findTotalSeatsByTrainScheduleIdBatch(trainScheduleIds);
-
-		// 2-4. 열차의 입석 예약 수 조회
+		// 2-3. 열차의 입석 예약 수 조회
 		Map<Long, Integer> standingReservationsMap =
 			seatReservationRepositoryCustom.countOverlappingStandingReservationsBatch(
 				trainScheduleIds, request.departureStationId(), request.arrivalStationId());
-
-		log.info("배치 쿼리 완료: 예약정보={}, 좌석정보={}, 전체좌석={}, 입석={}",
-			overlappingReservationsMap.size(), totalSeatsByCarTypeMap.size(),
-			totalSeatsMap.size(), standingReservationsMap.size());
 
 		// 3. 각 열차별로 배치 조회된 데이터를 사용해 응답 생성
 		List<TrainSearchResponse> results = trainInfoSlice.stream()
@@ -241,14 +229,15 @@ public class TrainScheduleService {
 
 					List<SeatReservationInfo> overlappingReservations =
 						overlappingReservationsMap.getOrDefault(trainScheduleId, List.of());
-					Map<CarType, Integer> totalSeats =
-						totalSeatsByCarTypeMap.getOrDefault(trainScheduleId, Map.of());
-					Integer totalSeatCount = totalSeatsMap.getOrDefault(trainScheduleId, 0);
+					Map<CarType, Integer> totalSeatsByCarType =
+						seatInfoBatch.getSeatsCountByCarType(trainScheduleId);
+					Integer totalSeatCount =
+						seatInfoBatch.getTotalSeatsCount(trainScheduleId);
 					Integer standingReservations = standingReservationsMap.getOrDefault(trainScheduleId, 0);
 
 					// 좌석 상태 계산 (일반실, 특실, 입석)
 					SectionSeatStatus sectionStatus = calculateSectionSeatStatusWithBatchData(
-						overlappingReservations, totalSeats, totalSeatCount,
+						overlappingReservations, totalSeatsByCarType, totalSeatCount,
 						standingReservations, request.passengerCount());
 
 					return createTrainSearchResponse(trainInfo, sectionStatus, fare, request.passengerCount());
@@ -292,26 +281,31 @@ public class TrainScheduleService {
 	private TrainSearchResponse createTrainSearchResponse(TrainBasicInfo trainInfo, SectionSeatStatus sectionStatus,
 		StationFare fare, int passengerCount) {
 
-		boolean hasStanding = sectionStatus.standingAvailable();
+		// 입석 가능 여부 (일반실이 매진되었을 때만 입석 표시)
+		boolean hasStandingForStandard = !sectionStatus.canReserveStandard();
 
 		// 1. 좌석 타입별 정보 생성 (일반실 / 특실)
 		SeatTypeInfo standardSeatInfo = SeatTypeInfo.create(
-			sectionStatus.standardAvailable(),   // 일반실 잔여 좌석 수
+			sectionStatus.standardRemaining(),   // 일반실 잔여 좌석 수
 			sectionStatus.standardTotal(),         // 일반실 전체 좌석 수
 			fare.getStandardFare(),
 			passengerCount,
-			"일반실"
+			"일반실",
+			hasStandingForStandard,  // 일반실 매진 시 입석 옵션 고려
+			sectionStatus.canReserveStandard()
 		);
 		SeatTypeInfo firstClassSeatInfo = SeatTypeInfo.create(
-			sectionStatus.firstClassAvailable(), // 특실 잔여 좌석 수
+			sectionStatus.firstClassRemaining(), // 특실 잔여 좌석 수
 			sectionStatus.firstClassTotal(),     // 특실 전체 좌석 수
 			fare.getFirstClassFare(),
 			passengerCount,
-			"특실"
+			"특실",
+			false,
+			sectionStatus.canReserveFirstClass()
 		);
 
-		// 2. 입석 정보 생성
-		StandingTypeInfo standingInfo = createStandingInfoIfNeeded(sectionStatus, fare);
+		// 2. 입석 정보 생성 (일반실 매진 시에만)
+		StandingTypeInfo standingInfo = createStandingInfoIfNeeded(sectionStatus, fare, passengerCount);
 
 		return TrainSearchResponse.of(
 			trainInfo.trainScheduleId(),
@@ -330,15 +324,18 @@ public class TrainScheduleService {
 	/**
 	 * 입석 정보 생성 (필요한 경우만)
 	 */
-	private StandingTypeInfo createStandingInfoIfNeeded(SectionSeatStatus sectionStatus, StationFare fare) {
-		// 입석 가능 열차 && 일반실 예약 불가(매진)
-		boolean shouldShowStanding = sectionStatus.standingAvailable() && !sectionStatus.canReserveStandard();
+	private StandingTypeInfo createStandingInfoIfNeeded(SectionSeatStatus sectionStatus, StationFare fare,
+		int passengerCount) {
+		// 일반실 예약 불가 && (입석 잔여석 > 승객 수) 인 경우
+		boolean shouldShowStanding = !sectionStatus.canReserveStandard()
+			&& sectionStatus.canReserveStanding(passengerCount, standingRatio);
 
 		if (shouldShowStanding) {
 			int standingFare = (int)(fare.getStandardFare() * (1.0 - STANDING_FARE_DISCOUNT_RATE));
+
 			return StandingTypeInfo.create(
-				sectionStatus.maxAdditionalStanding(),
-				MAX_STANDING_CAPACITY,
+				sectionStatus.getStandingRemaining(standingRatio),
+				sectionStatus.getMaxStandingCapacity(standingRatio),
 				standingFare
 			);
 		}
@@ -356,51 +353,43 @@ public class TrainScheduleService {
 		int requestedPassengerCount) {
 
 		// 1. 좌석 계산
-		SeatCalculationResult seatResult = calculateAvailableSeats(totalSeats, overlappingReservations);
+		SeatCalculationResult seatResult = calculateRemainingSeats(totalSeats, overlappingReservations);
 
 		// 2. 입석 계산
 		int maxAllowedStandingCount = (int)(totalSeatCount * standingRatio);
-		int maxAdditionalStanding = Math.max(0, maxAllowedStandingCount - standingReservations);
-
-		StandingCalculationResult standingResult = new StandingCalculationResult(
-			maxAdditionalStanding > 0,   // 입석 가능 열차 판단
-			maxAdditionalStanding,
-			maxAdditionalStanding >= requestedPassengerCount,
-			standingReservations
-		);
+		int remainingStanding = Math.max(0, maxAllowedStandingCount - standingReservations);
 
 		// 3. 예약 가능 여부 판단
-		boolean canReserveStandard = seatResult.standardAvailable() >= requestedPassengerCount;
-		boolean canReserveFirstClass = seatResult.firstClassAvailable() >= requestedPassengerCount;
+		boolean canReserveStandard = seatResult.standardRemaining() >= requestedPassengerCount;
+		boolean canReserveFirstClass = seatResult.firstClassRemaining() >= requestedPassengerCount;
 
 		return SectionSeatStatus.of(
-			seatResult.standardAvailable(), seatResult.standardTotal(),
-			seatResult.firstClassAvailable(), seatResult.firstClassTotal(),
+			seatResult.standardRemaining(), seatResult.standardTotal(),
+			seatResult.firstClassRemaining(), seatResult.firstClassTotal(),
 			canReserveStandard, canReserveFirstClass,
-			standingResult.standingAvailable(), standingResult.maxAdditionalStanding(),
-			standingResult.canReserveStanding(), standingResult.currentStandingReservations()
+			standingReservations, totalSeatCount
 		);
 	}
 
 	/**
 	 * 좌석 타입별 잔여 좌석 계산
 	 */
-	private SeatCalculationResult calculateAvailableSeats(Map<CarType, Integer> totalSeats,
+	private SeatCalculationResult calculateRemainingSeats(Map<CarType, Integer> totalSeats,
 		List<SeatReservationInfo> overlappingReservations) {
 		// 총 좌석 수
 		int standardTotal = totalSeats.getOrDefault(CarType.STANDARD, 0);
 		int firstClassTotal = totalSeats.getOrDefault(CarType.FIRST_CLASS, 0);
 
 		// 예약된 좌석 수 계산
-		Map<CarType, Long> occupiedSeats = overlappingReservations.stream()
+		Map<CarType, Long> reservedSeats = overlappingReservations.stream()
 			.collect(Collectors.groupingBy(SeatReservationInfo::carType, Collectors.counting()));
 
-		int standardOccupied = occupiedSeats.getOrDefault(CarType.STANDARD, 0L).intValue();
-		int firstClassOccupied = occupiedSeats.getOrDefault(CarType.FIRST_CLASS, 0L).intValue();
+		int standardReserved = reservedSeats.getOrDefault(CarType.STANDARD, 0L).intValue();
+		int firstClassReserved = reservedSeats.getOrDefault(CarType.FIRST_CLASS, 0L).intValue();
 
 		return new SeatCalculationResult(
-			Math.max(0, standardTotal - standardOccupied), standardTotal,
-			Math.max(0, firstClassTotal - firstClassOccupied), firstClassTotal
+			Math.max(0, standardTotal - standardReserved), standardTotal,
+			Math.max(0, firstClassTotal - firstClassReserved), firstClassTotal
 		);
 	}
 
@@ -409,14 +398,8 @@ public class TrainScheduleService {
 	// ============================================
 
 	private record SeatCalculationResult(
-		int standardAvailable, int standardTotal,
-		int firstClassAvailable, int firstClassTotal
-	) {
-	}
-
-	private record StandingCalculationResult(
-		boolean standingAvailable, int maxAdditionalStanding,
-		boolean canReserveStanding, int currentStandingReservations
+		int standardRemaining, int standardTotal,
+		int firstClassRemaining, int firstClassTotal
 	) {
 	}
 }
