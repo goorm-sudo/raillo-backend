@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.member.domain.Member;
 
@@ -18,7 +17,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
 	boolean existsByPhoneNumber(String phoneNumber);
 
 	@Modifying
-	@Transactional
 	@Query(value = "delete from member where id in (:memberIds)", nativeQuery = true)
 	void deleteAllByIdInBatch(@Param("memberIds") List<Long> memberIds);
 }
