@@ -22,14 +22,16 @@ public class DeleteExpiredMembersScheduler {
 	private final JobLauncher jobLauncher;
 	private final Job deleteExpiredMembersJob;
 
-	@Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시에 수행
+	@Scheduled(cron = "0 0 3 * * ?")
 	public void runDeleteExpiredMembers() {
 		try {
+			log.info("삭제 배치 작업 시작");
 			JobParameters jobParameters = new JobParametersBuilder()
 				.addLong("time", System.currentTimeMillis()) // 작업 식별을 위한 시간 파라미터 추가
 				.toJobParameters();
 
 			jobLauncher.run(deleteExpiredMembersJob, jobParameters);
+			log.info("삭제 배치 작업 완료");
 
 		} catch (JobExecutionAlreadyRunningException | JobRestartException
 				 | JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
