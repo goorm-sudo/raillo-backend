@@ -10,7 +10,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,9 +62,9 @@ public class ReservationService {
 	 * @return 예약 레코드
 	 */
 	@Transactional
-	public Reservation createReservation(ReservationCreateRequest request, UserDetails userDetails) {
+	public Reservation createReservation(ReservationCreateRequest request, String memberNo) {
 		TrainSchedule trainSchedule = getTrainSchedule(request);
-		Member member = memberRepository.getMember(userDetails.getUsername());
+		Member member = memberRepository.getMember(memberNo);
 		ScheduleStop departureStop = getStopStation(trainSchedule, request.departureStationId());
 		ScheduleStop arrivalStop = getStopStation(trainSchedule, request.arrivalStationId());
 		CarType carType = findCarType(request.seatIds());
