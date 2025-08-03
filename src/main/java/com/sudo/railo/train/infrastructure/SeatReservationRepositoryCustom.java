@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
+import com.sudo.railo.booking.application.dto.projection.SeatInfoProjection;
 
 public interface SeatReservationRepositoryCustom {
 
@@ -32,4 +33,12 @@ public interface SeatReservationRepositoryCustom {
 		Long departureStationId,
 		Long arrivalStationId
 	);
+
+	/**
+	 * 예약 ID로 해당 예약의 좌석 정보와 승객 타입을 조회 (PaymentService용)
+	 *
+	 * @param reservationId 예약 ID
+	 * @return 좌석 정보와 승객 타입 리스트
+	 */
+	List<SeatInfoProjection> findSeatInfoByReservationId(Long reservationId);
 }
