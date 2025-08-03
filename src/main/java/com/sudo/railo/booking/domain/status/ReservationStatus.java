@@ -43,6 +43,6 @@ public enum ReservationStatus {
 	 * 환불 가능 여부
 	 */
 	public boolean isRefundable() {
-		return this == PAID;
+		return this == CANCELLED;
 	}
 }
