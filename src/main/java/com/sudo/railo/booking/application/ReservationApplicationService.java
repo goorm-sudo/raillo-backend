@@ -60,7 +60,7 @@ public class ReservationApplicationService {
 					.orElseThrow(() -> new BusinessException((BookingError.SEAT_NOT_FOUND)));
 				SeatReservation seatReservation = seatReservationService
 					.reserveNewSeat(reservation, seat, passengerType);
-				ticketService.createTicket(reservation, seat, passengerType);
+				// ticketService.createTicket(reservation, seat, passengerType);
 				seatReservationIds.add(seatReservation.getId());
 			}
 		}
