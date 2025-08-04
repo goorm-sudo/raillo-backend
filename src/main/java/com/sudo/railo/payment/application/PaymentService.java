@@ -13,6 +13,8 @@ import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.payment.application.dto.PaymentInfo;
+import com.sudo.railo.payment.application.dto.request.PaymentProcessAccountRequest;
+import com.sudo.railo.payment.application.dto.request.PaymentProcessCardRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessRequest;
 import com.sudo.railo.payment.application.dto.response.PaymentProcessResponse;
 import com.sudo.railo.payment.domain.Payment;
@@ -38,16 +40,38 @@ public class PaymentService {
 	private final TicketService ticketService;
 
 	/**
-	 * 결제 처리 (즉시 결제)
+	 * 결제 처리 (카드)
+	 *
+	 * @param memberNo 회원번호
+	 * @param request {@link PaymentProcessCardRequest} 객체
+	 * @return {@link PaymentProcessResponse} 객체
+	 */
+	@Transactional
+	public PaymentProcessResponse processPaymentViaCard(String memberNo, PaymentProcessCardRequest request) {
+		return processPayment(memberNo, request);
+	}
+
+	/**
+	 * 결제 처리 (계좌 이체)
+	 *
+	 * @param memberNo 회원번호
+	 * @param request {@link PaymentProcessAccountRequest} 객체
+	 * @return {@link PaymentProcessResponse} 객체
+	 */
+	@Transactional
+	public PaymentProcessResponse processPaymentViaBankAccount(String memberNo, PaymentProcessAccountRequest request) {
+		return processPayment(memberNo, request);
+	}
+
+	/**
+	 * 결제 처리 (공통)
 	 *
 	 * @param memberNo 회원번호
 	 * @param request {@link PaymentProcessRequest} 객체
 	 * @return {@link PaymentProcessResponse} 객체
 	 */
-	@Transactional
-	public PaymentProcessResponse processPayment(String memberNo, PaymentProcessRequest request) {
-		Reservation reservation = reservationRepository.findById(request.reservationId())
-			.orElseThrow(() -> new BusinessException(PaymentError.RESERVATION_NOT_FOUND));
+	private PaymentProcessResponse processPayment(String memberNo, PaymentProcessRequest request) {
+		Reservation reservation = getReservation(request.getReservationId());
 		Payment payment = createAndSavePayment(request, memberNo, reservation);
 
 		validatePaymentApprovalConditions(payment, reservation);
@@ -55,6 +79,11 @@ public class PaymentService {
 		completePaymentProcess(request, payment, reservation);
 
 		return PaymentProcessResponse.from(payment);
+	}
+
+	private Reservation getReservation(Long reservationId) {
+		return reservationRepository.findById(reservationId)
+			.orElseThrow(() -> new BusinessException(PaymentError.RESERVATION_NOT_FOUND));
 	}
 
 	private Payment createAndSavePayment(PaymentProcessRequest request, String memberNo, Reservation reservation) {
@@ -65,7 +94,7 @@ public class PaymentService {
 		validatePaymentProcessRequest(request, reservation);
 
 		String paymentKey = paymentKeyGenerator.generatePaymentKey(memberNo);
-		PaymentInfo paymentInfo = new PaymentInfo(request.amount(), request.paymentMethod(), PaymentStatus.PENDING);
+		PaymentInfo paymentInfo = new PaymentInfo(request.getAmount(), request.getPaymentMethod(), PaymentStatus.PENDING);
 		Payment payment = Payment.create(member, reservation, paymentKey, paymentInfo);
 
 		return paymentRepository.save(payment);
@@ -85,17 +114,17 @@ public class PaymentService {
 
 	private void validatePaymentProcessRequest(PaymentProcessRequest request, Reservation reservation) {
 		// 금액 유효성 검증
-		if (request.amount() == null) {
+		if (request.getAmount() == null) {
 			throw new BusinessException(PaymentError.INVALID_PAYMENT_AMOUNT);
 		}
 
 		// 금액 위변조 검증
-		if (!request.amount().equals(BigDecimal.valueOf(reservation.getFare()))) {
+		if (!request.getAmount().equals(BigDecimal.valueOf(reservation.getFare()))) {
 			throw new BusinessException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
 		}
 
 		// 중복 결제 검증
-		if (paymentRepository.existsByReservationIdAndPaymentStatus(request.reservationId(), PaymentStatus.PAID)) {
+		if (paymentRepository.existsByReservationIdAndPaymentStatus(request.getReservationId(), PaymentStatus.PAID)) {
 			throw new BusinessException(PaymentError.PAYMENT_ALREADY_COMPLETED);
 		}
 	}
@@ -132,7 +161,7 @@ public class PaymentService {
 		generateTicket(reservation);
 
 		log.info("결제 완료: paymentKey={}, reservationId={}, amount={}",
-			payment.getPaymentKey(), request.reservationId(), request.amount());
+			payment.getPaymentKey(), request.getReservationId(), request.getAmount());
 	}
 
 	private void generateTicket(Reservation reservation) {
