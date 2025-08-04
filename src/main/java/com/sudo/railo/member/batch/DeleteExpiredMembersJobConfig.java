@@ -62,9 +62,9 @@ public class DeleteExpiredMembersJobConfig {
 
 		queryProvider.setSqlQuery("SELECT * FROM member m WHERE m.is_deleted = true AND m.updated_at < :date");
 
-		// 삭제된지 30일이 지난 회원 조회 파라미터
+		// 삭제된지 3년이 지난 회원 조회 파라미터
 		Map<String, Object> parameters = new HashMap<>();
-		parameters.put("date", LocalDateTime.now().minusDays(30));
+		parameters.put("date", LocalDateTime.now().minusYears(3));
 
 		// JPA 를 사용하여 페이징 방식으로 데이터 읽어옴
 		return new JpaPagingItemReaderBuilder<Member>()
