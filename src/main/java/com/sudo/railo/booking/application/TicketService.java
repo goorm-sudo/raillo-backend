@@ -62,4 +62,14 @@ public class TicketService {
 			throw new BusinessException(BookingError.TICKET_LIST_GET_FAILED);
 		}
 	}
+
+	public void deleteTicketById(Long ticketId) {
+		Ticket ticket = ticketRepository.findById(ticketId)
+			.orElseThrow(() -> new BusinessException(BookingError.TICKET_NOT_FOUND));
+		ticketRepository.delete(ticket);
+	}
+
+	public void deleteTicketByReservationId(Long reservationId) {
+		ticketRepository.deleteAllByReservationId(reservationId);
+	}
 }
