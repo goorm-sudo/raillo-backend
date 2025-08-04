@@ -1,6 +1,6 @@
 package com.sudo.railo.member.domain;
 
-import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.sudo.railo.global.domain.BaseEntity;
 
@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@SoftDelete(columnName = "is_deleted")
+@SQLRestriction("is_deleted = false")
 public class Member extends BaseEntity {
 
 	@Id
@@ -43,12 +43,16 @@ public class Member extends BaseEntity {
 	@Embedded
 	private MemberDetail memberDetail;
 
+	@Column(name = "is_deleted", nullable = false)
+	private boolean isDeleted;
+
 	private Member(String name, String phoneNumber, String password, Role role, MemberDetail memberDetail) {
 		this.name = name;
 		this.phoneNumber = phoneNumber;
 		this.password = password;
 		this.role = role;
 		this.memberDetail = memberDetail;
+		this.isDeleted = false;
 	}
 
 	public static Member create(String name, String phoneNumber, String password, Role role,
@@ -67,5 +71,9 @@ public class Member extends BaseEntity {
 
 	public void updatePassword(String password) {
 		this.password = password;
+	}
+
+	public void softDelete() {
+		this.isDeleted = true;
 	}
 }

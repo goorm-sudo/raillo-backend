@@ -63,7 +63,7 @@ public class MemberService {
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 
 		try {
-			memberRepository.delete(currentMember);
+			currentMember.softDelete();
 		} catch (Exception e) {
 			log.error("회원 삭제 실패 : {}", e.getMessage());
 			throw new BusinessException(MemberError.MEMBER_DELETE_FAIL);
