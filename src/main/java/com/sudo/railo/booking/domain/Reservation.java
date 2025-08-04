@@ -3,6 +3,8 @@ package com.sudo.railo.booking.domain;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import com.sudo.railo.booking.domain.status.ReservationStatus;
 import com.sudo.railo.booking.domain.type.TripType;
@@ -47,6 +49,7 @@ public class Reservation extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	@Comment("멤버 ID")
 	private Member member;
 

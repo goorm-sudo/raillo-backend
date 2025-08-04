@@ -31,6 +31,7 @@ public class CartReservation extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "member_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	private Member member;
 
 	@OneToOne(fetch = FetchType.LAZY)
