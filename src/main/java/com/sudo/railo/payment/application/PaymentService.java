@@ -169,4 +169,10 @@ public class PaymentService {
 			.forEach(seatInfoProjection -> ticketService.createTicket(
 				reservation, seatInfoProjection.getSeat(), seatInfoProjection.getPassengerType()));
 	}
+
+	private void generateTicket(Reservation reservation) {
+		seatReservationRepositoryCustom.findSeatInfoByReservationId(reservation.getId())
+			.forEach(seatInfoProjection -> ticketService.createTicket(
+				reservation, seatInfoProjection.getSeat(), seatInfoProjection.getPassengerType()));
+	}
 }
