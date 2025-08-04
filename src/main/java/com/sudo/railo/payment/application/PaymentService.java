@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.booking.application.TicketService;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
@@ -19,6 +20,7 @@ import com.sudo.railo.payment.domain.status.PaymentStatus;
 import com.sudo.railo.payment.exception.PaymentError;
 import com.sudo.railo.payment.infrastructure.PaymentRepository;
 import com.sudo.railo.payment.util.PaymentKeyGenerator;
+import com.sudo.railo.train.infrastructure.SeatReservationRepositoryCustom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentService {
 
 	private final ReservationRepository reservationRepository;
+	private final SeatReservationRepositoryCustom seatReservationRepositoryCustom;
 	private final MemberRepository memberRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentKeyGenerator paymentKeyGenerator;
-	private final PaymentBookingService paymentBookingService;
+	private final TicketService ticketService;
 
 	/**
 	 * 결제 처리 (즉시 결제)
@@ -114,14 +117,27 @@ public class PaymentService {
 		payment.approve();
 
 		// 예약 상태 변경
-		paymentBookingService.markReservationAsPaid(reservation);
+		markReservationAsPaid(reservation);
+	}
+
+	private void markReservationAsPaid(Reservation reservation) {
+		reservation.approve();
+		reservationRepository.save(reservation);
+
+		log.info("예약 결제 완료 처리: reservationId={}", reservation.getId());
 	}
 
 	private void completePaymentProcess(PaymentProcessRequest request, Payment payment, Reservation reservation) {
 		// 티켓 발급
-		paymentBookingService.generateTicket(reservation);
+		generateTicket(reservation);
 
 		log.info("결제 완료: paymentKey={}, reservationId={}, amount={}",
 			payment.getPaymentKey(), request.reservationId(), request.amount());
+	}
+
+	private void generateTicket(Reservation reservation) {
+		seatReservationRepositoryCustom.findSeatInfoByReservationId(reservation.getId())
+			.forEach(seatInfoProjection -> ticketService.createTicket(
+				reservation, seatInfoProjection.getSeat(), seatInfoProjection.getPassengerType()));
 	}
 }
