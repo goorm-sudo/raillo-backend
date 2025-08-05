@@ -16,6 +16,7 @@ import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
+import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.infrastructure.SeatRepository;
 
@@ -27,6 +28,7 @@ public class ReservationApplicationService {
 
 	private final ReservationService reservationService;
 	private final SeatReservationService seatReservationService;
+	private final TicketService ticketService;
 	private final SeatRepository seatRepository;
 
 	@Transactional
@@ -47,6 +49,8 @@ public class ReservationApplicationService {
 		if (passengersCnt != seatIds.size()) {
 			throw new BusinessException(BookingError.RESERVATION_CREATE_SEATS_INVALID);
 		}
+
+		validateStopSequence(reservation);
 
 		// 좌석 차례대로 승객 할당
 		int idx = 0;
@@ -75,5 +79,13 @@ public class ReservationApplicationService {
 	@Transactional
 	public void deleteReservationsByMember(Member member) {
 		reservationService.deleteAllByMemberId(member.getId());
+	}
+
+	private static void validateStopSequence(Reservation reservation) {
+		ScheduleStop departureStop = reservation.getDepartureStop();
+		ScheduleStop arrivalStop = reservation.getArrivalStop();
+		if (departureStop.getStopOrder() > arrivalStop.getStopOrder()) {
+			throw new BusinessException(BookingError.TRAIN_NOT_OPERATIONAL);
+		}
 	}
 }
