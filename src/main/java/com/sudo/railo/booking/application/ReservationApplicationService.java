@@ -26,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class ReservationApplicationService {
 
 	private final ReservationService reservationService;
-	private final TicketService ticketService;
 	private final SeatReservationService seatReservationService;
 	private final SeatRepository seatRepository;
 
@@ -36,9 +35,9 @@ public class ReservationApplicationService {
 		Reservation reservation = reservationService.createReservation(request, memberNo);
 
 		// 승객 정보, 좌석 정보 정렬 (승객 정보는 PassengerType에 정의한 순서대로, 좌석 정보는 오름차순)
-		List<PassengerSummary> passengers = request.passengers();
+		List<PassengerSummary> passengers = new ArrayList<>(request.passengers());
 		passengers.sort(Comparator.comparingInt(ps -> ps.getPassengerType().ordinal()));
-		List<Long> seatIds = request.seatIds();
+		List<Long> seatIds = new ArrayList<>(request.seatIds());
 		seatIds.sort(Comparator.naturalOrder());
 
 		// 요청 승객 수와 선택한 좌석 수를 비교하여 좌석 수가 승객 수보다 많으면 오류 발생
