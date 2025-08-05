@@ -1,10 +1,10 @@
 package com.sudo.railo.member.batch;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -80,8 +80,10 @@ public class DeleteExpiredMembersJobConfig {
 	public ItemWriter<Member> expiredMembersWriter() {
 		// 영구 삭제 처리
 		return chunk -> {
-			List<Long> memberIds = new ArrayList<>();
-			chunk.forEach(member -> memberIds.add(member.getId()));
+			List<Long> memberIds = chunk.getItems().stream()
+				.map(Member::getId)
+				.filter(Objects::nonNull)
+				.toList();
 
 			if (!memberIds.isEmpty()) {
 				log.info("총 {}명의 회원 영구 삭제 처리", memberIds.size());
