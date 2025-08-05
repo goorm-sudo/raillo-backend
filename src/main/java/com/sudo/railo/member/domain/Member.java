@@ -1,5 +1,8 @@
 package com.sudo.railo.member.domain;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.sudo.railo.global.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -10,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,6 +24,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@SQLDelete(sql = "UPDATE member SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
+@Table(
+	name = "member",
+	indexes = {
+		@Index(name = "idx_member_deleted_updated", columnList = "is_deleted,updated_at")
+	}
+)
 public class Member extends BaseEntity {
 
 	@Id
@@ -40,12 +53,16 @@ public class Member extends BaseEntity {
 	@Embedded
 	private MemberDetail memberDetail;
 
+	@Column(name = "is_deleted", nullable = false)
+	private boolean isDeleted = false;
+
 	private Member(String name, String phoneNumber, String password, Role role, MemberDetail memberDetail) {
 		this.name = name;
 		this.phoneNumber = phoneNumber;
 		this.password = password;
 		this.role = role;
 		this.memberDetail = memberDetail;
+		this.isDeleted = false;
 	}
 
 	public static Member create(String name, String phoneNumber, String password, Role role,
@@ -65,4 +82,5 @@ public class Member extends BaseEntity {
 	public void updatePassword(String password) {
 		this.password = password;
 	}
+
 }
