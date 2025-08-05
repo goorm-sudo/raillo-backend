@@ -13,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +26,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @SQLDelete(sql = "UPDATE member SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
+@Table(
+	name = "member",
+	indexes = {
+		@Index(name = "idx_member_deleted_updated", columnList = "is_deleted,updated_at")
+	}
+)
 public class Member extends BaseEntity {
 
 	@Id
