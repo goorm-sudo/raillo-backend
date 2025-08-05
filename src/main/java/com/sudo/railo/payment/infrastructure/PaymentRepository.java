@@ -10,7 +10,7 @@ import com.sudo.railo.payment.domain.Payment;
 import com.sudo.railo.payment.domain.status.PaymentStatus;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
+public interface PaymentRepository extends JpaRepository<Payment, Long>, PaymentRepositoryCustom {
 
 	/**
 	 * 결제 키로 결제 정보 조회
