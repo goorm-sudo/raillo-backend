@@ -67,15 +67,9 @@ public class ReservationApplicationService {
 
 	@Transactional
 	public void cancelReservation(Reservation reservation) {
-		// 예약 soft-delete
 		reservation.cancel();
-
 		Long reservationId = reservation.getId();
-
-		// SeatReservation 삭제 (ReservationId 이용)
 		seatReservationService.deleteSeatReservationByReservationId(reservationId);
-
-		// Ticket 삭제 (ReservationId 이용)
 		ticketService.deleteTicketByReservationId(reservationId);
 	}
 }
