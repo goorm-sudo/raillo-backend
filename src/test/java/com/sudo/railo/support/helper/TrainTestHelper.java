@@ -49,22 +49,16 @@ public class TrainTestHelper {
 	 * 좌석 = (standardRows * 2)개 + (firstRows * 2)개
 	 */
 	@Transactional
-	public Train saveTrainWithCarsAndSeats(TrainFixture trainFixture) {
-		Train train = trainFixture.create();
+	public Train createCustomKTX(int standardRows, int firstRows) {
+		Train train = createKTXTrain();
 		Train savedTrain = trainRepository.save(train);
 
-		List<TrainCar> trainCars = train.generateTrainCars(
-			TrainFixture.createSeatLayouts(),
-			trainFixture.createTrainTemplate()
+		List<CarSpec> carSpecs = List.of(
+			new CarSpec(CarType.STANDARD, standardRows),
+			new CarSpec(CarType.FIRST_CLASS, firstRows)
 		);
-		List<TrainCar> savedTrainCars = trainCarRepository.saveAll(trainCars);
 
-		savedTrainCars.stream().map(trainCar -> trainCar.generateSeats(
-			trainFixture.getCarSpecByCarNumber(trainCar.getCarNumber()),
-			TrainFixture.getSeatLayoutByCarType(trainCar.getCarType())
-		)).forEach(testSeatRepository::saveAll);
-
-		return savedTrain;
+		return saveTrainWithCarsAndSeats(savedTrain, carSpecs);
 	}
 
 	/**
