@@ -248,8 +248,12 @@ public class ReservationService {
 		List<CarType> carTypes = seatRepository.findCarTypes(seatIds);
 
 		// 입석 체크
-		if (seatIds.isEmpty() && carTypes.isEmpty()) {
+		if (seatIds.isEmpty()) {
 			return CarType.STANDARD;
+		}
+
+		if (carTypes.isEmpty()) {
+			throw new BusinessException(BookingError.SEAT_NOT_FOUND);
 		}
 
 		if (carTypes.size() != 1) {
