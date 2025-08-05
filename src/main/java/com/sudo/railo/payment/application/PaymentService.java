@@ -1,6 +1,7 @@
 package com.sudo.railo.payment.application;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +16,12 @@ import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.payment.application.dto.PaymentInfo;
+import com.sudo.railo.payment.application.dto.projection.PaymentProjection;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessAccountRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessCardRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessRequest;
 import com.sudo.railo.payment.application.dto.response.PaymentCancelResponse;
+import com.sudo.railo.payment.application.dto.response.PaymentHistoryResponse;
 import com.sudo.railo.payment.application.dto.response.PaymentProcessResponse;
 import com.sudo.railo.payment.domain.Payment;
 import com.sudo.railo.payment.domain.status.PaymentStatus;
@@ -40,6 +43,7 @@ public class PaymentService {
 	private final MemberRepository memberRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentKeyGenerator paymentKeyGenerator;
+	private final ReservationApplicationService reservationApplicationService;
 	private final TicketService ticketService;
 
 	/**
@@ -149,7 +153,6 @@ public class PaymentService {
 
 	private void markReservationAsPaid(Reservation reservation) {
 		reservation.approve();
-		reservationRepository.save(reservation);
 
 		log.info("예약 결제 완료 처리: reservationId={}", reservation.getId());
 	}
@@ -245,4 +248,24 @@ public class PaymentService {
 		log.info("예약 환불 처리: reservationId={}", reservation.getId());
 	}
 
+	/**
+	 * 결제 내역 조회
+	 * @param memberNo 회원번호
+	 * @return {@code List<PaymentHistoryResponse>}
+	 */
+	@Transactional(readOnly = true)
+	public List<PaymentHistoryResponse> getPaymentHistory(String memberNo) {
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		List<PaymentProjection> paymentProjections = paymentRepository.findPaymentHistoryByMemberId(member.getId());
+
+		return paymentProjections.stream()
+			.map(paymentProjection -> new PaymentHistoryResponse(
+				paymentProjection.getPaymentId(), paymentProjection.getPaymentKey(),
+				paymentProjection.getReservationCode(), paymentProjection.getAmount(),
+				paymentProjection.getPaymentMethod(), paymentProjection.getPaymentStatus(),
+				paymentProjection.getPaidAt(), paymentProjection.getCancelledAt(), paymentProjection.getRefundedAt()))
+			.toList();
+	}
 }
