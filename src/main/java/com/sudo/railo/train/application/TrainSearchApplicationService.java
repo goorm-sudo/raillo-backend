@@ -69,6 +69,7 @@ public class TrainSearchApplicationService {
 			scheduleInfo.trainClassificationCode(), scheduleInfo.trainNumber());
 
 		return TrainCarListResponse.of(
+			request.trainScheduleId(),
 			recommendedCarNumber,
 			availableCars.size(),
 			scheduleInfo.trainClassificationCode(),
