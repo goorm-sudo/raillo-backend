@@ -9,6 +9,7 @@ import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.global.domain.BaseEntity;
 import com.sudo.railo.train.domain.Seat;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,7 +52,7 @@ public class Ticket extends BaseEntity {
 	@Comment("예약 ID")
 	private Reservation reservation;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 	@JoinColumn(name = "qr_id", nullable = false)
 	@Comment("QR ID")
 	private Qr qr;

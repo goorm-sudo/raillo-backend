@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
 import com.sudo.railo.booking.domain.Qr;
@@ -61,5 +62,17 @@ public class TicketService {
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.TICKET_LIST_GET_FAILED);
 		}
+	}
+
+	@Transactional
+	public void deleteTicketById(Long ticketId) {
+		Ticket ticket = ticketRepository.findById(ticketId)
+			.orElseThrow(() -> new BusinessException(BookingError.TICKET_NOT_FOUND));
+		ticketRepository.delete(ticket);
+	}
+
+	@Transactional
+	public void deleteTicketByReservationId(Long reservationId) {
+		ticketRepository.deleteAllByReservationId(reservationId);
 	}
 }

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
@@ -64,5 +63,13 @@ public class ReservationApplicationService {
 			}
 		}
 		return new ReservationCreateResponse(reservation.getId(), seatReservationIds);
+	}
+
+	@Transactional
+	public void cancelReservation(Reservation reservation) {
+		reservation.cancel();
+		Long reservationId = reservation.getId();
+		seatReservationService.deleteSeatReservationByReservationId(reservationId);
+		ticketService.deleteTicketByReservationId(reservationId);
 	}
 }

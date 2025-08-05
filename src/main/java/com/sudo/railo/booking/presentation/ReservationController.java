@@ -42,7 +42,8 @@ public class ReservationController implements ReservationControllerDocs {
 		@RequestBody ReservationCreateRequest request,
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
-		ReservationCreateResponse response = reservationApplicationService.createReservation(request, userDetails.getUsername());
+		ReservationCreateResponse response = reservationApplicationService
+			.createReservation(request, userDetails.getUsername());
 		return SuccessResponse.of(ReservationSuccess.RESERVATION_CREATE_SUCCESS, response);
 	}
 

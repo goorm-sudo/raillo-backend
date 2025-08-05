@@ -1,7 +1,10 @@
 package com.sudo.railo.booking.application;
 
+import java.util.List;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
@@ -11,10 +14,7 @@ import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
 
-import java.util.List;
-
 import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -53,6 +53,18 @@ public class SeatReservationService {
 			// 동시성 문제 및 유니크 제약 위반 발생
 			throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
 		}
+	}
+
+	@Transactional
+	public void deleteSeatReservation(Long seatReservationId) {
+		SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId)
+			.orElseThrow(() -> new BusinessException(BookingError.SEAT_RESERVATION_NOT_FOUND));
+		seatReservationRepository.delete(seatReservation);
+	}
+
+	@Transactional
+	public void deleteSeatReservationByReservationId(Long reservationId) {
+		seatReservationRepository.deleteAllByReservationId(reservationId);
 	}
 
 	/**
