@@ -46,7 +46,7 @@ public class Member extends BaseEntity {
 	private MemberDetail memberDetail;
 
 	@Column(name = "is_deleted", nullable = false)
-	private boolean isDeleted;
+	private boolean isDeleted = false;
 
 	private Member(String name, String phoneNumber, String password, Role role, MemberDetail memberDetail) {
 		this.name = name;
@@ -74,5 +74,5 @@ public class Member extends BaseEntity {
 	public void updatePassword(String password) {
 		this.password = password;
 	}
-	
+
 }
