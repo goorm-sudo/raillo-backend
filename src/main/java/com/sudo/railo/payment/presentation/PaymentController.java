@@ -2,6 +2,7 @@ package com.sudo.railo.payment.presentation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,7 @@ import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.payment.application.PaymentService;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessAccountRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessCardRequest;
+import com.sudo.railo.payment.application.dto.response.PaymentCancelResponse;
 import com.sudo.railo.payment.application.dto.response.PaymentProcessResponse;
 import com.sudo.railo.payment.success.PaymentSuccess;
 
@@ -51,4 +53,15 @@ public class PaymentController {
 
 		return SuccessResponse.of(PaymentSuccess.PAYMENT_PROCESS_SUCCESS, response);
 	}
+
+	@Operation(summary = "결제 취소", description = "완료된 결제를 취소 및 환불처리 합니다.")
+	@PostMapping("/{paymentKey}/cancel")
+	public SuccessResponse<PaymentCancelResponse> cancelPayment(@PathVariable String paymentKey,
+		@AuthenticationPrincipal UserDetails userDetails) {
+		String memberNo = userDetails.getUsername();
+		PaymentCancelResponse response = paymentService.cancelPayment(memberNo, paymentKey);
+
+		return SuccessResponse.of(PaymentSuccess.PAYMENT_CANCEL_SUCCESS, response);
+	}
+
 }
