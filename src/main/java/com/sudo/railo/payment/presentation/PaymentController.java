@@ -1,7 +1,10 @@
 package com.sudo.railo.payment.presentation;
 
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +16,7 @@ import com.sudo.railo.payment.application.PaymentService;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessAccountRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessCardRequest;
 import com.sudo.railo.payment.application.dto.response.PaymentCancelResponse;
+import com.sudo.railo.payment.application.dto.response.PaymentHistoryResponse;
 import com.sudo.railo.payment.application.dto.response.PaymentProcessResponse;
 import com.sudo.railo.payment.success.PaymentSuccess;
 
@@ -64,4 +68,14 @@ public class PaymentController {
 		return SuccessResponse.of(PaymentSuccess.PAYMENT_CANCEL_SUCCESS, response);
 	}
 
+	@Operation(summary = "결제 내역 조회", description = "사용자의 결제 내역을 조회합니다.")
+	@GetMapping
+	public SuccessResponse<List<PaymentHistoryResponse>> getPaymentHistory(
+		@AuthenticationPrincipal UserDetails userDetails) {
+
+		String memberNo = userDetails.getUsername();
+		List<PaymentHistoryResponse> response = paymentService.getPaymentHistory(memberNo);
+
+		return SuccessResponse.of(PaymentSuccess.PAYMENT_HISTORY_SUCCESS, response);
+	}
 }
