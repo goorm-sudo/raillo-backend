@@ -48,8 +48,6 @@ public class TrainScheduleTestHelper {
 		return createCustomSchedule()
 			.scheduleName("KTX 001 경부선")
 			.operationDate(LocalDate.now())
-			.departureTime(LocalTime.of(5, 0))
-			.arrivalTime(LocalTime.of(8, 0))
 			.train(train)
 			.addStop("서울", null, LocalTime.of(5, 0))
 			.addStop("부산", LocalTime.of(8, 0), null)
@@ -114,16 +112,6 @@ public class TrainScheduleTestHelper {
 			return this;
 		}
 
-		public TrainScheduleBuilder departureTime(LocalTime time) {
-			this.departureTime = time;
-			return this;
-		}
-
-		public TrainScheduleBuilder arrivalTime(LocalTime time) {
-			this.arrivalTime = time;
-			return this;
-		}
-
 		public TrainScheduleBuilder train(Train train) {
 			this.train = train;
 			return this;
@@ -141,12 +129,38 @@ public class TrainScheduleTestHelper {
 
 		@Transactional
 		public TrainScheduleWithStopStations build() {
+			validateStops();
+			setDepartureAndArrivalTime();
 			Map<String, Station> stationMap = resolveStations();
 			List<ScheduleStopTemplate> stopTemplates = buildStopTemplates(stationMap);
 			TrainScheduleTemplate template = saveTemplate(stationMap, stopTemplates);
 			TrainSchedule schedule = saveSchedule(template);
 			List<ScheduleStop> savedStops = saveScheduleStops(template, schedule);
 			return new TrainScheduleWithStopStations(schedule, savedStops);
+		}
+
+		private void validateStops() {
+			if (stops.size() < 2) {
+				throw new IllegalArgumentException("스케줄은 최소 2개 이상의 정차역이 필요합니다. 현재 정차역 수: " + stops.size());
+			}
+		}
+
+		private void setDepartureAndArrivalTime() {
+			if (departureTime == null) {
+				StopInfo firstStop = stops.get(0);
+				this.departureTime = firstStop.departureTime();
+				if (this.departureTime == null) {
+					throw new IllegalArgumentException("첫 번째 정차역의 출발시간이 설정되어야 합니다.");
+				}
+			}
+
+			if (arrivalTime == null) {
+				StopInfo lastStop = stops.get(stops.size() - 1);
+				this.arrivalTime = lastStop.arrivalTime();
+				if (this.arrivalTime == null) {
+					throw new IllegalArgumentException("마지막 정차역의 도착시간이 설정되어야 합니다.");
+				}
+			}
 		}
 
 		private Map<String, Station> resolveStations() {
