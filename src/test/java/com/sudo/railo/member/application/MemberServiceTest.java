@@ -101,7 +101,7 @@ class MemberServiceTest {
 	}
 
 	@Test
-	@DisplayName("회원을 찾을 수 없어 조회에 실패한다.")
+	@DisplayName("회원을 찾을 수 없어 회원 정보 조회에 실패한다.")
 	void getMemberInfo_fail() {
 		//given
 		String memberNo = "202507300001";
@@ -113,4 +113,32 @@ class MemberServiceTest {
 				assertThat(exception.getErrorCode()).isEqualTo(MemberError.USER_NOT_FOUND));
 	}
 
+	@Test
+	@DisplayName("회원 이메일 조회에 성공한다.")
+	void getMemberEmail_success() {
+		//given
+		Member member = MemberFixture.createStandardMember();
+		memberRepository.save(member);
+
+		String memberNo = "202507300001";
+
+		//when
+		String memberEmail = memberService.getMemberEmail(memberNo);
+
+		//then
+		assertThat(memberEmail).isEqualTo(member.getMemberDetail().getEmail());
+	}
+
+	@Test
+	@DisplayName("회원을 찾을 수 없어 이메일 조회에 실패한다.")
+	void getMemberEmail_fail() {
+		//given
+		String memberNo = "202507300001";
+
+		//when & then
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> memberService.getMemberEmail(memberNo))
+			.satisfies(exception ->
+				assertThat(exception.getErrorCode()).isEqualTo(MemberError.USER_NOT_FOUND));
+	}
 }
