@@ -2,15 +2,19 @@ package com.sudo.railo.train.application;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.train.application.dto.TrainScheduleBasicInfo;
 import com.sudo.railo.train.application.dto.request.TrainCarListRequest;
 import com.sudo.railo.train.application.dto.request.TrainCarSeatDetailRequest;
+import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
+import com.sudo.railo.train.application.dto.response.OperationCalendarItem;
 import com.sudo.railo.train.application.dto.response.TrainCarInfo;
 import com.sudo.railo.train.application.dto.response.TrainCarListResponse;
 import com.sudo.railo.train.application.dto.response.TrainCarSeatDetailResponse;
+import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +27,24 @@ public class TrainSearchApplicationService {
 
 	private final TrainSearchService trainSearchService;
 	private final TrainSeatQueryService trainCarService;
+
+	/**
+	 * 운행 캘린더 조회
+	 */
+	public List<OperationCalendarItem> getOperationCalendar() {
+		return trainSearchService.getOperationCalendar();
+	}
+
+	/**
+	 * 통합 열차 조회 (열차 스케줄 검색)
+	 */
+	public TrainSearchSlicePageResponse searchTrains(TrainSearchRequest request, Pageable pageable) {
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, pageable);
+
+		log.info("열차 검색 완료: {} 건 조회, hasNext: {}", response.numberOfElements(), response.hasNext());
+
+		return response;
+	}
 
 	/**
 	 * 열차 객차 목록 조회 (잔여 좌석이 있는 객차만)

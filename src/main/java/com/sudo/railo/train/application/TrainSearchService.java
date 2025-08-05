@@ -60,7 +60,7 @@ public class TrainSearchService {
 
 	/**
 	 * 운행 캘린더 조회
-	 * @return
+	 * @return List<OperationCalendarItem>
 	 */
 	public List<OperationCalendarItem> getOperationCalendar() {
 		LocalDate startDate = LocalDate.now();
@@ -78,7 +78,7 @@ public class TrainSearchService {
 			})
 			.toList();
 
-		log.info("운행 캘린더 조회 완료: {} ~ {} ({} 일), 운행일수: {}",
+		log.info("운행 캘린더 조회 : {} ~ {} ({} 일), 운행일수: {}",
 			startDate, endDate, calendar.size(), datesWithSchedule.size());
 
 		return calendar;
@@ -140,7 +140,7 @@ public class TrainSearchService {
 		List<TrainSearchResponse> trainSearchResults = processTrainSearchResults(trainInfoSlice.getContent(), fare,
 			request);
 
-		log.info("Slice 기반 열차 조회 완료: {}건 조회, hasNext: {}", trainSearchResults.size(), trainInfoSlice.hasNext());
+		log.info("Slice 기반 열차 조회: {}건 조회, hasNext: {}", trainSearchResults.size(), trainInfoSlice.hasNext());
 
 		return createTrainSearchPageResponse(trainSearchResults, trainInfoSlice);
 	}
