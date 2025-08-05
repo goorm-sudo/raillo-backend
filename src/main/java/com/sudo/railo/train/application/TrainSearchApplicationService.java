@@ -95,12 +95,17 @@ public class TrainSearchApplicationService {
 	 * TODO: 조금 더 고도화된 객차 추천 알고리즘 필요
 	 */
 	private String selectRecommendedCar(List<TrainCarInfo> availableCars, int passengerCount) {
-		// 승객 수보다 잔여 좌석이 많은 객차 중에서 중간 위치 선택
-		return availableCars.stream()
+		// 승객 수보다 잔여 좌석이 많은 객차 필터링
+		List<TrainCarInfo> suitableCars = availableCars.stream()
 			.filter(car -> car.remainingSeats() >= passengerCount)
-			.skip(availableCars.size() / 2) // 중간 객차 선택
-			.findFirst()
-			.map(TrainCarInfo::carNumber)
-			.orElse(availableCars.get(0).carNumber()); // 없으면 첫 번째 객차
+			.toList();
+
+		// 적합한 객차가 있으면 중간 위치 선택, 없으면 첫 번째 객차
+		if (!suitableCars.isEmpty()) {
+			int middleIndex = suitableCars.size() / 2;
+			return suitableCars.get(middleIndex).carNumber();
+		}
+
+		return availableCars.get(0).carNumber();
 	}
 }
