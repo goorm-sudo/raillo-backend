@@ -113,11 +113,6 @@ public class PaymentService {
 	}
 
 	private void validatePaymentProcessRequest(PaymentProcessRequest request, Reservation reservation) {
-		// 금액 유효성 검증
-		if (request.getAmount() == null) {
-			throw new BusinessException(PaymentError.INVALID_PAYMENT_AMOUNT);
-		}
-
 		// 금액 위변조 검증
 		if (!request.getAmount().equals(BigDecimal.valueOf(reservation.getFare()))) {
 			throw new BusinessException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
