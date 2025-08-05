@@ -1,6 +1,7 @@
 package com.sudo.railo.train.infrastructure;
 
 import static com.sudo.railo.booking.domain.QReservation.*;
+import static com.sudo.railo.booking.domain.QSeatReservation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sudo.railo.booking.application.dto.projection.QSeatInfoProjection;
+import com.sudo.railo.booking.application.dto.projection.SeatInfoProjection;
 import com.sudo.railo.booking.domain.QSeatReservation;
 import com.sudo.railo.train.application.dto.SeatReservationInfo;
 import com.sudo.railo.train.domain.QScheduleStop;
@@ -140,5 +143,20 @@ public class SeatReservationRepositoryCustomImpl implements SeatReservationRepos
 				tuple -> tuple.get(seatReservation.trainSchedule.id),
 				tuple -> tuple.get(seatReservation.count()).intValue()
 			));
+	}
+
+	/**
+	 * 예약 ID로 해당 예약의 좌석 정보와 승객 타입을 조회 (PaymentService용)
+	 */
+	@Override
+	public List<SeatInfoProjection> findSeatInfoByReservationId(Long reservationId) {
+		return queryFactory
+			.select(new QSeatInfoProjection(
+				seatReservation.seat,
+				seatReservation.passengerType
+			))
+			.from(seatReservation)
+			.where(seatReservation.reservation.id.eq(reservationId))
+			.fetch();
 	}
 }

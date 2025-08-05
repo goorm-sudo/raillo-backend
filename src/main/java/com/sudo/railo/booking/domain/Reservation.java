@@ -98,4 +98,33 @@ public class Reservation extends BaseEntity {
 	@Column(nullable = false)
 	@Comment("운임")
 	private int fare;
+
+	public void approve() {
+		this.reservationStatus = ReservationStatus.PAID;
+		this.purchaseAt = LocalDateTime.now();
+	}
+
+	public void cancel() {
+		this.reservationStatus = ReservationStatus.CANCELLED;
+		this.cancelledAt = LocalDateTime.now();
+	}
+
+	public void refund() {
+		this.reservationStatus = ReservationStatus.REFUNDED;
+	}
+
+	// 결제 가능 여부 확인
+	public boolean canBePaid() {
+		return this.reservationStatus.isPayable();
+	}
+
+	// 취소 가능 여부 확인
+	public boolean canBeCancelled() {
+		return this.reservationStatus.isCancellable();
+	}
+
+	// 환불 가능 여부 확인
+	public boolean canBeRefunded() {
+		return this.purchaseAt != null && this.reservationStatus.isRefundable();
+	}
 }

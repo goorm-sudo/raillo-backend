@@ -135,6 +135,6 @@ public class Payment {
 
 	// 환불 가능 여부 확인
 	public boolean canBeRefunded() {
-		return this.paymentStatus.isRefundable();
+		return this.paidAt != null && this.paymentStatus.isRefundable();
 	}
 }
