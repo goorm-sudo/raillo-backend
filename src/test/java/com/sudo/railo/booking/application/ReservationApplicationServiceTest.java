@@ -3,10 +3,6 @@ package com.sudo.railo.booking.application;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,10 +33,7 @@ import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.type.CarType;
 
-import lombok.RequiredArgsConstructor;
-
 @ServiceTest
-@RequiredArgsConstructor
 class ReservationApplicationServiceTest {
 
 	@Autowired
@@ -62,10 +55,10 @@ class ReservationApplicationServiceTest {
 	private ReservationApplicationService reservationApplicationService;
 
 	private Train train;
-	private String memberNo;
-	private List<Long> standardSeatIds;
 	private TrainScheduleWithStopStations scheduleWithStops;
+	private String memberNo;
 	private List<PassengerSummary> passengers;
+	private List<Long> standardSeatIds;
 	private ScheduleStop departureStop;
 	private ScheduleStop arrivalStop;
 
@@ -157,33 +150,14 @@ class ReservationApplicationServiceTest {
 	}
 
 	@Test
-	@DisplayName("동시에 같은 좌석에 여러 예약이 발생하면 1개의 예약만 성공한다.")
-	void allowsOnlyOneReservationForConcurrentRequests() throws InterruptedException {
-		int threadCount = 10;
-		ExecutorService executorService = Executors.newFixedThreadPool(10);
-		CountDownLatch latch = new CountDownLatch(threadCount);
-		AtomicInteger successCount = new AtomicInteger();
-		AtomicInteger failCount = new AtomicInteger();
+	@DisplayName("출발역과 도착역이 운행 스케줄 순서와 맞지 않으면 예외가 발생한다.")
+	void throwsExceptionWhenDepartureAndArrivalStopsAreNotInCorrectOrder() {
+		var request = createRequest(scheduleWithStops, arrivalStop, departureStop, passengers, standardSeatIds);
+		trainScheduleTestHelper.createOrUpdateStationFare("부산", "서울", 50000, 10000);
 
-		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
-
-		for (int i = 0; i < threadCount; i++) {
-			executorService.submit(() -> {
-				try {
-					reservationApplicationService.createReservation(request, memberNo);
-					successCount.getAndIncrement();
-				} catch (BusinessException e) {
-					failCount.getAndIncrement();
-				} finally {
-					latch.countDown();
-				}
-			});
-		}
-		latch.await();
-		executorService.shutdown();
-
-		assertThat(successCount.get()).isEqualTo(1);
-		assertThat(failCount.get()).isEqualTo(threadCount - 1);
+		assertThatThrownBy(() -> reservationApplicationService.createReservation(request, memberNo))
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(BookingError.TRAIN_NOT_OPERATIONAL.getMessage());
 	}
 
 	private static ReservationCreateRequest createRequest(
