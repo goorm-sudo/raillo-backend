@@ -27,7 +27,7 @@ public class DatabaseCleanupExtension implements AfterEachCallback {
 
 		return tableNames.stream()
 			.filter(tableNameWithSchema -> tableNameWithSchema.startsWith("PUBLIC."))
-			.map(tableNameWithSchema -> "DELETE FROM " + tableNameWithSchema)
+			.map(tableNameWithSchema -> "TRUNCATE TABLE " + tableNameWithSchema)
 			.collect(java.util.stream.Collectors.toList());
 	}
 

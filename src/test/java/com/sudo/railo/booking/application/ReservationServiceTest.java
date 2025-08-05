@@ -14,6 +14,7 @@ import com.sudo.railo.booking.domain.status.ReservationStatus;
 import com.sudo.railo.booking.domain.type.PassengerSummary;
 import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.domain.type.TripType;
+import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.support.annotation.ServiceTest;
@@ -43,30 +44,27 @@ class ReservationServiceTest {
 	@Autowired
 	private TrainScheduleTestHelper trainScheduleTestHelper;
 
+	@Autowired
+	private ReservationRepository reservationRepository;
 
 	@Test
 	@DisplayName("유효한 요청으로 예약이 성공한다")
 	void createReservation_success() {
 		//given
-		Train train = trainTestHelper.saveKTX();
-		TrainScheduleWithStopStations scheduleWithStops = trainScheduleTestHelper.createSeoulToBusanSchedule(train);
-		ScheduleStop departureStop = trainScheduleTestHelper.getScheduleStopByStationName(scheduleWithStops, "서울");
-		ScheduleStop arrivalStop = trainScheduleTestHelper.getScheduleStopByStationName(scheduleWithStops, "부산");
-		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 60700, 85000);
+		Train train = trainTestHelper.createKTX();
+		TrainScheduleWithStopStations scheduleWithStops = trainScheduleTestHelper.createSchedule(train);
 
 		Member member = MemberFixture.createStandardMember();
 		memberRepository.save(member);
 
-		// 일반실 좌석 2개 선택
 		List<Long> standardSeatIds = trainTestHelper.getSeatIds(train, CarType.STANDARD, 2);
-
-		PassengerSummary adult = new PassengerSummary(PassengerType.ADULT, 1);
-		PassengerSummary child = new PassengerSummary(PassengerType.CHILD, 1);
+		ScheduleStop departureStop = trainScheduleTestHelper.getScheduleStopByStationName(scheduleWithStops, "서울");
+		ScheduleStop arrivalStop = trainScheduleTestHelper.getScheduleStopByStationName(scheduleWithStops, "부산");
 		ReservationCreateRequest request = new ReservationCreateRequest(
 			scheduleWithStops.trainSchedule().getId(),
 			departureStop.getStation().getId(),
 			arrivalStop.getStation().getId(),
-			List.of(adult, child),
+			List.of(new PassengerSummary(PassengerType.ADULT, 1), new PassengerSummary(PassengerType.CHILD, 1)),
 			standardSeatIds,
 			TripType.OW
 		);
@@ -75,10 +73,13 @@ class ReservationServiceTest {
 		Reservation reservation = reservationService.createReservation(request, member.getMemberDetail().getMemberNo());
 
 		// then
-		assertThat(reservation.getTrainSchedule().getId()).isEqualTo(scheduleWithStops.trainSchedule().getId());
-		assertThat(reservation.getMember().getId()).isEqualTo(member.getId());
-		assertThat(reservation.getReservationStatus()).isEqualTo(ReservationStatus.RESERVED);
-		assertThat(reservation.getTotalPassengers()).isEqualTo(2);
-		assertThat(reservation.getReservationCode()).isNotNull();
+		Reservation savedReservation = reservationRepository.findById(reservation.getId())
+			.orElseThrow(() -> new AssertionError("예약이 DB에 저장되지 않았습니다"));
+
+		assertThat(savedReservation.getMember().getId()).isEqualTo(member.getId());
+		assertThat(savedReservation.getReservationStatus()).isEqualTo(ReservationStatus.RESERVED);
+		assertThat(savedReservation.getTotalPassengers()).isEqualTo(2);
+		assertThat(savedReservation.getFare()).isEqualTo(80000);
+		assertThat(savedReservation.getReservationCode()).isNotNull();
 	}
 }

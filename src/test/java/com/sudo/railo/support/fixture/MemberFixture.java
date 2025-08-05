@@ -24,7 +24,7 @@ public enum MemberFixture {
 		Role.MEMBER
 	);
 
-	private final String MemberNo;
+	private final String memberNo;
 	private final Membership membership;
 	private final String email;
 	private final LocalDate birthDate;
@@ -36,7 +36,7 @@ public enum MemberFixture {
 
 	MemberFixture(String memberNo, Membership membership, String email, LocalDate birthDate, String gender,
 		String name, String phoneNumber, String password, Role role) {
-		MemberNo = memberNo;
+		this.memberNo = memberNo;
 		this.membership = membership;
 		this.email = email;
 		this.birthDate = birthDate;
@@ -48,7 +48,7 @@ public enum MemberFixture {
 	}
 
 	public static Member createStandardMember() {
-		MemberDetail memberDetail = MemberDetail.create(MEMBER.MemberNo, MEMBER.membership, MEMBER.email, MEMBER.birthDate, MEMBER.gender);
+		MemberDetail memberDetail = MemberDetail.create(MEMBER.memberNo, MEMBER.membership, MEMBER.email, MEMBER.birthDate, MEMBER.gender);
 		return Member.create(MEMBER.name, MEMBER.phoneNumber, MEMBER.password, MEMBER.role, memberDetail);
 	}
 }

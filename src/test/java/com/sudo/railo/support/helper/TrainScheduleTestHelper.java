@@ -39,29 +39,25 @@ public class TrainScheduleTestHelper {
 	private final TrainScheduleTemplateRepository trainScheduleTemplateRepository;
 
 	/**
-	 * KTX 001 경부선 스케줄 생성
+	 * 기본 스케줄 생성 메서드
+	 * 서울 -> 부산 (출발: 5:00 -> 도착: 8:00)
+	 * standardFare: 50,000원, firstClassFare: 100,000원
 	 */
-	public TrainScheduleWithStopStations createSeoulToBusanSchedule(Train train) {
-		return customSchedule()
+	public TrainScheduleWithStopStations createSchedule(Train train) {
+		createOrUpdateStationFare("서울", "부산", 50000, 100000);
+		return createCustomSchedule()
 			.scheduleName("KTX 001 경부선")
 			.operationDate(LocalDate.now())
-			.departureTime(LocalTime.of(5, 13))
-			.arrivalTime(LocalTime.of(7, 50))
 			.train(train)
-			.addStop("서울", null, LocalTime.of(5, 13))
-			.addStop("광명", LocalTime.of(5, 30), LocalTime.of(5, 32))
-			.addStop("대전", LocalTime.of(6, 12), LocalTime.of(6, 14))
-			.addStop("동대구", LocalTime.of(6, 56), LocalTime.of(6, 58))
-			.addStop("경주", LocalTime.of(7, 14), LocalTime.of(7, 16))
-			.addStop("울산", LocalTime.of(7, 27), LocalTime.of(7, 29))
-			.addStop("부산", LocalTime.of(7, 50), null)
+			.addStop("서울", null, LocalTime.of(5, 0))
+			.addStop("부산", LocalTime.of(8, 0), null)
 			.build();
 	}
 
 	/**
 	 * 커스텀 스케줄 빌더
 	 */
-	public TrainScheduleBuilder customSchedule() {
+	public TrainScheduleBuilder createCustomSchedule() {
 		return new TrainScheduleBuilder();
 	}
 
@@ -116,16 +112,6 @@ public class TrainScheduleTestHelper {
 			return this;
 		}
 
-		public TrainScheduleBuilder departureTime(LocalTime time) {
-			this.departureTime = time;
-			return this;
-		}
-
-		public TrainScheduleBuilder arrivalTime(LocalTime time) {
-			this.arrivalTime = time;
-			return this;
-		}
-
 		public TrainScheduleBuilder train(Train train) {
 			this.train = train;
 			return this;
@@ -143,12 +129,38 @@ public class TrainScheduleTestHelper {
 
 		@Transactional
 		public TrainScheduleWithStopStations build() {
+			validateStops();
+			setDepartureAndArrivalTime();
 			Map<String, Station> stationMap = resolveStations();
 			List<ScheduleStopTemplate> stopTemplates = buildStopTemplates(stationMap);
 			TrainScheduleTemplate template = saveTemplate(stationMap, stopTemplates);
 			TrainSchedule schedule = saveSchedule(template);
 			List<ScheduleStop> savedStops = saveScheduleStops(template, schedule);
 			return new TrainScheduleWithStopStations(schedule, savedStops);
+		}
+
+		private void validateStops() {
+			if (stops.size() < 2) {
+				throw new IllegalArgumentException("스케줄은 최소 2개 이상의 정차역이 필요합니다. 현재 정차역 수: " + stops.size());
+			}
+		}
+
+		private void setDepartureAndArrivalTime() {
+			if (departureTime == null) {
+				StopInfo firstStop = stops.get(0);
+				this.departureTime = firstStop.departureTime();
+				if (this.departureTime == null) {
+					throw new IllegalArgumentException("첫 번째 정차역의 출발시간이 설정되어야 합니다.");
+				}
+			}
+
+			if (arrivalTime == null) {
+				StopInfo lastStop = stops.get(stops.size() - 1);
+				this.arrivalTime = lastStop.arrivalTime();
+				if (this.arrivalTime == null) {
+					throw new IllegalArgumentException("마지막 정차역의 도착시간이 설정되어야 합니다.");
+				}
+			}
 		}
 
 		private Map<String, Station> resolveStations() {
