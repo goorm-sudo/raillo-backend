@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.domain.SeatReservation;
@@ -14,7 +15,6 @@ import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
 
 import jakarta.persistence.OptimisticLockException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -55,6 +55,18 @@ public class SeatReservationService {
 		}
 	}
 
+	@Transactional
+	public void deleteSeatReservation(Long seatReservationId) {
+		SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId)
+			.orElseThrow(() -> new BusinessException(BookingError.SEAT_RESERVATION_NOT_FOUND));
+		seatReservationRepository.delete(seatReservation);
+	}
+
+	@Transactional
+	public void deleteSeatReservationByReservationId(Long reservationId) {
+		seatReservationRepository.deleteAllByReservationId(reservationId);
+	}
+
 	/**
 	 * 기존 예약들과 충돌 검증 (락이 걸린 상태에서 수행)
 	 */
@@ -72,15 +84,5 @@ public class SeatReservationService {
 				throw new BusinessException(BookingError.SEAT_ALREADY_RESERVED);
 			}
 		});
-	}
-
-	public void deleteSeatReservation(Long seatReservationId) {
-		SeatReservation seatReservation = seatReservationRepository.findById(seatReservationId)
-			.orElseThrow(() -> new BusinessException(BookingError.SEAT_RESERVATION_NOT_FOUND));
-		seatReservationRepository.delete(seatReservation);
-	}
-
-	public void deleteSeatReservationByReservationId(Long reservationId) {
-		seatReservationRepository.deleteAllByReservationId(reservationId);
 	}
 }
