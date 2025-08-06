@@ -92,7 +92,7 @@ class TicketServiceTest {
 
 	@Test
 	@DisplayName("예약, 좌석, 승객 유형으로 티켓 생성에 성공한다")
-	void createTicket_success() {
+	void reservationAndSeatAndPassengerType_createTicket_success() {
 		// when
 		ticketService.createTicket(reservation, seat1, passengerType1);
 
@@ -104,8 +104,8 @@ class TicketServiceTest {
 	}
 
 	@Test
-	@DisplayName("UserDetails로 가지고 있는 티켓 조회에 성공한다")
-	void getMyTickets_success() {
+	@DisplayName("멤버번호로 가지고 있는 티켓 조회에 성공한다")
+	void memberNo_getMyTickets_success() {
 		// given
 		Qr qr1 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
 		Qr qr2 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
@@ -138,7 +138,7 @@ class TicketServiceTest {
 
 	@Test
 	@DisplayName("티켓 ID로 티켓 삭제에 성공한다")
-	void deleteTicketById_success() {
+	void ticketId_deleteTicket_success() {
 		// given
 		Qr qr1 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
 		Qr qr2 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
@@ -173,7 +173,7 @@ class TicketServiceTest {
 
 	@Test
 	@DisplayName("예약 ID로 티켓 삭제에 성공한다")
-	void deleteTicketByReservationId_success() {
+	void reservationId_deleteTicket_success() {
 		// given
 		Qr qr1 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
 		Qr qr2 = qrRepository.save(Qr.builder().isUsable(true).scanCount(0).build());
