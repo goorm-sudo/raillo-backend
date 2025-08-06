@@ -72,7 +72,9 @@ public class ReservationService {
 
 		validateTrainOperating(trainSchedule);
 
-		Reservation reservation = generateReservation(request, trainSchedule, member, departureStop, arrivalStop, totalFare);
+		Reservation reservation = generateReservation(
+			request, trainSchedule, member, departureStop, arrivalStop, totalFare
+		);
 		return reservationRepository.save(reservation);
 	}
 
@@ -326,5 +328,9 @@ public class ReservationService {
 		} catch (JsonProcessingException e) {
 			throw new BusinessException(BookingError.RESERVATION_CREATE_FAILED);
 		}
+	}
+
+	public void deleteAllByMemberId(Long memberId) {
+		reservationRepository.deleteAllByMemberId(memberId);
 	}
 }
