@@ -38,17 +38,22 @@ class AuthServiceTest {
 
 	@Autowired
 	private AuthService authService;
+
 	@Autowired
 	private MemberRepository memberRepository;
+
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
+
 	@Autowired
 	private AuthRedisRepository authRedisRepository;
 
 	@Autowired
 	private RedisTemplate<String, Object> objectRedisTemplate;
+
 	@Autowired
 	private RedisKeyGenerator redisKeyGenerator;
+
 	@Autowired
 	private TokenGenerator tokenGenerator;
 
@@ -229,7 +234,7 @@ class AuthServiceTest {
 		Member member = MemberFixture.createStandardMember();
 		memberRepository.save(member);
 
-		// refreshToken 이 일치하지 않도록 테스트 인증 객체 생성
+		// refreshToken 이 일치하지 않도록 테스트 인증 객체 따로 생성 후 토큰 생성
 		List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(member.getRole().toString()));
 		UserDetails userDetails = new User(member.getMemberDetail().getMemberNo(), member.getPassword(), authorities);
 		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, member.getPassword(),
