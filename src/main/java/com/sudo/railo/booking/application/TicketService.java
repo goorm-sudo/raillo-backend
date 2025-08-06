@@ -56,7 +56,6 @@ public class TicketService {
 		Member member = memberRepository.findByMemberNo(username)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		try {
-			// List<TicketReadResponse> tickets = ticketRepository.findByReservationMemberId(member.getId());
 			return ticketRepositoryCustom.findPaidTicketResponsesByMemberId(member.getId());
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.TICKET_LIST_GET_FAILED);
