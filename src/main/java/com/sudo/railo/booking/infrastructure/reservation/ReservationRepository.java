@@ -15,4 +15,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 		ReservationStatus reservationStatus,
 		Pageable pageable
 	);
+
+	void deleteAllByMemberId(Long memberId);
 }
