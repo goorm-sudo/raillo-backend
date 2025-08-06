@@ -90,7 +90,7 @@ public class TrainSearchServiceOverlapReservationTest {
 		);
 	}
 
-	@DisplayName("열차 조회 시 다구간 경로에서 기존의 ‘겹친 구간’ 예약만 잔여 좌석에서 차감된다.")
+	@DisplayName("열차 조회 시 다구간 경로에서 기존의 ‘겹침 구간’ 예약만 잔여 좌석에서 차감된다.")
 	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("overlapScenarios")
 	void shouldCountOnlyOverlappingReservations(OverlapScenario s) {
