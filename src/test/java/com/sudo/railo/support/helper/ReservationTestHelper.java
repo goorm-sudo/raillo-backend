@@ -67,7 +67,7 @@ public class ReservationTestHelper {
 	 * @param passengerType 승객 유형 (성인, 어린이 등)
 	 * @return 생성된 Reservation 객체
 	 */
-	public Reservation createReservationWithSeats(Member member,
+	public Reservation createReservationWithSeatIds(Member member,
 		TrainScheduleWithStopStations scheduleWithStops,
 		ScheduleStop departureStop,
 		ScheduleStop arrivalStop,

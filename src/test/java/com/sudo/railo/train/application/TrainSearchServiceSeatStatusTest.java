@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +166,7 @@ public class TrainSearchServiceSeatStatusTest {
 	@DisplayName("다양한 기존 예약 상황에 따라 적절한 좌석 상태와 입석 정보를 표시한다.")
 	@ParameterizedTest
 	@MethodSource("seatStatusScenarios")
-	void searchTrains_validatesSeatStatusAndStandingInfoForAllScenarios(SeatStatusScenario scenario) {
+	void shouldDisplayCorrectSeatAndStandingInfoForAllScenarios(SeatStatusScenario scenario) {
 		// given
 		LocalDate searchDate = LocalDate.now().plusDays(1);
 		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 50000, 80000);
@@ -190,13 +191,13 @@ public class TrainSearchServiceSeatStatusTest {
 
 		if (scenario.reservedStandardSeats > 0) {
 			List<Long> seatIds = trainTestHelper.getSeatIds(train, CarType.STANDARD, scenario.reservedStandardSeats);
-			reservationTestHelper.createReservationWithSeats(member, schedule, departureStop, arrivalStop, seatIds,
+			reservationTestHelper.createReservationWithSeatIds(member, schedule, departureStop, arrivalStop, seatIds,
 				PassengerType.ADULT);
 		}
 		if (scenario.reservedFirstClassSeats > 0) {
 			List<Long> seatIds = trainTestHelper.getSeatIds(train, CarType.FIRST_CLASS,
 				scenario.reservedFirstClassSeats);
-			reservationTestHelper.createReservationWithSeats(member, schedule, departureStop, arrivalStop, seatIds,
+			reservationTestHelper.createReservationWithSeatIds(member, schedule, departureStop, arrivalStop, seatIds,
 				PassengerType.ADULT);
 		}
 		if (scenario.reservedStandingSeats > 0) {
@@ -241,6 +242,158 @@ public class TrainSearchServiceSeatStatusTest {
 	}
 
 	/**
+	 * 입석 테스트용 공통 데이터
+	 */
+	private void setupStandingTestData() {
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 50000, 80000);
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+		Member member = memberRepository.save(MemberFixture.createStandardMember());
+
+		// 여유 열차와 매진 열차 생성
+		Train availableTrain = trainTestHelper.createRealisticTrain(1, 1, 8, 6); // 일반실 32석, 특실 18석
+		Train soldOutTrain = trainTestHelper.createRealisticTrain(1, 1, 8, 6);   // 일반실 32석, 특실 18석
+
+		TrainScheduleWithStopStations availableSchedule = createTrainSchedule(availableTrain, searchDate,
+			"KTX 201", LocalTime.of(10, 0), LocalTime.of(13, 0), "서울", "부산");
+		TrainScheduleWithStopStations soldOutSchedule = createTrainSchedule(soldOutTrain, searchDate,
+			"KTX 203", LocalTime.of(10, 10), LocalTime.of(13, 10), "서울", "부산");
+
+		ScheduleStop departureStop = trainScheduleTestHelper.getScheduleStopByStationName(soldOutSchedule, "서울");
+		ScheduleStop arrivalStop = trainScheduleTestHelper.getScheduleStopByStationName(soldOutSchedule, "부산");
+
+		// 매진 열차의 일반실 모두 예약 (32석 모두)
+		List<Long> allStandardSeats = trainTestHelper.getSeatIds(soldOutTrain, CarType.STANDARD, 32);
+		reservationTestHelper.createReservationWithSeatIds(member, soldOutSchedule, departureStop, arrivalStop,
+			allStandardSeats, PassengerType.ADULT);
+	}
+
+	@DisplayName("입석 정보 자동 제공: 일반실 여유 열차는 입석 정보를 제공하지 않고, 매진/부족 열차는 입석 정보를 제공한다.")
+	@Test
+	void shouldAutoProvideStandingInfoWhenStandardSoldOutOrInsufficient() {
+		// given
+		setupStandingTestData();
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+
+		// when
+		TrainSearchRequest request = new TrainSearchRequest(
+			seoul.getId(), busan.getId(), searchDate, 2, "00");
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, PageRequest.of(0, 20));
+
+		// then
+		assertThat(response.content()).hasSize(2);
+
+		TrainSearchResponse availableTrain = findTrainByTime(response.content(), LocalTime.of(10, 0));
+		TrainSearchResponse soldOutTrain = findTrainByTime(response.content(), LocalTime.of(10, 10));
+
+		assertThat(availableTrain.hasStandingInfo()).isFalse();
+		assertThat(soldOutTrain.hasStandingInfo()).isTrue();
+
+		log.info("여유 열차 - {}: 일반실 {}석 잔여, 입석 정보 없음",
+			availableTrain.trainNumber(), availableTrain.standardSeat().remainingSeats());
+		log.info("매진 열차 - {}: 일반실 매진, 입석 정보 제공",
+			soldOutTrain.trainNumber());
+	}
+
+	@DisplayName("입석 요금 할인: 입석 요금은 일반실 대비 15% 할인을 적용한다. (85% 요금)")
+	@Test
+	void shouldApply15PercentDiscountOnStandingFare() {
+		// given
+		setupStandingTestData();
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+
+		// when
+		TrainSearchRequest request = new TrainSearchRequest(
+			seoul.getId(), busan.getId(), searchDate, 3, "00");
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, PageRequest.of(0, 20));
+
+		// then
+		List<TrainSearchResponse> standingTrains = response.content().stream()
+			.filter(TrainSearchResponse::hasStandingInfo)
+			.toList();
+
+		assertThat(standingTrains).hasSize(1);
+
+		TrainSearchResponse standingTrain = standingTrains.get(0);
+		int standingFare = standingTrain.standing().fare();
+		int standardFare = standingTrain.standardSeat().fare();
+		int expectedFare = (int)(standardFare * 0.85);
+		double actualDiscount = (1.0 - (double)standingFare / standardFare) * 100;
+
+		assertThat(standingFare).isEqualTo(expectedFare);
+		assertThat(actualDiscount).isEqualTo(15.0, within(0.1)); // ±0.1 범위 오차 허용
+
+		log.info("입석 요금 할인 검증 - 일반실: {}원, 입석: {}원 ({}% 할인)",
+			standardFare, standingFare, String.format("%.1f", actualDiscount));
+	}
+
+	@DisplayName("입석 수용력: 열차는 총 좌석의 15%를 입석 인원으로 수용할 수 있다. (32+18=50석 → 7석)")
+	@Test
+	void shouldCalculateStandingCapacityAsFifteenPercent() {
+		// given
+		setupStandingTestData();
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+
+		// when
+		TrainSearchRequest request = new TrainSearchRequest(
+			seoul.getId(), busan.getId(), searchDate, 4, "00");
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, PageRequest.of(0, 20));
+
+		// then
+		List<TrainSearchResponse> standingTrains = response.content().stream()
+			.filter(TrainSearchResponse::hasStandingInfo)
+			.toList();
+
+		assertThat(standingTrains).hasSize(1);
+
+		TrainSearchResponse standingTrain = standingTrains.get(0);
+		int totalSeats = standingTrain.standardSeat().totalSeats() + standingTrain.firstClassSeat().totalSeats();
+		int expectedCapacity = (int)(totalSeats * 0.15); // 50 * 0.15 = 7.5 → 7석
+
+		assertThat(totalSeats).isEqualTo(50); // 32 + 18
+		assertThat(expectedCapacity).isEqualTo(7);
+		assertThat(standingTrain.standing().maxStanding()).isEqualTo(expectedCapacity);
+		assertThat(standingTrain.standing().remainingStanding()).isLessThanOrEqualTo(expectedCapacity);
+
+		log.info("입석 수용력 검증 - 총 좌석: {}석, 입석 용량: {}석, 잔여 입석: {}석",
+			totalSeats, expectedCapacity, standingTrain.standing().remainingStanding());
+	}
+
+	@DisplayName("입석 상태 표시: 일반실 매진, 입석 예약 가능 시 좌석 상태는 STANDING_ONLY로 표시되고, 입석 정보가 노출된다.")
+	@Test
+	void shouldDisplayStandingOnlyStatusAndStandingInfoWhenStandardSoldOutAndCanReserveStanding() {
+		// given
+		setupStandingTestData();
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+
+		// when
+		TrainSearchRequest request = new TrainSearchRequest(
+			seoul.getId(), busan.getId(), searchDate, 2, "00");
+		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, PageRequest.of(0, 20));
+
+		// then
+		TrainSearchResponse soldOutTrain = findTrainByTime(response.content(), LocalTime.of(10, 10));
+
+		assertThat(soldOutTrain.hasStandingInfo()).isTrue();
+		assertThat(soldOutTrain.standardSeat().status()).isEqualTo(SeatAvailabilityStatus.STANDING_ONLY);
+		assertThat(soldOutTrain.standardSeat().canReserve()).isFalse();
+		assertThat(soldOutTrain.standardSeat().displayText()).contains("일반실(입석)");
+		assertThat(soldOutTrain.standing().remainingStanding()).isGreaterThan(0);
+
+		log.info("입석 상태 표시 검증 - 일반실 상태: {}, 표시 텍스트: {}",
+			soldOutTrain.standardSeat().status(), soldOutTrain.standardSeat().displayText());
+	}
+
+	/**
 	 * 열차 스케줄 생성 헬퍼
 	 */
 	private TrainScheduleWithStopStations createTrainSchedule(Train train,
@@ -254,5 +407,12 @@ public class TrainSearchServiceSeatStatusTest {
 			.addStop(departureStation, null, departureTime)
 			.addStop(arrivalStation, arrivalTime, null)
 			.build();
+	}
+
+	private TrainSearchResponse findTrainByTime(List<TrainSearchResponse> trains, LocalTime time) {
+		return trains.stream()
+			.filter(train -> train.departureTime().equals(time))
+			.findFirst()
+			.orElseThrow(() -> new AssertionError("시간 " + time + "에 해당하는 열차를 찾을 수 없습니다"));
 	}
 }
