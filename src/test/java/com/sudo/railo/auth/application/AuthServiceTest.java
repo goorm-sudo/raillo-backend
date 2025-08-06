@@ -159,6 +159,40 @@ class AuthServiceTest {
 	}
 
 	@Test
+	@DisplayName("리프레시 토큰만 유효시간이 만료되어 레디스에 존재하지 않아도 로그아웃에 성공한다.")
+	void logout_success_when_refresh_token_is_expired() {
+		//given
+		Member member = MemberFixture.createStandardMember();
+		String plainPwd = member.getPassword();
+		String encodedPwd = passwordEncoder.encode(plainPwd);
+
+		Member saveMember = Member.create(
+			member.getName(),
+			member.getPhoneNumber(),
+			encodedPwd,
+			member.getRole(),
+			member.getMemberDetail()
+		);
+		memberRepository.save(saveMember);
+
+		LoginRequest request = new LoginRequest(member.getMemberDetail().getMemberNo(), plainPwd);
+		TokenResponse response = authService.login(request);
+
+		String accessToken = response.accessToken();
+		String memberNo = saveMember.getMemberDetail().getMemberNo();
+		String logoutTokenKey = redisKeyGenerator.generateLogoutTokenKey(accessToken);
+
+		authRedisRepository.deleteRefreshToken(memberNo); // 리프레시 토큰을 삭제하여 만료된 상황 시뮬레이션
+
+		//when
+		authService.logout(accessToken, memberNo);
+
+		//then
+		assertThat(authRedisRepository.getRefreshToken(memberNo)).isNull();
+		assertThat(objectRedisTemplate.hasKey(logoutTokenKey)).isTrue();
+	}
+
+	@Test
 	@DisplayName("액세스 토큰 재발급에 성공한다.")
 	void reissueAccessToken_success() {
 		//given
