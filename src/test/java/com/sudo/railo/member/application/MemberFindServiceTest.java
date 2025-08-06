@@ -16,11 +16,13 @@ import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetup;
 import com.sudo.railo.auth.application.dto.request.VerifyCodeRequest;
 import com.sudo.railo.auth.application.dto.response.SendCodeResponse;
+import com.sudo.railo.auth.application.dto.response.TemporaryTokenResponse;
 import com.sudo.railo.auth.exception.AuthError;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.global.redis.AuthRedisRepository;
 import com.sudo.railo.global.redis.MemberRedisRepository;
 import com.sudo.railo.member.application.dto.request.FindMemberNoRequest;
+import com.sudo.railo.member.application.dto.request.FindPasswordRequest;
 import com.sudo.railo.member.application.dto.response.VerifyMemberNoResponse;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
@@ -69,7 +71,7 @@ class MemberFindServiceTest {
 	}
 
 	@Test
-	@DisplayName("이메일 인증을 통한 회원번호 찾기 요청에 성공한다.")
+	@DisplayName("존재하는 회원 정보로 이메일 인증을 통한 회원번호 찾기 요청에 성공한다.")
 	void requestFindMemberNo_success() {
 		//given
 		String memberEmail = member.getMemberDetail().getEmail();
@@ -154,9 +156,99 @@ class MemberFindServiceTest {
 				assertThat(exception.getErrorCode()).isEqualTo(AuthError.INVALID_AUTH_CODE));
 	}
 
-	// TODO: 이메일 인증을 통한 비밀번호 찾기 요청 성공
-	// TODO: 이메일 인증을 통한 비밀번호 찾기 요청 실패
-	// TODO: 이메일 인증을 통한 비밀번호 찾기 검증 요청 성공
-	// TODO: 이메일 인증을 통한 비밀번호 찾기 검증 요청 실패
+	@Test
+	@DisplayName("존재하는 회원 정보로 이메일 인증을 통한 비밀번호 찾기 요청에 성공한다.")
+	void requestFindPassword_success() {
+		//given
+		FindPasswordRequest request = new FindPasswordRequest(member.getName(), member.getMemberDetail().getMemberNo());
 
+		//when
+		SendCodeResponse response = memberFindService.requestFindPassword(request);
+
+		//then
+		assertThat(response).isNotNull();
+		assertThat(response.email()).isEqualTo(member.getMemberDetail().getEmail());
+
+		assertThat(greenMail.waitForIncomingEmail(5000, 1)).isTrue();
+
+		String savedAuthCode = authRedisRepository.getAuthCode(member.getMemberDetail().getEmail());
+		assertThat(savedAuthCode).isNotNull();
+
+		String mailContent = GreenMailUtil.getBody(greenMail.getReceivedMessages()[0]);
+		assertThat(mailContent).contains(savedAuthCode);
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 회원번호로 비밀번호 찾기 요청 시도 시 실패한다.")
+	void requestFindPassword_fail_when_wrong_member_no() {
+		//given
+		String wrongMemberNo = "202007070001";
+		FindPasswordRequest request = new FindPasswordRequest(member.getName(), wrongMemberNo);
+
+		//when & then
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> memberFindService.requestFindPassword(request))
+			.satisfies(exception ->
+				assertThat(exception.getErrorCode()).isEqualTo(MemberError.USER_NOT_FOUND));
+	}
+
+	@Test
+	@DisplayName("회원 정보에 있는 이름과 일치하지 않는 요청일 경우 실패한다.")
+	void requestFindPassword_fail_when_miss_match_name() {
+		//given
+		String wrongName = "다른이름";
+		FindPasswordRequest request = new FindPasswordRequest(wrongName, member.getMemberDetail().getMemberNo());
+
+		//when & then
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> memberFindService.requestFindPassword(request))
+			.satisfies(exception ->
+				assertThat(exception.getErrorCode()).isEqualTo(MemberError.NAME_MISMATCH));
+	}
+
+	@Test
+	@DisplayName("올바른 인증 코드로 비밀번호 찾기 검증에 성공하면 임시 토큰이 발급된다.")
+	void verifyFindPassword_success() {
+		//given
+		String memberEmail = member.getMemberDetail().getEmail();
+		String memberNo = member.getMemberDetail().getMemberNo();
+		String authCode = "123456";
+
+		memberRedisRepository.saveMemberNo(memberEmail, memberNo);
+		authRedisRepository.saveAuthCode(memberEmail, authCode);
+
+		VerifyCodeRequest request = new VerifyCodeRequest(memberEmail, authCode);
+
+		//when
+		TemporaryTokenResponse response = memberFindService.verifyFindPassword(request);
+
+		//then
+		assertThat(response).isNotNull();
+		assertThat(response.temporaryToken()).isNotNull();
+
+		// 검증 후 레디스에 회원번호가 삭제되었는지 확인
+		String savedAuthCode = authRedisRepository.getAuthCode(memberEmail);
+		assertThat(savedAuthCode).isNull();
+	}
+	
+	@Test
+	@DisplayName("인증 코드가 일치하지 않으면 비밀번호 찾기 검증 요청에 실패한다.")
+	void verifyFindPassword_fail() {
+		//given
+		String memberEmail = member.getMemberDetail().getEmail();
+		String memberNo = member.getMemberDetail().getMemberNo();
+		String correctAuthCode = "123456";
+		String wrongAuthCode = "111111";
+
+		memberRedisRepository.saveMemberNo(memberEmail, memberNo);
+		authRedisRepository.saveAuthCode(memberEmail, correctAuthCode);
+
+		VerifyCodeRequest request = new VerifyCodeRequest(memberEmail, wrongAuthCode);
+
+		//when & then
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> memberFindService.verifyFindPassword(request))
+			.satisfies(exception ->
+				assertThat(exception.getErrorCode()).isEqualTo(AuthError.INVALID_AUTH_CODE));
+	}
 }
