@@ -20,7 +20,9 @@ import com.sudo.railo.support.annotation.ServiceTest;
 import com.sudo.railo.support.helper.TrainScheduleTestHelper;
 import com.sudo.railo.support.helper.TrainTestHelper;
 import com.sudo.railo.train.application.dto.request.TrainSearchRequest;
+import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.exception.TrainErrorCode;
 
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +46,9 @@ public class TrainSearchValidationTest {
 	@Autowired
 	private ReservationRepository reservationRepository;
 
-	@DisplayName("다양한 잘못된 검색 조건에 대해 적절한 예외가 발생한다")
+	@DisplayName("다양한 잘못된 검색 조건에 대해 적절한 비즈니스 예외가 발생한다")
 	@TestFactory
-	Collection<DynamicTest> searchTrains_throwsAppropriateExceptionsForVariousInvalidConditions() {
+	Collection<DynamicTest> shouldThrowAppropriateExceptionForInvalidSearchConditions() {
 		// given
 		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
 		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
@@ -108,5 +110,78 @@ public class TrainSearchValidationTest {
 				}
 			))
 			.toList();
+	}
+
+	@DisplayName("다양한 검색 시나리오에서 검색 결과가 없을 경우 빈 리스트를 반환한다.")
+	@TestFactory
+	Collection<DynamicTest> shouldReturnEmptyListForNonexistentRoutesAndDates() {
+		// given - 기본 테스트 데이터
+		Train train = trainTestHelper.createRealisticTrain(2, 1, 10, 6);
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+
+		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 50000, 80000);
+		createTrainSchedule(train, searchDate, "KTX 001",
+			LocalTime.of(10, 0), LocalTime.of(13, 0), "서울", "부산");
+
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+		Station daegu = trainScheduleTestHelper.getOrCreateStation("대구");
+
+		record NoResultScenario(
+			String description,
+			TrainSearchRequest request
+		) {
+			@Override
+			public String toString() {
+				return description;
+			}
+		}
+
+		List<NoResultScenario> scenarios = List.of(
+			new NoResultScenario(
+				"존재하는 역이지만 해당 역을 경유하는 노선이 없는 경우 (서울-대구)",
+				new TrainSearchRequest(seoul.getId(), daegu.getId(), searchDate, 1, "00")
+			),
+			new NoResultScenario(
+				"해당 날짜에 운행하는 열차 없음",
+				new TrainSearchRequest(seoul.getId(), busan.getId(), searchDate.plusDays(1), 1, "00")
+			),
+			new NoResultScenario(
+				"요청한 출발 시간 이후에 운행하는 열차 없음",
+				new TrainSearchRequest(seoul.getId(), busan.getId(), searchDate, 1, "15")
+			)
+		);
+
+		return scenarios.stream()
+			.map(scenario -> DynamicTest.dynamicTest(
+				scenario.description,
+				() -> {
+					// when
+					TrainSearchSlicePageResponse response = trainSearchService.searchTrains(
+						scenario.request, PageRequest.of(0, 20));
+
+					// then: 검색 결과 없을 때 빈 리스트 반환
+					assertThat(response.content()).isEmpty();
+
+					log.info("검색 결과 없음 시나리오 완료 - {}", scenario.description);
+				}
+			))
+			.toList();
+	}
+
+	/**
+	 * 열차 스케줄 생성 헬퍼
+	 */
+	private TrainScheduleTestHelper.TrainScheduleWithStopStations createTrainSchedule(Train train,
+		LocalDate operationDate,
+		String scheduleName, LocalTime departureTime, LocalTime arrivalTime,
+		String departureStation, String arrivalStation) {
+		return trainScheduleTestHelper.createCustomSchedule()
+			.scheduleName(scheduleName)
+			.operationDate(operationDate)
+			.train(train)
+			.addStop(departureStation, null, departureTime)
+			.addStop(arrivalStation, arrivalTime, null)
+			.build();
 	}
 }
