@@ -33,6 +33,7 @@ import com.sudo.railo.train.application.dto.response.TrainSearchResponse;
 import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageResponse;
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
+import com.sudo.railo.train.exception.TrainErrorCode;
 import com.sudo.railo.train.infrastructure.SeatRepository;
 import com.sudo.railo.train.infrastructure.StationRepository;
 import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
@@ -281,6 +282,48 @@ class TrainSearchServiceTest {
 			log.info("페이징 테스트 완료 (크기 {}): 1페이지 {}건, 2페이지 {}건",
 				test.pageSize, firstResponse.content().size(), secondResponse.content().size());
 		});
+	}
+
+	@DisplayName("조회하는 구간의 요금 정보가 없으면 STATION_FARE_NOT_FOUND 예외를 던진다")
+	@Test
+	void shouldThrowStationFareNotFoundWhenFareIsMissing() {
+		// given
+		LocalDate searchDate = LocalDate.now().plusDays(1);
+
+		// 역 생성
+		Station seoul = trainScheduleTestHelper.getOrCreateStation("서울");
+		Station busan = trainScheduleTestHelper.getOrCreateStation("부산");
+
+		// 서울→부산 요금 등록
+		trainScheduleTestHelper.createOrUpdateStationFare("서울", "부산", 50000, 80000);
+
+		Train train = trainTestHelper.createRealisticTrain(1, 1, 10, 6);
+		// 요금 없는 방향으로 부산→서울 스케줄 생성
+		createTrainSchedule(train, searchDate, "KTX Rev",
+			LocalTime.of(15, 0), LocalTime.of(18, 0),
+			"부산", "서울"
+		);
+
+		// when & then
+		TrainSearchRequest request = new TrainSearchRequest(
+			busan.getId(),    // 출발: 요금 미등록 방향
+			seoul.getId(),    // 도착
+			searchDate,
+			1,
+			"15"              // 15시 이후
+		);
+
+		assertThatThrownBy(() ->
+			trainSearchService.searchTrains(request, PageRequest.of(0, 10))
+		)
+			.isInstanceOf(BusinessException.class)
+			.satisfies(ex -> {
+				BusinessException be = (BusinessException)ex;
+				assertThat(be.getErrorCode())
+					.isEqualTo(TrainErrorCode.STATION_FARE_NOT_FOUND);
+				assertThat(be.getMessage())
+					.contains(TrainErrorCode.STATION_FARE_NOT_FOUND.getMessage());
+			});
 	}
 
 	/**
