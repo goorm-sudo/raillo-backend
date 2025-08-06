@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.auth.application.AuthService;
+import com.sudo.railo.booking.application.ReservationApplicationService;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
@@ -28,6 +29,7 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AuthService authService;
+	private final ReservationApplicationService reservationApplicationService;
 
 	/**
 	 * 비회원 등록
@@ -64,6 +66,7 @@ public class MemberService {
 
 		try {
 			memberRepository.delete(currentMember);
+			reservationApplicationService.deleteReservationsByMember(currentMember);
 		} catch (Exception e) {
 			log.error("회원 삭제 실패 : {}", e.getMessage());
 			throw new BusinessException(MemberError.MEMBER_DELETE_FAIL);
