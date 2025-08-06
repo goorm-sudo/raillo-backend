@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.sudo.railo.auth.application.AuthService;
+import com.sudo.railo.auth.application.dto.request.LoginRequest;
+import com.sudo.railo.auth.application.dto.response.TokenResponse;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
@@ -25,6 +28,9 @@ class MemberServiceTest {
 
 	@Autowired
 	private MemberService memberService;
+
+	@Autowired
+	private AuthService authService;
 
 	@Autowired
 	private MemberRepository memberRepository;
@@ -72,6 +78,47 @@ class MemberServiceTest {
 			.isThrownBy(() -> memberService.guestRegister(request))
 			.satisfies(exception ->
 				assertThat(exception.getErrorCode()).isEqualTo(MemberError.DUPLICATE_GUEST_INFO));
+	}
+
+	@Test
+	@DisplayName("회원 삭제에 성공한다.")
+	void deleteMember_success() {
+		//given
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
+
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
+		TokenResponse response = authService.login(request);
+
+		String accessToken = response.accessToken();
+
+		//when
+		memberService.memberDelete(accessToken, memberNo);
+
+		//then
+		Member deletedMember = memberRepository.findByMemberNoIgnoreIsDeleted(memberNo)
+			.orElseThrow(() -> new AssertionError("회원을 찾을 수 없습니다."));
+		assertThat(deletedMember.isDeleted()).isTrue();
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 회원 삭제 시 예외가 발생해 실패한다.")
+	void deleteMember_fail_when_user_not_found() {
+		//given
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
+
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
+		TokenResponse response = authService.login(request);
+
+		String accessToken = response.accessToken();
+		String nonExistMemberNo = "202507309999";
+
+		//when & then
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> memberService.memberDelete(accessToken, nonExistMemberNo))
+			.satisfies(exception ->
+				assertThat(exception.getErrorCode()).isEqualTo(MemberError.USER_NOT_FOUND));
 	}
 
 	@Test
@@ -140,5 +187,21 @@ class MemberServiceTest {
 			.isThrownBy(() -> memberService.getMemberEmail(memberNo))
 			.satisfies(exception ->
 				assertThat(exception.getErrorCode()).isEqualTo(MemberError.USER_NOT_FOUND));
+	}
+
+	private Member createMemberWithEncryptedPassword() {
+		Member member = MemberFixture.createStandardMember();
+		String plainPwd = member.getPassword();
+		String encodedPwd = passwordEncoder.encode(plainPwd);
+
+		Member saveMember = Member.create(
+			member.getName(),
+			member.getPhoneNumber(),
+			encodedPwd,
+			member.getRole(),
+			member.getMemberDetail()
+		);
+
+		return memberRepository.save(saveMember);
 	}
 }
