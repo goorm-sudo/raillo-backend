@@ -52,9 +52,10 @@ class MemberFindServiceTest {
 	@Autowired
 	private MemberRedisRepository memberRedisRepository;
 
-	private Member member;
 	@Autowired
 	private AuthRedisRepository authRedisRepository;
+
+	private Member member;
 
 	@BeforeEach
 	void setUp() {
@@ -230,7 +231,7 @@ class MemberFindServiceTest {
 		String savedAuthCode = authRedisRepository.getAuthCode(memberEmail);
 		assertThat(savedAuthCode).isNull();
 	}
-	
+
 	@Test
 	@DisplayName("인증 코드가 일치하지 않으면 비밀번호 찾기 검증 요청에 실패한다.")
 	void verifyFindPassword_fail() {
