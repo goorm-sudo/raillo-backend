@@ -2,7 +2,6 @@ package com.sudo.railo.booking.application;
 
 import java.util.List;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +52,8 @@ public class TicketService {
 		}
 	}
 
-	public List<TicketReadResponse> getMyTickets(UserDetails userDetails) {
-		Member member = memberRepository.findByMemberNo(userDetails.getUsername())
+	public List<TicketReadResponse> getMyTickets(String username) {
+		Member member = memberRepository.findByMemberNo(username)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		try {
 			// List<TicketReadResponse> tickets = ticketRepository.findByReservationMemberId(member.getId());
