@@ -122,4 +122,14 @@ class CartReservationServiceTest {
 		assertThat(detail.reservationId()).isEqualTo(reservation.getId());
 		assertThat(detail.seats()).isNotEmpty();
 	}
+
+	@Test
+	@DisplayName("장바구니가 비어있다면 빈 응답을 반환한다")
+	void getCartReservations_empty_success() {
+		// when
+		List<ReservationDetail> cart = cartReservationService.getCartReservations(memberNo);
+
+		// then
+		assertThat(cart).isEmpty();
+	}
 }
