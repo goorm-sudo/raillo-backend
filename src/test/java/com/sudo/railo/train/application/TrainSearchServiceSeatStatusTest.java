@@ -34,11 +34,7 @@ import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.domain.type.CarType;
 import com.sudo.railo.train.domain.type.SeatAvailabilityStatus;
-import com.sudo.railo.train.infrastructure.ScheduleStopRepository;
 import com.sudo.railo.train.infrastructure.SeatRepository;
-import com.sudo.railo.train.infrastructure.TrainCarRepository;
-import com.sudo.railo.train.infrastructure.TrainRepository;
-import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,18 +65,6 @@ public class TrainSearchServiceSeatStatusTest {
 
 	@Autowired
 	private MemberRepository memberRepository;
-
-	@Autowired
-	TrainScheduleRepository trainScheduleRepository;
-
-	@Autowired
-	ScheduleStopRepository scheduleStopRepository;
-
-	@Autowired
-	TrainRepository trainRepository;
-
-	@Autowired
-	TrainCarRepository trainCarRepository;
 
 	@Autowired
 	private SeatRepository seatRepository;
