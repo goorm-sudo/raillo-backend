@@ -45,7 +45,7 @@ train:
     ratio: 0.15
 
 jwt:
-  secret: "crailotestjwtsecretkey2025fordevelopmentandtestingonly"
+  secret: "crailotestjwtsecretkey2025fordevelopmentandtestingonlylonglonglonglonglonglonglonglonglong"
 
 cors:
   allowed-origins: http://localhost:3000
