@@ -96,6 +96,10 @@ public class TrainSearchServiceSeatStatusTest {
 		boolean expectedFirstClassCanReserve,
 		boolean expectedHasStanding
 	) {
+		@Override
+		public String toString() {
+			return description;
+		}
 	}
 
 	static Stream<SeatStatusScenario> seatStatusScenarios() {
@@ -164,7 +168,7 @@ public class TrainSearchServiceSeatStatusTest {
 	}
 
 	@DisplayName("다양한 기존 예약 상황에 따라 적절한 좌석 상태와 입석 정보를 표시한다.")
-	@ParameterizedTest
+	@ParameterizedTest(name = "[{index}] {0}")
 	@MethodSource("seatStatusScenarios")
 	void shouldDisplayCorrectSeatAndStandingInfoForAllScenarios(SeatStatusScenario scenario) {
 		// given

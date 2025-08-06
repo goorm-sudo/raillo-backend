@@ -33,6 +33,9 @@ public class TrainSearchValidator {
 		}
 	}
 
+	/**
+	 * 예약 날짜가 오늘(date)이면, 시(hour) 단위로만 비교
+	 */
 	private void validateDepartureTime(TrainSearchRequest request) {
 		if (request.operationDate().equals(LocalDate.now())) {
 			int requestHour = Integer.parseInt(request.departureHour());
