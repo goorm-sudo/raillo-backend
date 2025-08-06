@@ -67,7 +67,6 @@ public class ReservationApplicationService {
 
 	@Transactional
 	public void cancelReservation(Reservation reservation) {
-		reservation.cancel();
 		Long reservationId = reservation.getId();
 		seatReservationService.deleteSeatReservationByReservationId(reservationId);
 		ticketService.deleteTicketByReservationId(reservationId);

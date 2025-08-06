@@ -1,21 +1,27 @@
 package com.sudo.railo.payment.application;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sudo.railo.booking.application.ReservationApplicationService;
 import com.sudo.railo.booking.application.TicketService;
 import com.sudo.railo.booking.domain.Reservation;
+import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.payment.application.dto.PaymentInfo;
+import com.sudo.railo.payment.application.dto.projection.PaymentProjection;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessAccountRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessCardRequest;
 import com.sudo.railo.payment.application.dto.request.PaymentProcessRequest;
+import com.sudo.railo.payment.application.dto.response.PaymentCancelResponse;
+import com.sudo.railo.payment.application.dto.response.PaymentHistoryResponse;
 import com.sudo.railo.payment.application.dto.response.PaymentProcessResponse;
 import com.sudo.railo.payment.domain.Payment;
 import com.sudo.railo.payment.domain.status.PaymentStatus;
@@ -37,6 +43,7 @@ public class PaymentService {
 	private final MemberRepository memberRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentKeyGenerator paymentKeyGenerator;
+	private final ReservationApplicationService reservationApplicationService;
 	private final TicketService ticketService;
 
 	/**
@@ -146,7 +153,6 @@ public class PaymentService {
 
 	private void markReservationAsPaid(Reservation reservation) {
 		reservation.approve();
-		reservationRepository.save(reservation);
 
 		log.info("예약 결제 완료 처리: reservationId={}", reservation.getId());
 	}
@@ -163,5 +169,103 @@ public class PaymentService {
 		seatReservationRepositoryCustom.findSeatInfoByReservationId(reservation.getId())
 			.forEach(seatInfoProjection -> ticketService.createTicket(
 				reservation, seatInfoProjection.getSeat(), seatInfoProjection.getPassengerType()));
+	}
+
+	@Transactional
+	public PaymentCancelResponse cancelPayment(String memberNo, String paymentKey) {
+		Payment payment = findPayment(memberNo, paymentKey);
+
+		// 결제 취소 처리
+		payment.cancel("사용자 요청에 의한 취소");
+
+		markReservationAsCancelled(payment.getReservation());
+
+		log.info("결제 취소 완료: paymentKey={}, reservationId={}", paymentKey, payment.getReservation().getId());
+
+		// 즉각 환불 처리 (임시)
+		refundPayment(payment, payment.getReservation());
+
+		return PaymentCancelResponse.from(payment);
+	}
+
+	private Payment findPayment(String memberNo, String paymentKey) {
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		Payment payment = paymentRepository.findByPaymentKey(paymentKey)
+			.orElseThrow(() -> new BusinessException(PaymentError.PAYMENT_NOT_FOUND));
+
+		validatePaymentCancellableCondition(member, payment);
+
+		return payment;
+	}
+
+	private void validatePaymentCancellableCondition(Member member, Payment payment) {
+		// 결제 소유자 확인
+		if (!payment.getMember().getId().equals(member.getId())) {
+			throw new BusinessException(PaymentError.PAYMENT_ACCESS_DENIED);
+		}
+
+		// 결제 취소 가능 여부 확인
+		if (!payment.canBeCancelled()) {
+			throw new BusinessException(PaymentError.PAYMENT_NOT_CANCELLABLE);
+		}
+
+		// 예약 취소 가능 여부 확인
+		if (!payment.getReservation().canBeCancelled()) {
+			throw new BusinessException(BookingError.RESERVATION_DELETE_FAILED);
+		}
+	}
+
+	private void markReservationAsCancelled(Reservation reservation) {
+		reservation.cancel();
+		reservationApplicationService.cancelReservation(reservation);
+
+		log.info("예약 취소 처리: reservationId={}", reservation.getId());
+	}
+
+	/**
+	 * 환불 처리
+	 * @param payment {@link Payment} 객체
+	 */
+	public void refundPayment(Payment payment, Reservation reservation) {
+		// 해당 로직은 외부 엔드포인트가 존재하지 않고 추후 엔드포인트가 생긴다고 하더라도
+		// 신뢰할 수 있는 PG사에서 환불 완료된 결제에 대해서만 호출할 예정이기 때문에 검증 과정이 필요 없습니다.
+
+		// 즉각 환불 처리 로직 (임시)
+		if (payment.canBeRefunded()) {
+			payment.refund();
+		}
+
+		markReservationAsRefunded(reservation);
+
+		log.info("환불 처리 완료: paymentKey={}", payment.getPaymentKey());
+	}
+
+	private void markReservationAsRefunded(Reservation reservation) {
+		reservation.refund();
+
+		log.info("예약 환불 처리: reservationId={}", reservation.getId());
+	}
+
+	/**
+	 * 결제 내역 조회
+	 * @param memberNo 회원번호
+	 * @return {@code List<PaymentHistoryResponse>}
+	 */
+	@Transactional(readOnly = true)
+	public List<PaymentHistoryResponse> getPaymentHistory(String memberNo) {
+		Member member = memberRepository.findByMemberNo(memberNo)
+			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
+
+		List<PaymentProjection> paymentProjections = paymentRepository.findPaymentHistoryByMemberId(member.getId());
+
+		return paymentProjections.stream()
+			.map(paymentProjection -> new PaymentHistoryResponse(
+				paymentProjection.getPaymentId(), paymentProjection.getPaymentKey(),
+				paymentProjection.getReservationCode(), paymentProjection.getAmount(),
+				paymentProjection.getPaymentMethod(), paymentProjection.getPaymentStatus(),
+				paymentProjection.getPaidAt(), paymentProjection.getCancelledAt(), paymentProjection.getRefundedAt()))
+			.toList();
 	}
 }
