@@ -13,6 +13,7 @@ import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.train.domain.Seat;
+import com.sudo.railo.train.infrastructure.SeatRepository;
 
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class SeatReservationService {
 
 	private final SeatReservationRepository seatReservationRepository;
+	private final SeatRepository seatRepository;
 
 	/***
 	 * 새로운 좌석 예약 현황을 생성하고 예약하는 메서드
@@ -35,16 +37,20 @@ public class SeatReservationService {
 			Long trainScheduleId = reservation.getTrainSchedule().getId();
 			Long seatId = seat.getId();
 
-			// 비관적 락으로 해당 좌석의 모든 예약을 조회 (다른 트랜잭션의 접근 차단)
+			// 1. 먼저 좌석 자체에 비관적 락을 걸어 동시 접근 차단 (최우선 락)
+			Seat lockedSeat = seatRepository.findByIdWithLock(seatId)
+				.orElseThrow(() -> new BusinessException(BookingError.SEAT_NOT_FOUND));
+
+			// 2. 락이 걸린 상태에서 해당 좌석의 기존 예약들을 비관적 락으로 조회
 			List<SeatReservation> existingReservations = seatReservationRepository
 				.findByTrainScheduleAndSeatWithLock(trainScheduleId, seatId);
 
-			// 락이 걸린 상태에서 충돌 검증 (원자성 보장)
+			// 3. 락이 걸린 상태에서 충돌 검증 (원자성 보장)
 			validateConflictWithExistingReservations(reservation, existingReservations);
 
 			SeatReservation seatReservation = SeatReservation.builder()
 				.trainSchedule(reservation.getTrainSchedule())
-				.seat(seat)
+				.seat(lockedSeat)
 				.reservation(reservation)
 				.passengerType(passengerType)
 				.build();
