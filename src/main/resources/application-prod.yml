@@ -63,12 +63,15 @@ train:
     ratio: 0.15
 
 cors:
-  allowed-origins: http://localhost:3000, https://www.raillo.shop
+  allowed-origins: https://www.raillo.shop
   allowed-methods: GET, POST, PUT, DELETE
   allowed-headers: Access-Control-Allow-Origin, Content-type, Access-Control-Allow-Headers, Authorization, X-Requested-With
 
 jwt:
   secret: ${JWT_KEY}
+
+cookie:
+  domain: .raillo.shop
 
 booking:
   expiration:
