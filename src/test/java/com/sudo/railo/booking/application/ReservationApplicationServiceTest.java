@@ -118,7 +118,7 @@ class ReservationApplicationServiceTest {
 	@ParameterizedTest
 	@ValueSource(ints = {1, 3})
 	@DisplayName("승객 수와 좌석 수가 일치하지 않으면 예외가 발생한다.")
-	void throwsExceptionWhenPassengerCountMismatchesSeatCount(int count) {
+	void shouldThrowsExceptionWhenPassengerCountMismatchesSeatCount(int count) {
 		passengers = List.of(new PassengerSummary(PassengerType.ADULT, count));
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
@@ -129,7 +129,7 @@ class ReservationApplicationServiceTest {
 
 	@Test
 	@DisplayName("존재하지 않은 좌석 ID로 예약하는 경우 예외가 발생한다.")
-	void throwsExceptionWhenSeatIdNotExists() {
+	void shouldThrowsExceptionWhenSeatIdNotExists() {
 		standardSeatIds = List.of(998L, 999L);
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
@@ -140,7 +140,7 @@ class ReservationApplicationServiceTest {
 
 	@Test
 	@DisplayName("이미 선점한 좌석을 예약하는 경우 예외가 발생한다.")
-	void throwsExceptionWhenSeatAlreadyReserved() {
+	void shouldThrowsExceptionWhenSeatAlreadyReserved() {
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 		reservationApplicationService.createReservation(request, memberNo);
 
@@ -151,7 +151,7 @@ class ReservationApplicationServiceTest {
 
 	@Test
 	@DisplayName("출발역과 도착역이 운행 스케줄 순서와 맞지 않으면 예외가 발생한다.")
-	void throwsExceptionWhenDepartureAndArrivalStopsAreNotInCorrectOrder() {
+	void shouldThrowsExceptionWhenDepartureAndArrivalStopsAreNotInCorrectOrder() {
 		var request = createRequest(scheduleWithStops, arrivalStop, departureStop, passengers, standardSeatIds);
 		trainScheduleTestHelper.createOrUpdateStationFare("부산", "서울", 50000, 10000);
 
