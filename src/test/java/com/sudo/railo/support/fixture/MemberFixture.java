@@ -22,6 +22,17 @@ public enum MemberFixture {
 		"010-1111-1111",
 		"testPassword",
 		Role.MEMBER
+	),
+	OTHER_MEMBER(
+		"202507300002",
+		Membership.FAMILY,
+		"other@example.com",
+		LocalDate.of(2000, 1, 1),
+		"W",
+		"other",
+		"010-2222-2222",
+		"otherPassword",
+		Role.MEMBER
 	);
 
 	private final String memberNo;
@@ -48,7 +59,15 @@ public enum MemberFixture {
 	}
 
 	public static Member createStandardMember() {
-		MemberDetail memberDetail = MemberDetail.create(MEMBER.memberNo, MEMBER.membership, MEMBER.email, MEMBER.birthDate, MEMBER.gender);
+		MemberDetail memberDetail = MemberDetail.create(MEMBER.memberNo, MEMBER.membership, MEMBER.email,
+			MEMBER.birthDate, MEMBER.gender);
 		return Member.create(MEMBER.name, MEMBER.phoneNumber, MEMBER.password, MEMBER.role, memberDetail);
+	}
+
+	public static Member createOtherMember() {
+		MemberDetail memberDetail = MemberDetail.create(OTHER_MEMBER.memberNo, OTHER_MEMBER.membership,
+			OTHER_MEMBER.email, OTHER_MEMBER.birthDate, OTHER_MEMBER.gender);
+		return Member.create(OTHER_MEMBER.name, OTHER_MEMBER.phoneNumber, OTHER_MEMBER.password, OTHER_MEMBER.role,
+			memberDetail);
 	}
 }
