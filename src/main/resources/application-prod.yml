@@ -70,6 +70,9 @@ cors:
 jwt:
   secret: ${JWT_KEY}
 
+cookie:
+  domain: .raillo.shop
+
 booking:
   expiration:
     reservation: 10
