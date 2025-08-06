@@ -85,7 +85,7 @@ class SeatReservationServiceTest {
 
 	@Test
 	@DisplayName("예약, 좌석, 승객 유형으로 좌석 예약 생성에 성공한다")
-	void reserveNewSeat_success() {
+	void reservationAndSeatAndPassengerType_reserveNewSeat_success() {
 		// when
 		SeatReservation entity = seatReservationService.reserveNewSeat(reservation, seat1, passengerType1);
 
@@ -96,7 +96,7 @@ class SeatReservationServiceTest {
 
 	@Test
 	@DisplayName("좌석 예약 ID로 좌석 예약 삭제에 성공한다")
-	void deleteSeatReservation_success() {
+	void seatReservationId_deleteSeatReservation_success() {
 		// given
 		Train train = trainTestHelper.createKTX();
 		TrainSchedule trainSchedule = trainScheduleTestHelper.createSchedule(train).trainSchedule();
@@ -128,7 +128,7 @@ class SeatReservationServiceTest {
 
 	@Test
 	@DisplayName("예약 ID로 좌석 예약 삭제에 성공한다")
-	void deleteSeatReservationByReservationId_success() {
+	void reservationId_deleteSeatReservation_success() {
 		// given
 		Train train = trainTestHelper.createKTX();
 		TrainSchedule trainSchedule = trainScheduleTestHelper.createSchedule(train).trainSchedule();
