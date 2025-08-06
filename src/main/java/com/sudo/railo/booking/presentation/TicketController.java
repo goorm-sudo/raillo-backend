@@ -25,7 +25,8 @@ public class TicketController implements TicketControllerDocs {
 
 	@GetMapping
 	public SuccessResponse<List<TicketReadResponse>> getMyTickets(@AuthenticationPrincipal UserDetails userDetails) {
-		List<TicketReadResponse> tickets = ticketService.getMyTickets(userDetails);
+		String username = userDetails.getUsername();
+		List<TicketReadResponse> tickets = ticketService.getMyTickets(username);
 		return SuccessResponse.of(TicketSuccess.TICKET_LIST_GET_SUCCESS, tickets);
 	}
 }
