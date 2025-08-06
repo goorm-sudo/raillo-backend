@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.booking.application.dto.request.ReservationCreateRequest;
 import com.sudo.railo.booking.application.dto.response.ReservationCreateResponse;
@@ -14,10 +15,10 @@ import com.sudo.railo.booking.domain.type.PassengerSummary;
 import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
 import com.sudo.railo.global.exception.error.BusinessException;
+import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.train.domain.Seat;
 import com.sudo.railo.train.infrastructure.SeatRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -70,5 +71,10 @@ public class ReservationApplicationService {
 		Long reservationId = reservation.getId();
 		seatReservationService.deleteSeatReservationByReservationId(reservationId);
 		ticketService.deleteTicketByReservationId(reservationId);
+	}
+
+	@Transactional
+	public void deleteReservationsByMember(Member member) {
+		reservationService.deleteAllByMemberId(member.getId());
 	}
 }
