@@ -281,8 +281,9 @@ public class TrainSearchService {
 	private TrainSearchResponse createTrainSearchResponse(TrainBasicInfo trainInfo, SectionSeatStatus sectionStatus,
 		StationFare fare, int passengerCount) {
 
-		// 입석 가능 여부 (일반실이 매진되었을 때만 입석 표시)
-		boolean hasStandingForStandard = !sectionStatus.canReserveStandard();
+		// 입석 가능 여부 (일반실이 예약 불가능하고 입석이 요청 인원을 수용 가능한 경우)
+		boolean hasStandingForStandard = !sectionStatus.canReserveStandard()
+			&& sectionStatus.canReserveStanding(passengerCount, standingRatio);
 
 		// 1. 좌석 타입별 정보 생성 (일반실 / 특실)
 		SeatTypeInfo standardSeatInfo = SeatTypeInfo.create(
