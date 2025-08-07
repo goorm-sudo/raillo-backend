@@ -177,17 +177,6 @@ public class TrainTestHelper {
 	 * count만큼 carType에 해당하는 좌석 ID 조회
 	 */
 	public List<Long> getSeatIds(Train train, CarType carType, int count) {
-		Pageable limit = PageRequest.of(0, count);
-		return testSeatRepository.findByTrainIdAndCarTypeWithTrainCarLimited(train.getId(), carType, limit)
-			.stream()
-			.toList();
-	}
-
-	/**
-	 * 좌석 조회 메서드
-	 * count만큼 carType에 해당하는 좌석 ID 조회
-	 */
-	public List<Long> getSeatIds(Train train, CarType carType, int count) {
 		return getSeats(train, carType, count)
 			.stream()
 			.map(Seat::getId)
