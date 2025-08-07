@@ -62,7 +62,7 @@
 - **활발한 협업과 역할 분담 경험** : 팀원이 적절하게 역할을 분담하고, 협업툴을 이용한 버전관리, 이슈 트래킹, 코드 리뷰 등 협업 방식을 적용
 - **실무에서 사용되는 기술 스택 학습 및 경험** : 실무에서 사용되는 다양한 기술 스택을 학습, 경험하고 관련 패턴을 적용
 
-## 🛠️ 기술 스택
+## 🔧 기술 스택
 ### Backend
 [![backend](https://skillicons.dev/icons?i=java,spring,redis,mysql)](https://skillicons.dev)
 - **Language** : Java
