@@ -24,5 +24,7 @@ public interface SeatReservationRepository extends JpaRepository<SeatReservation
 	@Query("SELECT sr FROM SeatReservation sr WHERE sr.trainSchedule.id = :trainScheduleId AND sr.seat.id = :seatId")
 	List<SeatReservation> findByTrainScheduleAndSeatWithLock(Long trainScheduleId, Long seatId);
 
+	List<SeatReservation> findByReservationId(Long reservationId);
+
 	void deleteAllByReservationId(Long reservationId);
 }
