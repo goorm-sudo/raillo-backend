@@ -64,7 +64,7 @@
 
 ## 🔧 기술 스택
 ### Backend
-[![backend](https://skillicons.dev/icons?i=java,spring,redis,mysql)](https://skillicons.dev)
+[![backend](https://skillicons.dev/icons?i=java,spring,redis,mysql,gradle)](https://skillicons.dev)
 - **Language** : Java
 - **Framework** : Spring Boot, Spring Security, Spring Batch
 - **ORM** : Spring Data JPA, QueryDSL
@@ -75,7 +75,7 @@
 - **Build Tool** : Gradle
 
 ### Infrastructure & DevOps
-[![infra,devops](https://skillicons.dev/icons?i=git,github,docker,aws,prometheus,grafana,githubactions)](https://skillicons.dev)
+[![infra,devops](https://skillicons.dev/icons?i=git,github,docker,kubernetes,aws,prometheus,grafana,githubactions)](https://skillicons.dev)
 - **Cloud Platform** : AWS (EKS, RDS, Route53, Load Balancer)
 - **Container** : Docker, Kubernetes
 - **CI/CD** : GitHub Actions, ArgoCD (GitOps)
@@ -87,6 +87,7 @@
 - **DB** : H2 (in-memory)
 - **Cache** : Embedded Redis
 - **Test Utils** : AssertJ
+- **Performance Testing** : K6
 - **Email Testing** : GreenMail
 - **Coverage** : JaCoCo
 
