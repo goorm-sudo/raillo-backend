@@ -75,6 +75,7 @@ public class ReservationConcurrentConflictTest {
 	@Test
 	@DisplayName("동시에 같은 좌석에 여러 예약이 발생하면 1개의 예약만 성공한다.")
 	void allowsOnlyOneReservationForConcurrentRequests() throws InterruptedException {
+		// given
 		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 		CountDownLatch latch = new CountDownLatch(threadCount);
 		AtomicInteger successCount = new AtomicInteger();
@@ -84,6 +85,7 @@ public class ReservationConcurrentConflictTest {
 		trainScheduleTestHelper.createOrUpdateStationFare("1", "3", 50000, 10000);
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when
 		for (int i = 0; i < threadCount; i++) {
 			executorService.submit(() -> {
 				try {
@@ -99,6 +101,7 @@ public class ReservationConcurrentConflictTest {
 		latch.await();
 		executorService.shutdown();
 
+		// then
 		assertThat(successCount.get()).isEqualTo(1);
 		assertThat(failCount.get()).isEqualTo(threadCount - 1);
 	}
@@ -106,6 +109,7 @@ public class ReservationConcurrentConflictTest {
 	@Test
 	@DisplayName("같은 좌석에 대해 겹치는 구간의 예약이 동시에 발생하면 1개의 예약만 성공한다.")
 	void allowsOnlyOneReservationForOverlappingRoutesWithConcurrentRequests() throws InterruptedException {
+		// given
 		ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 		CountDownLatch latch = new CountDownLatch(threadCount);
 		AtomicInteger successCount = new AtomicInteger();
@@ -121,6 +125,7 @@ public class ReservationConcurrentConflictTest {
 		trainScheduleTestHelper.createOrUpdateStationFare("2", "4", 50000, 10000);
 		var twoToFourRequest = createRequest(scheduleWithStops, two, four, passengers, standardSeatIds);
 
+		// when
 		// 절반은 1->3 구간, 절반은 2->4 구간 예약 시도
 		for (int i = 0; i < threadCount; i++) {
 			final int index = i;
@@ -142,6 +147,7 @@ public class ReservationConcurrentConflictTest {
 		latch.await();
 		executorService.shutdown();
 
+		// then
 		assertThat(successCount.get()).isEqualTo(1);
 		assertThat(failCount.get()).isEqualTo(threadCount - 1);
 	}

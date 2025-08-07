@@ -78,10 +78,13 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("예약 관련 정보를 받아 예약을 생성한다.")
 	void createReservation() {
+		// given
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when
 		var response = reservationApplicationService.createReservation(request, memberNo);
 
+		// then
 		Reservation savedReservation = reservationRepository.findById(response.reservationId()).orElseThrow();
 		Member member = memberRepository.findById(savedReservation.getMember().getId()).orElseThrow();
 		assertThat(member.getMemberDetail().getMemberNo()).isEqualTo(memberNo);
@@ -92,10 +95,13 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("예약이 성공하면 SeatReservation이 생성된다.")
 	void createSeatReservation() {
+		// given
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when
 		var response = reservationApplicationService.createReservation(request, memberNo);
 
+		// then
 		List<SeatReservation> savedSeatReservations = seatReservationRepository.findByReservationId(response.reservationId());
 		savedSeatReservations.forEach(seatReservation -> {
 			assertThat(seatReservation.getReservation().getId()).isEqualTo(response.reservationId());
@@ -106,12 +112,15 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("예약이 생성될 때 좌석 정보는 오름차순으로 정렬된다.")
 	void createReservationWithSortedSeats() {
+		// given
 		passengers = List.of(new PassengerSummary(PassengerType.ADULT, 4));
 		standardSeatIds = trainTestHelper.getSeatIds(train, CarType.STANDARD, 4);
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when
 		var response = reservationApplicationService.createReservation(request, memberNo);
 
+		// then
 		assertThat(response.seatReservationIds()).containsExactlyElementsOf(standardSeatIds);
 	}
 
@@ -119,9 +128,11 @@ class ReservationApplicationServiceTest {
 	@ValueSource(ints = {1, 3})
 	@DisplayName("승객 수와 좌석 수가 일치하지 않으면 예외가 발생한다.")
 	void shouldThrowsExceptionWhenPassengerCountMismatchesSeatCount(int count) {
+		// given
 		passengers = List.of(new PassengerSummary(PassengerType.ADULT, count));
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when & then
 		assertThatThrownBy(() -> reservationApplicationService.createReservation(request, memberNo))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(BookingError.RESERVATION_CREATE_SEATS_INVALID.getMessage());
@@ -130,9 +141,11 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("존재하지 않은 좌석 ID로 예약하는 경우 예외가 발생한다.")
 	void shouldThrowsExceptionWhenSeatIdNotExists() {
+		// given
 		standardSeatIds = List.of(998L, 999L);
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 
+		// when & then
 		assertThatThrownBy(() -> reservationApplicationService.createReservation(request, memberNo))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(BookingError.SEAT_NOT_FOUND.getMessage());
@@ -141,9 +154,11 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("이미 선점한 좌석을 예약하는 경우 예외가 발생한다.")
 	void shouldThrowsExceptionWhenSeatAlreadyReserved() {
+		// given
 		var request = createRequest(scheduleWithStops, departureStop, arrivalStop, passengers, standardSeatIds);
 		reservationApplicationService.createReservation(request, memberNo);
 
+		// when & then
 		assertThatThrownBy(() -> reservationApplicationService.createReservation(request, memberNo))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(BookingError.SEAT_ALREADY_RESERVED.getMessage());
@@ -152,9 +167,11 @@ class ReservationApplicationServiceTest {
 	@Test
 	@DisplayName("출발역과 도착역이 운행 스케줄 순서와 맞지 않으면 예외가 발생한다.")
 	void shouldThrowsExceptionWhenDepartureAndArrivalStopsAreNotInCorrectOrder() {
+		// given
 		var request = createRequest(scheduleWithStops, arrivalStop, departureStop, passengers, standardSeatIds);
 		trainScheduleTestHelper.createOrUpdateStationFare("부산", "서울", 50000, 10000);
 
+		// when & then
 		assertThatThrownBy(() -> reservationApplicationService.createReservation(request, memberNo))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(BookingError.TRAIN_NOT_OPERATIONAL.getMessage());
