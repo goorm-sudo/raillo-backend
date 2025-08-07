@@ -2,20 +2,20 @@ package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
-import com.sudo.railo.train.domain.type.CarType;
+import com.sudo.railo.train.application.dto.projection.TrainSeatInfoBatch;
 
 public interface TrainScheduleRepositoryCustom {
 
 	/**
 	 * 날짜 범위에서 활성 스케줄이 있는 날짜들 조회 (운행 스케줄 캘린더 조회)
-	 * TODO : 성능 모니터링 필요 : operation_calender 테이블, 배치, 캐시로 성능 개선 예정
+	 * TODO : 성능 모니터링 필요 : operation_calendar 테이블, 배치, 캐시로 성능 개선 예정
 	 */
 	Set<LocalDate> findDatesWithActiveSchedules(LocalDate startDate, LocalDate endDate);
 
@@ -38,14 +38,9 @@ public interface TrainScheduleRepositoryCustom {
 	);
 
 	/**
-	 * 열차의 좌석 타입별 전체 좌석 수 조회
-	 * 좌석 상태 계산을 위한 기준 데이터
+	 * 여러 열차의 객차 타입별, 열차 전체 인원 조회
+	 * @param trainScheduleIds
+	 * @return TrainSeatInfoBatch (Map<열차스케줄ID, Map < 객차타입, 좌석수>>, Map<열차스케줄ID, 전체좌석수>)
 	 */
-	Map<CarType, Integer> findTotalSeatsByCarType(Long trainScheduleId);
-
-	/**
-	 * 열차 최대 수용 인원 조회 (입석 포함)
-	 * 입석 가능 여부 판단용
-	 */
-	int findTotalSeatsByTrainScheduleId(Long trainScheduleId);
+	TrainSeatInfoBatch findTrainSeatInfoBatch(List<Long> trainScheduleIds);
 }

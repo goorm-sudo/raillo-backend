@@ -1,5 +1,8 @@
 package com.sudo.railo.member.domain;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import com.sudo.railo.global.domain.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -10,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,6 +24,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@SQLDelete(sql = "UPDATE member SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
+@Table(
+	name = "member",
+	indexes = {
+		@Index(name = "idx_member_deleted_updated", columnList = "is_deleted,updated_at")
+	}
+)
 public class Member extends BaseEntity {
 
 	@Id
@@ -40,8 +53,8 @@ public class Member extends BaseEntity {
 	@Embedded
 	private MemberDetail memberDetail;
 
-	@Column(name = "mileage_balance", precision = 10, scale = 0)
-	private java.math.BigDecimal mileageBalance = java.math.BigDecimal.ZERO;
+	@Column(name = "is_deleted", nullable = false)
+	private boolean isDeleted = false;
 
 	private Member(String name, String phoneNumber, String password, Role role, MemberDetail memberDetail) {
 		this.name = name;
@@ -49,7 +62,7 @@ public class Member extends BaseEntity {
 		this.password = password;
 		this.role = role;
 		this.memberDetail = memberDetail;
-		this.mileageBalance = java.math.BigDecimal.ZERO;
+		this.isDeleted = false;
 	}
 
 	public static Member create(String name, String phoneNumber, String password, Role role,
@@ -70,33 +83,4 @@ public class Member extends BaseEntity {
 		this.password = password;
 	}
 
-	/**
-	 * 마일리지 추가
-	 */
-	public void addMileage(Long amount) {
-		if (this.memberDetail == null) {
-			throw new IllegalStateException("회원 상세 정보가 없습니다");
-		}
-		this.memberDetail.addMileage(amount);
-	}
-
-	/**
-	 * 마일리지 차감
-	 */
-	public void useMileage(Long amount) {
-		if (this.memberDetail == null) {
-			throw new IllegalStateException("회원 상세 정보가 없습니다");
-		}
-		this.memberDetail.useMileage(amount);
-	}
-
-	/**
-	 * 현재 마일리지 조회
-	 */
-	public Long getTotalMileage() {
-		if (this.memberDetail == null) {
-			return 0L;
-		}
-		return this.memberDetail.getTotalMileage();
-	}
 }

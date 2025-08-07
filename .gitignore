@@ -40,7 +40,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-### dev.yml
-application-dev.yml
-

@@ -11,4 +11,6 @@ import com.sudo.railo.train.domain.TrainCar;
 public interface TrainCarRepository extends JpaRepository<TrainCar, Long> {
 
 	List<TrainCar> findByTrainIn(Collection<Train> trains);
+
+	List<TrainCar> findAllByTrainId(Long trainId);
 }

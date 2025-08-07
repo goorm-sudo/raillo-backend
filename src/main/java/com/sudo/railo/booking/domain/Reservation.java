@@ -2,15 +2,19 @@ package com.sudo.railo.booking.domain;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
+import com.sudo.railo.booking.domain.status.ReservationStatus;
+import com.sudo.railo.booking.domain.type.TripType;
+import com.sudo.railo.global.domain.BaseEntity;
 import com.sudo.railo.member.domain.Member;
-import com.sudo.railo.train.domain.Station;
+import com.sudo.railo.train.domain.ScheduleStop;
 import com.sudo.railo.train.domain.TrainSchedule;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
@@ -27,105 +31,100 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
-public class Reservation {
+public class Reservation extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "reservation_id")
+	@Comment("예약 ID")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "train_schedule_id", nullable = false)
+	@Comment("운행 일정 ID")
 	private TrainSchedule trainSchedule;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "member_id")
+	@JoinColumn(name = "member_id", nullable = false)
+	@OnDelete(action = OnDeleteAction.CASCADE)
+	@Comment("멤버 ID")
 	private Member member;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "departure_station_id", nullable = false)
-	private Station departureStation;
+	@JoinColumn(name = "departure_stop_id", nullable = false)
+	@Comment("출발 정류장 ID")
+	private ScheduleStop departureStop;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "arrival_station_id", nullable = false)
-	private Station arrivalStation;
+	@JoinColumn(name = "arrival_stop_id", nullable = false)
+	@Comment("도착 정류장 ID")
+	private ScheduleStop arrivalStop;
 
 	@Column(nullable = false)
+	@Comment("고객용 예매 코드")
 	private String reservationCode;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
+	@Comment("여행 타입")
 	private TripType tripType;
 
 	@Column(nullable = false)
+	@Comment("총 승객 수")
 	private int totalPassengers;
 
 	@Column(nullable = false)
+	@Comment("유형 별 승객 수")
 	private String passengerSummary;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
+	@Comment("예약 상태")
 	private ReservationStatus reservationStatus;
 
 	@Column(nullable = false)
+	@Comment("만료 시간")
 	private LocalDateTime expiresAt;
 
-	@Column(nullable = false)
-	private LocalDateTime reservedAt;
+	@Comment("결제 완료 시간")
+	private LocalDateTime purchaseAt;
 
-	private LocalDateTime paidAt;
-
+	@Comment("반환(취소) 시간")
 	private LocalDateTime cancelledAt;
 
-	/**
-	 * 예약 상태를 PAID로 변경 (결제 완료 시)
-	 */
-	public void markAsPaid() {
-		// 유효성 검증: RESERVED 상태에서만 PAID로 변경 가능
-		if (this.reservationStatus != ReservationStatus.RESERVED) {
-			throw new IllegalStateException(
-				String.format("예약 상태가 RESERVED가 아닙니다. 현재 상태: %s (예약ID: %d)", 
-					this.reservationStatus, this.id)
-			);
-		}
-		
+	@Column(nullable = false)
+	@Comment("운임")
+	private int fare;
+
+	public void approve() {
 		this.reservationStatus = ReservationStatus.PAID;
-		this.paidAt = LocalDateTime.now();
+		this.purchaseAt = LocalDateTime.now();
 	}
 
-	/**
-	 * 예약 상태를 CANCELLED로 변경 (결제 취소 시)
-	 */
-	public void markAsCancelled() {
-		// 유효성 검증: RESERVED 상태에서만 CANCELLED로 변경 가능
-		if (this.reservationStatus != ReservationStatus.RESERVED) {
-			throw new IllegalStateException(
-				String.format("예약 상태가 RESERVED가 아닙니다. 현재 상태: %s (예약ID: %d)", 
-					this.reservationStatus, this.id)
-			);
-		}
-		
+	public void cancel() {
 		this.reservationStatus = ReservationStatus.CANCELLED;
 		this.cancelledAt = LocalDateTime.now();
 	}
 
-	/**
-	 * 예약 상태를 REFUNDED로 변경 (환불 완료 시)
-	 */
-	public void markAsRefunded() {
-		// 유효성 검증: PAID 상태에서만 REFUNDED로 변경 가능
-		if (this.reservationStatus != ReservationStatus.PAID) {
-			throw new IllegalStateException(
-				String.format("예약 상태가 PAID가 아닙니다. 현재 상태: %s (예약ID: %d)", 
-					this.reservationStatus, this.id)
-			);
-		}
-		
+	public void refund() {
 		this.reservationStatus = ReservationStatus.REFUNDED;
-		this.cancelledAt = LocalDateTime.now();
+	}
+
+	// 결제 가능 여부 확인
+	public boolean canBePaid() {
+		return this.reservationStatus.isPayable();
+	}
+
+	// 취소 가능 여부 확인
+	public boolean canBeCancelled() {
+		return this.reservationStatus.isCancellable();
+	}
+
+	// 환불 가능 여부 확인
+	public boolean canBeRefunded() {
+		return this.purchaseAt != null && this.reservationStatus.isRefundable();
 	}
 }

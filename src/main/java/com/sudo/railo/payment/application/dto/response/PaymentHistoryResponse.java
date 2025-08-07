@@ -1,158 +1,41 @@
 package com.sudo.railo.payment.application.dto.response;
 
-import com.sudo.railo.payment.domain.entity.MileageTransaction;
-import com.sudo.railo.payment.domain.entity.Payment;
-import com.sudo.railo.payment.domain.entity.PaymentExecutionStatus;
-import com.sudo.railo.payment.domain.entity.RefundCalculation;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
-/**
- * 결제 내역 조회 응답 DTO
- */
-@Data
-@Builder
-@NoArgsConstructor @AllArgsConstructor
-public class PaymentHistoryResponse {
-    
-    private List<PaymentHistoryItem> payments;
-    private Long totalElements;
-    private Integer totalPages;
-    private Integer currentPage;
-    private Integer pageSize;
-    private Boolean hasNext;
-    private Boolean hasPrevious;
-    
-    /**
-     * 결제 내역 아이템
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor @AllArgsConstructor
-    public static class PaymentHistoryItem {
-        
-        private Long paymentId;
-        private Long reservationId;
-        private String externalOrderId;
-        private Long trainScheduleId;
-        
-        // 금액 정보
-        private BigDecimal amountOriginalTotal;
-        private BigDecimal totalDiscountAmountApplied;
-        private BigDecimal mileagePointsUsed;
-        private BigDecimal mileageAmountDeducted;
-        private BigDecimal mileageToEarn;
-        private BigDecimal amountPaid;
-        
-        // 결제 정보
-        private PaymentExecutionStatus paymentStatus;
-        private String paymentMethod;
-        private String pgProvider;
-        private String pgApprovalNo;
-        
-        // 환불 정보 추가
-        private boolean hasRefund;
-        private String refundStatus;
-        
-        // 시간 정보
-        private LocalDateTime paidAt;
-        private LocalDateTime createdAt;
-        
-        // 마일리지 요약 정보
-        private MileageSummary mileageSummary;
-        
-        /**
-         * Payment 엔티티에서 PaymentHistoryItem 생성
-         */
-        public static PaymentHistoryItem from(Payment payment, List<MileageTransaction> mileageTransactions) {
-            return from(payment, mileageTransactions, null);
-        }
-        
-        /**
-         * Payment 엔티티에서 PaymentHistoryItem 생성 (환불 정보 포함)
-         */
-        public static PaymentHistoryItem from(Payment payment, List<MileageTransaction> mileageTransactions, RefundCalculation refundCalculation) {
-            
-            // 마일리지 요약 정보 생성
-            MileageSummary mileageSummary = MileageSummary.from(mileageTransactions);
-            
-            return PaymentHistoryItem.builder()
-                    .paymentId(payment.getId())
-                    .reservationId(payment.getReservationId())
-                    .externalOrderId(payment.getExternalOrderId())
-                    .trainScheduleId(payment.getTrainScheduleId())
-                    .amountOriginalTotal(payment.getAmountOriginalTotal())
-                    .totalDiscountAmountApplied(payment.getTotalDiscountAmountApplied())
-                    .mileagePointsUsed(payment.getMileagePointsUsed())
-                    .mileageAmountDeducted(payment.getMileageAmountDeducted())
-                    .mileageToEarn(payment.getMileageToEarn())
-                    .amountPaid(payment.getAmountPaid())
-                    .paymentStatus(payment.getPaymentStatus())
-                    .paymentMethod(payment.getPaymentMethod().getDisplayName())
-                    .pgProvider(payment.getPgProvider())
-                    .pgApprovalNo(payment.getPgApprovalNo())
-                    .hasRefund(refundCalculation != null)
-                    .refundStatus(refundCalculation != null ? refundCalculation.getRefundStatus().name() : null)
-                    .paidAt(payment.getPaidAt())
-                    .createdAt(payment.getCreatedAt())
-                    .mileageSummary(mileageSummary)
-                    .build();
-        }
-    }
-    
-    /**
-     * 마일리지 요약 정보
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor @AllArgsConstructor
-    public static class MileageSummary {
-        
-        private Integer totalTransactions;      // 총 거래 건수
-        private BigDecimal totalEarned;         // 총 적립 포인트
-        private BigDecimal totalUsed;           // 총 사용 포인트
-        private BigDecimal netAmount;           // 순 증감 (적립 - 사용)
-        private LocalDateTime lastTransactionAt; // 마지막 거래 시간
-        
-        /**
-         * MileageTransaction 리스트에서 요약 정보 생성
-         */
-        public static MileageSummary from(List<MileageTransaction> transactions) {
-            if (transactions == null || transactions.isEmpty()) {
-                return MileageSummary.builder()
-                        .totalTransactions(0)
-                        .totalEarned(BigDecimal.ZERO)
-                        .totalUsed(BigDecimal.ZERO)
-                        .netAmount(BigDecimal.ZERO)
-                        .build();
-            }
-            
-            BigDecimal totalEarned = transactions.stream()
-                    .filter(t -> t.getType() == MileageTransaction.TransactionType.EARN)
-                    .map(MileageTransaction::getPointsAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            BigDecimal totalUsed = transactions.stream()
-                    .filter(t -> t.getType() == MileageTransaction.TransactionType.USE)
-                    .map(MileageTransaction::getPointsAmount)
-                    .map(BigDecimal::abs) // 사용은 음수로 저장되므로 절댓값
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-            LocalDateTime lastTransactionAt = transactions.stream()
-                    .map(MileageTransaction::getCreatedAt)
-                    .max(LocalDateTime::compareTo)
-                    .orElse(null);
-            
-            return MileageSummary.builder()
-                    .totalTransactions(transactions.size())
-                    .totalEarned(totalEarned)
-                    .totalUsed(totalUsed)
-                    .netAmount(totalEarned.subtract(totalUsed))
-                    .lastTransactionAt(lastTransactionAt)
-                    .build();
-        }
-    }
-} 
+import com.sudo.railo.payment.domain.status.PaymentStatus;
+import com.sudo.railo.payment.domain.type.PaymentMethod;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "결제 내역 응답")
+public record PaymentHistoryResponse(
+
+	@Schema(description = "결제 ID", example = "1")
+	Long paymentId,
+
+	@Schema(description = "결제 키", example = "PAY_1234567890ABCDEF")
+	String paymentKey,
+
+	@Schema(description = "예약 코드", example = "202312251230A1B2")
+	String reservationCode,
+
+	@Schema(description = "결제 금액", example = "50000")
+	BigDecimal amount,
+
+	@Schema(description = "결제 수단", example = "CARD")
+	PaymentMethod paymentMethod,
+
+	@Schema(description = "결제 상태", example = "PAID")
+	PaymentStatus paymentStatus,
+
+	@Schema(description = "결제 완료 시간")
+	LocalDateTime paidAt,
+
+	@Schema(description = "결제 취소 시간")
+	LocalDateTime cancelledAt,
+
+	@Schema(description = "환불 완료 시간")
+	LocalDateTime refundedAt
+) {
+}

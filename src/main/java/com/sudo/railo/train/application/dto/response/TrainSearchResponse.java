@@ -98,7 +98,7 @@ public record TrainSearchResponse(
 	/**
 	 * 입석 정보 존재 여부
 	 */
-	public boolean hasStanding() {
+	public boolean hasStandingInfo() {
 		return standing != null;
 	}
 

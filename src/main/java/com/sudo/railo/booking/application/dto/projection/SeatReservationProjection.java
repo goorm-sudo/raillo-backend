@@ -1,7 +1,7 @@
 package com.sudo.railo.booking.application.dto.projection;
 
 import com.querydsl.core.annotations.QueryProjection;
-import com.sudo.railo.booking.domain.PassengerType;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.train.domain.type.CarType;
 
 import lombok.Getter;
@@ -15,7 +15,6 @@ public class SeatReservationProjection {
 	private final int carNumber;
 	private final CarType carType;
 	private final String seatNumber;
-	private final int fare;
 
 	@QueryProjection
 	public SeatReservationProjection(
@@ -24,8 +23,7 @@ public class SeatReservationProjection {
 		PassengerType passengerType,
 		int carNumber,
 		CarType carType,
-		String seatNumber,
-		int fare
+		String seatNumber
 	) {
 		this.seatReservationId = seatReservationId;
 		this.reservationId = reservationId;
@@ -33,18 +31,5 @@ public class SeatReservationProjection {
 		this.carNumber = carNumber;
 		this.carType = carType;
 		this.seatNumber = seatNumber;
-		this.fare = fare;
-	}
-
-	public SeatReservationProjection withFare(int fare) {
-		return new SeatReservationProjection(
-			this.seatReservationId,
-			this.reservationId,
-			this.passengerType,
-			this.carNumber,
-			this.carType,
-			this.seatNumber,
-			fare
-		);
 	}
 }

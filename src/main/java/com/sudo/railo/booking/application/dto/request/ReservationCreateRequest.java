@@ -2,8 +2,8 @@ package com.sudo.railo.booking.application.dto.request;
 
 import java.util.List;
 
-import com.sudo.railo.booking.domain.PassengerSummary;
-import com.sudo.railo.booking.domain.TripType;
+import com.sudo.railo.booking.domain.type.PassengerSummary;
+import com.sudo.railo.booking.domain.type.TripType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;

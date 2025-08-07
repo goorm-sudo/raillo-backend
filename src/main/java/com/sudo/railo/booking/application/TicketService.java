@@ -2,24 +2,23 @@ package com.sudo.railo.booking.application;
 
 import java.util.List;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sudo.railo.booking.application.dto.response.TicketReadResponse;
-import com.sudo.railo.booking.domain.PassengerType;
-import com.sudo.railo.booking.domain.PaymentStatus;
 import com.sudo.railo.booking.domain.Qr;
 import com.sudo.railo.booking.domain.Reservation;
-import com.sudo.railo.booking.domain.SeatReservation;
 import com.sudo.railo.booking.domain.Ticket;
-import com.sudo.railo.booking.domain.TicketStatus;
+import com.sudo.railo.booking.domain.status.TicketStatus;
+import com.sudo.railo.booking.domain.type.PassengerType;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.TicketRepository;
-import com.sudo.railo.booking.infra.TicketRepositoryCustom;
+import com.sudo.railo.booking.infrastructure.ticket.TicketRepository;
+import com.sudo.railo.booking.infrastructure.ticket.TicketRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
-import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.member.infrastructure.MemberRepository;
+import com.sudo.railo.train.domain.Seat;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,15 +36,14 @@ public class TicketService {
 	 * @param reservation 예약 정보
 	 * @param passengerType 승객 유형
 	 */
-	public void createTicket(Reservation reservation, SeatReservation seatReservation, PassengerType passengerType) {
+	public void createTicket(Reservation reservation, Seat seat, PassengerType passengerType) {
 		Qr qr = qrService.createQr();
 		Ticket ticket = Ticket.builder()
 			.reservation(reservation)
-			.seatReservation(seatReservation)
+			.seat(seat)
 			.qr(qr)
 			.passengerType(passengerType)
-			.paymentStatus(PaymentStatus.RESERVED)
-			.status(TicketStatus.ISSUED)
+			.ticketStatus(TicketStatus.ISSUED)
 			.build();
 		try {
 			ticketRepository.save(ticket);
@@ -54,14 +52,25 @@ public class TicketService {
 		}
 	}
 
-	public List<TicketReadResponse> getMyTickets(UserDetails userDetails) {
-		Member member = memberRepository.findByMemberNo(userDetails.getUsername())
+	public List<TicketReadResponse> getMyTickets(String username) {
+		Member member = memberRepository.findByMemberNo(username)
 			.orElseThrow(() -> new BusinessException(MemberError.USER_NOT_FOUND));
 		try {
-			// List<TicketReadResponse> tickets = ticketRepository.findByReservationMemberId(member.getId());
 			return ticketRepositoryCustom.findPaidTicketResponsesByMemberId(member.getId());
 		} catch (Exception e) {
 			throw new BusinessException(BookingError.TICKET_LIST_GET_FAILED);
 		}
+	}
+
+	@Transactional
+	public void deleteTicketById(Long ticketId) {
+		Ticket ticket = ticketRepository.findById(ticketId)
+			.orElseThrow(() -> new BusinessException(BookingError.TICKET_NOT_FOUND));
+		ticketRepository.delete(ticket);
+	}
+
+	@Transactional
+	public void deleteTicketByReservationId(Long reservationId) {
+		ticketRepository.deleteAllByReservationId(reservationId);
 	}
 }

@@ -1,19 +1,17 @@
 package com.sudo.railo.member.presentation;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sudo.railo.global.security.jwt.TokenExtractor;
+import com.sudo.railo.auth.security.jwt.TokenExtractor;
 import com.sudo.railo.global.success.SuccessResponse;
 import com.sudo.railo.member.application.MemberService;
 import com.sudo.railo.member.application.dto.request.GuestRegisterRequest;
-import com.sudo.railo.member.application.dto.request.UpdatePasswordRequest;
-import com.sudo.railo.member.application.dto.request.UpdatePhoneNumberRequest;
 import com.sudo.railo.member.application.dto.response.GuestRegisterResponse;
 import com.sudo.railo.member.application.dto.response.MemberInfoResponse;
 import com.sudo.railo.member.docs.MemberControllerDocs;
@@ -40,36 +38,23 @@ public class MemberController implements MemberControllerDocs {
 	}
 
 	@DeleteMapping("/members")
-	public SuccessResponse<?> memberDelete(HttpServletRequest request) {
+	public SuccessResponse<?> memberDelete(HttpServletRequest request,
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
 		String accessToken = tokenExtractor.resolveToken(request);
 
-		memberService.memberDelete(accessToken);
+		memberService.memberDelete(accessToken, memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_DELETE_SUCCESS);
 	}
 
 	@GetMapping("/members/me")
-	public SuccessResponse<MemberInfoResponse> getMemberInfo() {
+	public SuccessResponse<MemberInfoResponse> getMemberInfo(
+		@AuthenticationPrincipal(expression = "username") String memberNo) {
 
-		MemberInfoResponse response = memberService.getMemberInfo();
+		MemberInfoResponse response = memberService.getMemberInfo(memberNo);
 
 		return SuccessResponse.of(MemberSuccess.MEMBER_INFO_SUCCESS, response);
 	}
 
-	@PutMapping("/members/phone-number")
-	public SuccessResponse<?> updatePhoneNumber(@RequestBody @Valid UpdatePhoneNumberRequest request) {
-
-		memberService.updatePhoneNumber(request);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_PHONENUMBER_UPDATE_SUCCESS);
-	}
-
-	@PutMapping("/members/password")
-	public SuccessResponse<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest request) {
-
-		memberService.updatePassword(request);
-
-		return SuccessResponse.of(MemberSuccess.MEMBER_PASSWORD_UPDATE_SUCCESS);
-	}
 }

@@ -11,13 +11,13 @@ import com.sudo.railo.booking.application.dto.response.ReservationDetail;
 import com.sudo.railo.booking.domain.CartReservation;
 import com.sudo.railo.booking.domain.Reservation;
 import com.sudo.railo.booking.exception.BookingError;
-import com.sudo.railo.booking.infra.CartReservationRepository;
-import com.sudo.railo.booking.infra.ReservationRepository;
-import com.sudo.railo.booking.infra.ReservationRepositoryCustom;
+import com.sudo.railo.booking.infrastructure.CartReservationRepository;
+import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
+import com.sudo.railo.booking.infrastructure.reservation.ReservationRepositoryCustom;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.exception.MemberError;
-import com.sudo.railo.member.infra.MemberRepository;
+import com.sudo.railo.member.infrastructure.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

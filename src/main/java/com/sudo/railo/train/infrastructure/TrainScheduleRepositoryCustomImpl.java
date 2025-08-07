@@ -2,6 +2,7 @@ package com.sudo.railo.train.infrastructure;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,12 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Repository;
 
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sudo.railo.train.application.dto.TrainBasicInfo;
+import com.sudo.railo.train.application.dto.projection.TrainSeatInfoBatch;
+import com.sudo.railo.train.application.dto.projection.TrainSeatInfoProjection;
 import com.sudo.railo.train.domain.QScheduleStop;
 import com.sudo.railo.train.domain.QStation;
 import com.sudo.railo.train.domain.QTrain;
@@ -82,8 +84,8 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 		JPAQuery<Long> validScheduleSubQuery = queryFactory
 			.select(ts.id)
 			.from(ts)
-			.join(ts.scheduleStops, departureStop)
-			.join(ts.scheduleStops, arrivalStop)
+			.join(departureStop).on(departureStop.trainSchedule.id.eq(ts.id))
+			.join(arrivalStop).on(arrivalStop.trainSchedule.id.eq(ts.id))
 			.where(
 				ts.operationDate.eq(operationDate)
 					.and(ts.operationStatus.eq(OperationStatus.ACTIVE))
@@ -110,9 +112,9 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 				arrivalStation.stationName))
 			.from(ts)
 			.join(ts.train, t)
-			.join(ts.scheduleStops, depStop2)
+			.join(depStop2).on(depStop2.trainSchedule.id.eq(ts.id))
 			.join(depStop2.station, departureStation)
-			.join(ts.scheduleStops, arrStop2)
+			.join(arrStop2).on(arrStop2.trainSchedule.id.eq(ts.id))
 			.join(arrStop2.station, arrivalStation)
 			.where(
 				ts.id.in(validScheduleSubQuery)
@@ -147,52 +149,49 @@ public class TrainScheduleRepositoryCustomImpl implements TrainScheduleRepositor
 	}
 
 	/**
-	 *  열차의 좌석 타입별 전체 좌석 수 조회
-	 * - 일반실/특실별 총 좌석 수 계산
-	 * - 좌석 상태 계산의 기준 데이터
+	 * 객차 타입별, 열차 전체 인원 조회
 	 */
 	@Override
-	public Map<CarType, Integer> findTotalSeatsByCarType(Long trainScheduleId) {
-		QTrainSchedule ts = QTrainSchedule.trainSchedule;
-		QTrain t = QTrain.train;
-		QTrainCar tc = QTrainCar.trainCar;
+	public TrainSeatInfoBatch findTrainSeatInfoBatch(List<Long> trainScheduleIds) {
+		if (trainScheduleIds.isEmpty()) {
+			return new TrainSeatInfoBatch(Map.of(), Map.of());
+		}
 
-		// 객차별 좌석 수를 타입별로 합계 계산
-		List<Tuple> results = queryFactory
-			.select(tc.carType, tc.totalSeats.sum())    // 객차타입별 좌석수 합계
-			.from(ts)
-			.join(ts.train, t)                          // 열차 조인
-			.join(t.trainCars, tc)                      // 객차 조인
-			.where(ts.id.eq(trainScheduleId))           // 특정 열차 스케줄
-			.groupBy(tc.carType)                        // 객차 타입별 그룹화
+		QTrainSchedule trainSchedule = QTrainSchedule.trainSchedule;
+		QTrain train = QTrain.train;
+		QTrainCar trainCar = QTrainCar.trainCar;
+
+		List<TrainSeatInfoProjection> seatInfoResults = queryFactory
+			.select(Projections.constructor(TrainSeatInfoProjection.class,
+				trainSchedule.id,
+				trainCar.carType,
+				trainCar.totalSeats.sum()
+			))
+			.from(trainSchedule)
+			.join(trainSchedule.train, train)
+			.join(trainCar).on(trainCar.train.id.eq(train.id))
+			.where(trainSchedule.id.in(trainScheduleIds))
+			.groupBy(trainSchedule.id, trainCar.carType)
 			.fetch();
 
-		// Map으로 변환: {STANDARD=246, FIRST_CLASS=117}
-		return results.stream().collect(Collectors.toMap(
-			tuple -> tuple.get(tc.carType),                    // Key: 객차타입
-			tuple -> tuple.get(tc.totalSeats.sum()).intValue() // Value: 좌석수
-		));
-	}
+		// 결과 변환: 객차별 좌석 수 + 전체 좌석 수 동시 계산
+		Map<Long, Map<CarType, Integer>> seatsByCarType = new HashMap<>();
+		Map<Long, Integer> totalSeats = new HashMap<>();
 
-	/**
-	 *  열차 최대 수용 인원 조회
-	 */
-	@Override
-	public int findTotalSeatsByTrainScheduleId(Long trainScheduleId) {
-		QTrainSchedule ts = QTrainSchedule.trainSchedule;
-		QTrain t = QTrain.train;
-		QTrainCar tc = QTrainCar.trainCar;
+		for (TrainSeatInfoProjection dto : seatInfoResults) {
+			Long trainScheduleId = dto.getTrainScheduleId();
+			CarType carType = dto.getCarType();
+			Integer seatCount = dto.getSeatCount();
 
-		// 해당 열차의 전체 좌석 수 계산
-		Integer totalSeats = queryFactory
-			.select(tc.totalSeats.sum())
-			.from(ts)
-			.join(ts.train, t)
-			.join(t.trainCars, tc)
-			.where(ts.id.eq(trainScheduleId))
-			.fetchOne();
+			// 1. 객차별 좌석 수 저장
+			seatsByCarType.computeIfAbsent(trainScheduleId, k -> new HashMap<>())
+				.put(carType, seatCount);
 
-		return totalSeats != null ? totalSeats : 0;
+			// 2. 전체 좌석 수 누적 계산
+			totalSeats.merge(trainScheduleId, seatCount, Integer::sum);
+		}
+
+		return new TrainSeatInfoBatch(seatsByCarType, totalSeats);
 	}
 
 	@Getter

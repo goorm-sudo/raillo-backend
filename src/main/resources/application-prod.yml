@@ -8,7 +8,7 @@ spring:
 
   jackson:
     time-zone: Asia/Seoul
-  
+
   data:
     redis:
       host: redis-service   # k8s의 redis 서비스명
@@ -22,11 +22,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         order_inserts: true
-        format_sql: true
+        format_sql: false
         jdbc:
           batch_size: 500
 
@@ -46,6 +46,12 @@ spring:
           timeout: 5000
           writetimeout: 5000
 
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
 train:
   schedule:
     excel:
@@ -57,12 +63,15 @@ train:
     ratio: 0.15
 
 cors:
-  allowed-origins: http://localhost:3000, https://www.raillo.shop
+  allowed-origins: https://www.raillo.shop
   allowed-methods: GET, POST, PUT, DELETE
   allowed-headers: Access-Control-Allow-Origin, Content-type, Access-Control-Allow-Headers, Authorization, X-Requested-With
 
 jwt:
   secret: ${JWT_KEY}
+
+cookie:
+  domain: .raillo.shop
 
 booking:
   expiration:
@@ -83,19 +92,3 @@ management:
   endpoint:
     prometheus:
       access: unrestricted
-
-# Payment Configuration
-payment:
-  kakaopay:
-    admin-key: ${KAKAO_PAY_ADMIN_KEY:SECRET_KEY test_admin_key_from_developers_kakao}
-    cid: ${KAKAO_PAY_CID:TC0ONETIME}
-    ready-url: https://open-api.kakaopay.com/online/v1/payment/ready
-    approve-url: https://open-api.kakaopay.com/online/v1/payment/approve
-    cancel-url: https://open-api.kakaopay.com/online/v1/payment/cancel
-    order-url: https://open-api.kakaopay.com/online/v1/payment/order
-  naverpay:
-    client-id: ${NAVER_PAY_CLIENT_ID:test_client_id}
-    client-secret: ${NAVER_PAY_CLIENT_SECRET:test_client_secret}
-  crypto:
-    secret-key: ${PAYMENT_CRYPTO_KEY:dGVzdC1wYXltZW50LWNyeXB0by1rZXktMzItYnl0ZXM=}
-    key-rotation-enabled: false

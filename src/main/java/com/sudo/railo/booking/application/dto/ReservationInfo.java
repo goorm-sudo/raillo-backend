@@ -19,6 +19,7 @@ public record ReservationInfo(
 	LocalTime arrivalTime,
 	LocalDate operationDate,
 	LocalDateTime expiresAt,
+	int fare,
 	List<SeatReservationProjection> seats
 ) {
 
@@ -37,6 +38,7 @@ public record ReservationInfo(
 			projection.getArrivalTime(),
 			projection.getOperationDate(),
 			projection.getExpiresAt(),
+			projection.getFare(),
 			seats
 		);
 	}

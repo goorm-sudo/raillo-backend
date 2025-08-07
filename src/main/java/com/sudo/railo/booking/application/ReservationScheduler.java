@@ -11,7 +11,7 @@ public class ReservationScheduler {
 
 	private final ReservationService reservationService;
 
-	@Scheduled(cron = "0 * * * * *") // 매 분마다 실행
+	@Scheduled(cron = "0 0 * * * *") // 매 시간마다 실행
 	public void expireReservations() {
 		try {
 			reservationService.expireReservations();
