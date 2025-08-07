@@ -218,7 +218,7 @@ class ReservationServiceTest {
 	}
 
 	@Test
-	@DisplayName("멤버번호로 만료된 예약을 포함한 예약 목록 조회에 성공한다")
+	@DisplayName("멤버번호로 예약 목록 조회 시 만료된 예약을 제외하고 조회에 성공한다")
 	void memberNoAndExpiredReservation_getReservations_success() {
 		// given
 		String memberNo = member.getMemberDetail().getMemberNo();
