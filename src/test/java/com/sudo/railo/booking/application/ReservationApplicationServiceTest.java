@@ -103,6 +103,7 @@ class ReservationApplicationServiceTest {
 
 		// then
 		List<SeatReservation> savedSeatReservations = seatReservationRepository.findByReservationId(response.reservationId());
+		assertThat(savedSeatReservations).hasSize(2);
 		savedSeatReservations.forEach(seatReservation -> {
 			assertThat(seatReservation.getReservation().getId()).isEqualTo(response.reservationId());
 			assertThat(seatReservation.getSeat().getId()).isIn(standardSeatIds);
