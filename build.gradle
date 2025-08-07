@@ -115,6 +115,7 @@ jacocoTestReport {
                 sourceSets.main.output.asFileTree.matching {
                     include "**/application/**"
                     include "**/infrastructure/*RepositoryCustomImpl.class"
+                    include "**/security/jwt/Token*.class"
                     exclude "**/train/infrastructure/excel/**"
                     exclude "**/application/dto/**"
                 }

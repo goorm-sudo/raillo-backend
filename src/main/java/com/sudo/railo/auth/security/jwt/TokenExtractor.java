@@ -105,7 +105,7 @@ public class TokenExtractor {
 	/**
 	 * 클레임 추출
 	 * */
-	protected Claims parseClaims(String accessToken) {
+	public Claims parseClaims(String accessToken) {
 		try {
 			return Jwts.parserBuilder()
 				.setSigningKey(key)
