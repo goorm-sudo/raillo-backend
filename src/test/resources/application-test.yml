@@ -21,11 +21,21 @@ spring:
     open-in-view: false
 
   mail:
-    host: smtp.test.com
-    port: 62525
-    username: dummy
-    password: dummy
+    host: localhost
+    port: 3025
+    username: testUser
+    password: testPassword
     test-connection: false # 테스트 시 메일 연결 확인 비활성화
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: false
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 logging:
   level:
