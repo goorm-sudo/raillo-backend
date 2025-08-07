@@ -35,6 +35,7 @@ public class ReservationApplicationService {
 	public ReservationCreateResponse createReservation(ReservationCreateRequest request, String memberNo) {
 		// TODO: 요청 파라미터를 여기서 모두 검증할지, 각 서비스에서 검증할지 결정 필요
 		Reservation reservation = reservationService.createReservation(request, memberNo);
+		validateStopSequence(reservation);
 
 		// 승객 정보, 좌석 정보 정렬 (승객 정보는 PassengerType에 정의한 순서대로, 좌석 정보는 오름차순)
 		List<PassengerSummary> passengers = new ArrayList<>(request.passengers());
@@ -49,8 +50,6 @@ public class ReservationApplicationService {
 		if (passengersCnt != seatIds.size()) {
 			throw new BusinessException(BookingError.RESERVATION_CREATE_SEATS_INVALID);
 		}
-
-		validateStopSequence(reservation);
 
 		// 좌석 차례대로 승객 할당
 		int idx = 0;
