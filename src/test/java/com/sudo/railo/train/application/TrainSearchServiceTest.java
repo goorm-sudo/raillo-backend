@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
-import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
-import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.support.annotation.ServiceTest;
 import com.sudo.railo.support.helper.ReservationTestHelper;
 import com.sudo.railo.support.helper.TrainScheduleTestHelper;
@@ -34,9 +31,6 @@ import com.sudo.railo.train.application.dto.response.TrainSearchSlicePageRespons
 import com.sudo.railo.train.domain.Station;
 import com.sudo.railo.train.domain.Train;
 import com.sudo.railo.train.exception.TrainErrorCode;
-import com.sudo.railo.train.infrastructure.SeatRepository;
-import com.sudo.railo.train.infrastructure.StationRepository;
-import com.sudo.railo.train.infrastructure.TrainScheduleRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,24 +49,6 @@ class TrainSearchServiceTest {
 
 	@Autowired
 	private TrainScheduleTestHelper trainScheduleTestHelper;
-
-	@Autowired
-	private StationRepository stationRepository;
-
-	@Autowired
-	private TrainScheduleRepository trainScheduleRepository;
-
-	@Autowired
-	private SeatReservationRepository seatReservationRepository;
-
-	@Autowired
-	private ReservationRepository reservationRepository;
-
-	@Autowired
-	private MemberRepository memberRepository;
-
-	@Autowired
-	private SeatRepository seatRepository;
 
 	@DisplayName("열차 조회 시 지정한 출발 시간 이후에만 필터링하고, 결과를 시간순으로 정렬해서 반환한다")
 	@TestFactory

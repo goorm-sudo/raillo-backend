@@ -13,8 +13,6 @@ import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
-import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
-import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.global.exception.error.BusinessException;
 import com.sudo.railo.support.annotation.ServiceTest;
 import com.sudo.railo.support.helper.TrainScheduleTestHelper;
@@ -39,12 +37,6 @@ public class TrainSearchValidationTest {
 
 	@Autowired
 	private TrainScheduleTestHelper trainScheduleTestHelper;
-
-	@Autowired
-	private SeatReservationRepository seatReservationRepository;
-
-	@Autowired
-	private ReservationRepository reservationRepository;
 
 	@DisplayName("다양한 잘못된 검색 조건에 대해 적절한 비즈니스 예외가 발생한다")
 	@TestFactory

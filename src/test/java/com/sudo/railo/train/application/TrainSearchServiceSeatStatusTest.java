@@ -17,8 +17,6 @@ import org.springframework.data.domain.PageRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sudo.railo.booking.domain.type.PassengerType;
-import com.sudo.railo.booking.infrastructure.SeatReservationRepository;
-import com.sudo.railo.booking.infrastructure.reservation.ReservationRepository;
 import com.sudo.railo.member.domain.Member;
 import com.sudo.railo.member.infrastructure.MemberRepository;
 import com.sudo.railo.support.annotation.ServiceTest;
@@ -56,12 +54,6 @@ public class TrainSearchServiceSeatStatusTest {
 
 	@Autowired
 	private TrainScheduleTestHelper trainScheduleTestHelper;
-
-	@Autowired
-	private SeatReservationRepository seatReservationRepository;
-
-	@Autowired
-	private ReservationRepository reservationRepository;
 
 	@Autowired
 	private MemberRepository memberRepository;

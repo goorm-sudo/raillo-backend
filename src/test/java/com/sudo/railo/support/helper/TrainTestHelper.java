@@ -67,38 +67,6 @@ public class TrainTestHelper {
 	}
 
 	/**
-	 * 테스트용 대형 열차 생성
-	 * 객차 총 9개 (standard 6개 + firstClass 3개)
-	 * 좌석 총 450개 (standard 360개 + firstClass 90개)
-	 */
-	@Transactional
-	public Train createLargeTestTrain() {
-		return createRealisticTrain(6, 3, 15, 10);
-	}
-
-	/**
-	 * 특정 객차 타입별로 다른 행 수를 가진 복합 열차 생성
-	 * 예: 앞쪽 일반실은 크고, 뒤쪽 일반실은 작게
-	 * 총 280석 (일반실(2+2) 220석, 특실(2+1) 60석)
-	 */
-	@Transactional
-	public Train createMixedConfigurationTrain() {
-		Train train = createKTXTrain();
-		Train savedTrain = trainRepository.save(train);
-
-		List<CarSpec> carSpecs = List.of(
-			new CarSpec(CarType.FIRST_CLASS, 12),  // 특실 1호차: 36석
-			new CarSpec(CarType.STANDARD, 18),     // 일반실 2호차: 72석 (대형)
-			new CarSpec(CarType.STANDARD, 15),     // 일반실 3호차: 60석 (중형)
-			new CarSpec(CarType.STANDARD, 12),     // 일반실 4호차: 48석 (소형)
-			new CarSpec(CarType.STANDARD, 10),     // 일반실 5호차: 40석 (소형)
-			new CarSpec(CarType.FIRST_CLASS, 8)    // 특실 6호차: 24석
-		);
-
-		return saveTrainWithCarsAndSeats(savedTrain, carSpecs, createRealisticSeatLayouts());
-	}
-
-	/**
 	 * 커스텀 기차 생성 메서드
 	 * 객차 총 2개 (standard 1개 + firstClass 1개)
 	 * 좌석 = (standardRows * 2)개 + (firstRows * 2)개
