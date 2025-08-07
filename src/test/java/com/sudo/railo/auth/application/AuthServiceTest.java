@@ -102,20 +102,10 @@ class AuthServiceTest {
 	@DisplayName("회원이 로그인에 성공한다.")
 	void login_success() {
 		//given
-		Member member = MemberFixture.createStandardMember();
-		String plainPwd = member.getPassword();
-		String encodedPwd = passwordEncoder.encode(plainPwd);
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
 
-		Member saveMember = Member.create(
-			member.getName(),
-			member.getPhoneNumber(),
-			encodedPwd,
-			member.getRole(),
-			member.getMemberDetail()
-		);
-		memberRepository.save(saveMember);
-
-		LoginRequest request = new LoginRequest(member.getMemberDetail().getMemberNo(), plainPwd);
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
 
 		//when
 		TokenResponse response = authService.login(request);
@@ -134,24 +124,13 @@ class AuthServiceTest {
 	@DisplayName("회원이 로그아웃에 성공한다.")
 	void logout_success() {
 		//given
-		Member member = MemberFixture.createStandardMember();
-		String plainPwd = member.getPassword();
-		String encodedPwd = passwordEncoder.encode(plainPwd);
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
 
-		Member saveMember = Member.create(
-			member.getName(),
-			member.getPhoneNumber(),
-			encodedPwd,
-			member.getRole(),
-			member.getMemberDetail()
-		);
-		memberRepository.save(saveMember);
-
-		LoginRequest request = new LoginRequest(member.getMemberDetail().getMemberNo(), plainPwd);
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
 		TokenResponse response = authService.login(request);
 
 		String accessToken = response.accessToken();
-		String memberNo = saveMember.getMemberDetail().getMemberNo();
 
 		String logoutTokenKey = redisKeyGenerator.generateLogoutTokenKey(accessToken);
 
@@ -167,24 +146,13 @@ class AuthServiceTest {
 	@DisplayName("리프레시 토큰만 유효시간이 만료되어 레디스에 존재하지 않아도 로그아웃에 성공한다.")
 	void logout_success_when_refresh_token_is_expired() {
 		//given
-		Member member = MemberFixture.createStandardMember();
-		String plainPwd = member.getPassword();
-		String encodedPwd = passwordEncoder.encode(plainPwd);
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
 
-		Member saveMember = Member.create(
-			member.getName(),
-			member.getPhoneNumber(),
-			encodedPwd,
-			member.getRole(),
-			member.getMemberDetail()
-		);
-		memberRepository.save(saveMember);
-
-		LoginRequest request = new LoginRequest(member.getMemberDetail().getMemberNo(), plainPwd);
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
 		TokenResponse response = authService.login(request);
 
 		String accessToken = response.accessToken();
-		String memberNo = saveMember.getMemberDetail().getMemberNo();
 		String logoutTokenKey = redisKeyGenerator.generateLogoutTokenKey(accessToken);
 
 		authRedisRepository.deleteRefreshToken(memberNo); // 리프레시 토큰을 삭제하여 만료된 상황 시뮬레이션
@@ -201,20 +169,10 @@ class AuthServiceTest {
 	@DisplayName("액세스 토큰 재발급에 성공한다.")
 	void reissueAccessToken_success() {
 		//given
-		Member member = MemberFixture.createStandardMember();
-		String plainPwd = member.getPassword();
-		String encodedPwd = passwordEncoder.encode(plainPwd);
+		Member member = createMemberWithEncryptedPassword();
+		String memberNo = member.getMemberDetail().getMemberNo();
 
-		Member saveMember = Member.create(
-			member.getName(),
-			member.getPhoneNumber(),
-			encodedPwd,
-			member.getRole(),
-			member.getMemberDetail()
-		);
-		memberRepository.save(saveMember);
-
-		LoginRequest request = new LoginRequest(member.getMemberDetail().getMemberNo(), plainPwd);
+		LoginRequest request = new LoginRequest(memberNo, "testPassword");
 		TokenResponse tokenResponse = authService.login(request);
 		String refreshToken = tokenResponse.refreshToken();
 
@@ -251,6 +209,22 @@ class AuthServiceTest {
 			.isThrownBy(() -> authService.reissueAccessToken(refreshToken))
 			.satisfies(exception ->
 				assertThat(exception.getErrorCode()).isEqualTo(TokenError.NOT_EQUALS_REFRESH_TOKEN));
+	}
+
+	private Member createMemberWithEncryptedPassword() {
+		Member member = MemberFixture.createStandardMember();
+		String plainPwd = member.getPassword();
+		String encodedPwd = passwordEncoder.encode(plainPwd);
+
+		Member saveMember = Member.create(
+			member.getName(),
+			member.getPhoneNumber(),
+			encodedPwd,
+			member.getRole(),
+			member.getMemberDetail()
+		);
+
+		return memberRepository.save(saveMember);
 	}
 
 }
