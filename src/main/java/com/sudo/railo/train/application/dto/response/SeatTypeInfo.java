@@ -37,7 +37,8 @@ public record SeatTypeInfo(
 		boolean hasStandingOption,
 		boolean canReserve) {
 
-		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount, hasStandingOption);
+		SeatAvailabilityStatus status = determineSeatStatus(availableSeats, passengerCount, hasStandingOption,
+			totalSeats);
 
 		String displayText = createDisplayText(status, seatTypeName);
 		String description = createDescription(status, availableSeats, passengerCount);
@@ -49,18 +50,22 @@ public record SeatTypeInfo(
 	 * 좌석 수와 승객 수로 예약 가능한 좌석 상태 결정
 	 */
 	private static SeatAvailabilityStatus determineSeatStatus(int availableSeats, int passengerCount,
-		boolean hasStandingOption) {
+		boolean hasStandingOption, int totalSeats) {
 		if (availableSeats == 0) {
 			// 좌석은 매진이지만 입석이 가능한 경우
 			return hasStandingOption ? SeatAvailabilityStatus.STANDING_ONLY : SeatAvailabilityStatus.SOLD_OUT;
 		}
 
+		// 좌석 부족
 		if (availableSeats < passengerCount) {
-			return SeatAvailabilityStatus.INSUFFICIENT;
+			// 입석이 가능하다면 STANDING_ONLY, 불가능하다면 INSUFFICIENT
+			return hasStandingOption ? SeatAvailabilityStatus.STANDING_ONLY : SeatAvailabilityStatus.INSUFFICIENT;
 		}
 
-		if (availableSeats >= passengerCount + 20) {
-			return SeatAvailabilityStatus.AVAILABLE;
+		double availabilityRatio = (double)availableSeats / totalSeats;
+
+		if (availabilityRatio >= 0.25) {
+			return SeatAvailabilityStatus.AVAILABLE; // 25% 이상이면 여유
 		} else {
 			return SeatAvailabilityStatus.LIMITED;
 		}

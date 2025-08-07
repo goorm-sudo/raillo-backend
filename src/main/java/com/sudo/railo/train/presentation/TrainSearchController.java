@@ -46,7 +46,7 @@ public class TrainSearchController {
 	@Operation(summary = "운행 캘린더 조회", description = "금일로부터 한 달간의 운행 캘린더를 조회합니다.")
 	public SuccessResponse<List<OperationCalendarItem>> getOperationCalendar() {
 		log.info("운행 캘린더 조회");
-		List<OperationCalendarItem> calendar = trainSearchService.getOperationCalendar();
+		List<OperationCalendarItem> calendar = trainSearchApplicationService.getOperationCalendar();
 		log.info("운행 캘린더 조회: {} 건", calendar.size());
 
 		return SuccessResponse.of(TrainSearchSuccess.OPERATION_CALENDAR_SUCCESS, calendar);
@@ -70,7 +70,7 @@ public class TrainSearchController {
 			request.operationDate(), request.passengerCount(), request.departureHour(),
 			pageable.getPageNumber(), pageable.getPageSize());
 
-		TrainSearchSlicePageResponse response = trainSearchService.searchTrains(request, pageable);
+		TrainSearchSlicePageResponse response = trainSearchApplicationService.searchTrains(request, pageable);
 
 		return SuccessResponse.of(TrainSearchSuccess.TRAIN_SEARCH_SUCCESS, response);
 	}

@@ -15,7 +15,7 @@ public enum TrainErrorCode implements ErrorCode {
 	TRAIN_SCHEDULE_NOT_FOUND("해당 날짜에 운행하는 열차가 없습니다.", HttpStatus.NOT_FOUND, "T4001"),
 	TRAIN_OPERATION_CANCELLED("해당 열차는 운행이 취소되었습니다.", HttpStatus.BAD_REQUEST, "T4002"),
 	TRAIN_OPERATION_DELAYED("해당 열차는 지연 운행 중입니다.", HttpStatus.BAD_REQUEST, "T4003"),
-	TRAIN_SCHEDULE_DETAIL_NOT_FOUND("요청하신 열차 스케줄이 존재하지 않습니다.", HttpStatus.NOT_FOUND, "T4004"),
+	TRAIN_SCHEDULE_DETAIL_NOT_FOUND("해당 열차 스케줄을 찾을 수 없습니다.", HttpStatus.NOT_FOUND, "T4004"),
 	NO_AVAILABLE_CARS("잔여 좌석이 있는 객차가 없습니다.", HttpStatus.NOT_FOUND, "TR_4005"),
 	TRAIN_CAR_NOT_FOUND("해당 객차를 찾을 수 없습니다.", HttpStatus.NOT_FOUND, "TR_4006"),
 
