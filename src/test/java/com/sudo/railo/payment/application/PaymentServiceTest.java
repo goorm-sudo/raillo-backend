@@ -146,7 +146,8 @@ class PaymentServiceTest {
 		// when & then
 		assertThatThrownBy(() -> paymentService
 			.processPaymentViaCard(member.getMemberDetail().getMemberNo(), request))
-			.isInstanceOf(BusinessException.class).hasMessage(PaymentError.PAYMENT_AMOUNT_MISMATCH.getMessage());
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(PaymentError.PAYMENT_AMOUNT_MISMATCH.getMessage());
 	}
 
 	@Test
@@ -162,7 +163,8 @@ class PaymentServiceTest {
 		// when & then
 		assertThatThrownBy(() -> paymentService
 			.processPaymentViaCard(other.getMemberDetail().getMemberNo(), request))
-			.isInstanceOf(BusinessException.class).hasMessage(PaymentError.RESERVATION_ACCESS_DENIED.getMessage());
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(PaymentError.RESERVATION_ACCESS_DENIED.getMessage());
 	}
 
 	@Test
@@ -182,7 +184,8 @@ class PaymentServiceTest {
 		// 첫 번째 결제 후 예약 상태가 PAID로 변경되어 결제할 수 없는 상태가 됨
 		assertThatThrownBy(() -> paymentService
 			.processPaymentViaCard(member.getMemberDetail().getMemberNo(), secondRequest))
-			.isInstanceOf(BusinessException.class).hasMessage(PaymentError.RESERVATION_NOT_PAYABLE.getMessage());
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(PaymentError.RESERVATION_NOT_PAYABLE.getMessage());
 	}
 
 	@Test
@@ -230,7 +233,8 @@ class PaymentServiceTest {
 		// when & then
 		assertThatThrownBy(() -> paymentService.cancelPayment(
 			other.getMemberDetail().getMemberNo(), paymentResponse.paymentKey()))
-			.isInstanceOf(BusinessException.class).hasMessage(PaymentError.PAYMENT_ACCESS_DENIED.getMessage());
+			.isInstanceOf(BusinessException.class)
+			.hasMessage(PaymentError.PAYMENT_ACCESS_DENIED.getMessage());
 	}
 
 	@Test
@@ -262,6 +266,7 @@ class PaymentServiceTest {
 	void getPaymentHistory_fail_whenMemberNotFound() {
 		// when & then
 		assertThatThrownBy(() -> paymentService.getPaymentHistory("nonexistent"))
-			.isInstanceOf(BusinessException.class).hasMessage("사용자를 찾을 수 없습니다.");
+			.isInstanceOf(BusinessException.class)
+			.hasMessage("사용자를 찾을 수 없습니다.");
 	}
 }
