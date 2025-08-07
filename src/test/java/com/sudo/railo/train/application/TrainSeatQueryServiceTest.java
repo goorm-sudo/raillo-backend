@@ -81,12 +81,14 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("잔여 좌석이 있는 객차 목록을 성공적으로 조회한다")
 	void getAvailableTrainCars() {
+		// when
 		List<TrainCarInfo> availableTrainCars = trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(),
 			departureStop.getStation().getId(),
 			arrivalStop.getStation().getId()
 		);
 
+		// then
 		assertThat(availableTrainCars).hasSize(2);
 
 		TrainCarInfo standardCar = availableTrainCars.get(0);
@@ -107,6 +109,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("예약된 좌석이 있으면 해당 좌석은 조회 되지 않는다")
 	void shouldExcludeReservedSeatsFromAvailableCount() {
+		// given
 		Member testMember = MemberFixture.createStandardMember();
 		memberRepository.save(testMember);
 
@@ -114,12 +117,14 @@ class TrainSeatQueryServiceTest {
 		ReservationCreateRequest standardRequest = getReservationCreateRequest(standardSeatIds);
 		reservationApplicationService.createReservation(standardRequest, testMember.getMemberDetail().getMemberNo());
 
+		// when
 		List<TrainCarInfo> availableTrainCars = trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(),
 			departureStop.getStation().getId(),
 			arrivalStop.getStation().getId()
 		);
 
+		// then
 		TrainCarInfo standardCar = availableTrainCars.get(0);
 		assertThat(standardCar.carType()).isEqualTo(CarType.STANDARD);
 		assertThat(standardCar.totalSeats()).isEqualTo(2);
@@ -129,6 +134,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("잔여 좌석이 없으면 조회 되지 않는다")
 	void shouldThrowExceptionWhenNoAvailableSeats() {
+		// given
 		Member testMember = MemberFixture.createStandardMember();
 		memberRepository.save(testMember);
 
@@ -140,6 +146,7 @@ class TrainSeatQueryServiceTest {
 		ReservationCreateRequest firstClassRequest = getReservationCreateRequest(firstClassSeatIds);
 		reservationApplicationService.createReservation(firstClassRequest, testMember.getMemberDetail().getMemberNo());
 
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(), departureStop.getStation().getId(),
 			arrivalStop.getStation().getId()
@@ -151,6 +158,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 열차 스케줄로 객차 조회 시 예외가 발생한다")
 	void shouldThrowExceptionWhenGetAvailableTrainCarsWithTrainScheduleNotFound() {
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getAvailableTrainCars(
 			999L,
 			departureStop.getStation().getId(),
@@ -163,6 +171,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 출발역으로 객차 조회 시 예외가 발생한다")
 	void shouldThrowExceptionWhenGetAvailableTrainCarsWithDepartureStationNotFound() {
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(),
 			999L,
@@ -175,10 +184,11 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 도착역으로 객차 조회 시 예외가 발생한다")
 	void shouldThrowExceptionWhenGetAvailableTrainCarsWithArrivalStationNotFound() {
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(),
 			departureStop.getStation().getId(),
-		999L
+			999L
 		))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(TrainErrorCode.STATION_NOT_FOUND.getMessage());
@@ -187,6 +197,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("유효하지 않은 경로로 조회하면 예외가 발생한다")
 	void shouldThrowExceptionWhenGetAvailableTrainCarsWithInvalidRoute() {
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getAvailableTrainCars(
 			scheduleWithStops.trainSchedule().getId(),
 			arrivalStop.getStation().getId(),
@@ -199,6 +210,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("객차 좌석 상세 정보를 성공적으로 조회한다")
 	void getTrainCarSeatDetail() {
+		// given
 		List<TrainCar> trainCars = trainCarRepository.findByTrainIn(List.of(train));
 		TrainCar trainCar = trainCars.get(0);
 		TrainCarSeatDetailRequest request = new TrainCarSeatDetailRequest(
@@ -208,8 +220,10 @@ class TrainSeatQueryServiceTest {
 			arrivalStop.getStation().getId()
 		);
 
+		// when
 		TrainCarSeatDetailResponse response = trainSeatQueryService.getTrainCarSeatDetail(request);
 
+		// then
 		assertThat(response.carNumber()).isEqualTo("1");
 		assertThat(response.carType()).isEqualTo(CarType.STANDARD);
 		assertThat(response.totalSeatCount()).isEqualTo(2);
@@ -229,6 +243,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("예약된 좌석은 조회시 사용 불가능한 상태로 조회된다.")
 	void shouldReservedSeatsAsUnavailable() {
+		// given
 		Member testMember = MemberFixture.createStandardMember();
 		memberRepository.save(testMember);
 		List<Long> standardSeatIds = trainTestHelper.getSeatIds(train, CarType.STANDARD, 1);
@@ -243,8 +258,10 @@ class TrainSeatQueryServiceTest {
 			arrivalStop.getStation().getId()
 		);
 
+		// when
 		TrainCarSeatDetailResponse response = trainSeatQueryService.getTrainCarSeatDetail(request);
 
+		// then
 		SeatDetail secondSeatDetail = response.seatList().get(0);
 		assertThat(secondSeatDetail.isAvailable()).isFalse();
 	}
@@ -252,6 +269,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 객차로 좌석 상세 조회 시 예외가 발생한다")
 	void shouldThrowExceptionWhenGetTrainCarSeatDetailWithTrainCarNotFound() {
+		// given
 		TrainCarSeatDetailRequest request = new TrainCarSeatDetailRequest(
 			999L,
 			scheduleWithStops.trainSchedule().getId(),
@@ -259,6 +277,7 @@ class TrainSeatQueryServiceTest {
 			arrivalStop.getStation().getId()
 		);
 
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getTrainCarSeatDetail(request))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(TrainErrorCode.TRAIN_CAR_NOT_FOUND.getMessage());
@@ -267,6 +286,7 @@ class TrainSeatQueryServiceTest {
 	@Test
 	@DisplayName("존재하지 않는 열차 스케줄로 좌석 상세 조회 시 예외가 발생한다")
 	void shouldThrowExceptionWhenGetTrainCarSeatDetailWithTrainScheduleNotFound() {
+		// given
 		List<TrainCar> trainCars = trainCarRepository.findByTrainIn(List.of(train));
 		TrainCar trainCar = trainCars.get(0);
 		TrainCarSeatDetailRequest request = new TrainCarSeatDetailRequest(
@@ -276,6 +296,7 @@ class TrainSeatQueryServiceTest {
 			arrivalStop.getStation().getId()
 		);
 
+		// when & then
 		assertThatThrownBy(() -> trainSeatQueryService.getTrainCarSeatDetail(request))
 			.isInstanceOf(BusinessException.class)
 			.hasMessage(TrainErrorCode.TRAIN_SCHEDULE_NOT_FOUND.getMessage());
