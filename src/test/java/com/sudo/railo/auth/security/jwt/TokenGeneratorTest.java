@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
 import com.sudo.railo.auth.exception.TokenError;
@@ -28,13 +27,12 @@ class TokenGeneratorTest {
 
 	private static final String TEST_SECRET_KEY = "crailotestjwtsecretkey2025fordevelopmentandtestingonlylonglonglonglonglonglonglonglonglong==";
 
-	@Autowired
-	private TokenGenerator tokenGenerator;
-
 	@Mock
 	private Authentication authentication;
 
 	private TokenValidator tokenValidator;
+
+	private TokenGenerator tokenGenerator;
 
 	private SecretKey testKey;
 
@@ -99,7 +97,7 @@ class TokenGeneratorTest {
 			.setSubject(memberNo)
 			.claim("auth", authorities)
 			.claim("isRefreshToken", true)
-			.setExpiration(new Date(System.currentTimeMillis()- 1000))
+			.setExpiration(new Date(System.currentTimeMillis() - 1000))
 			.signWith(testKey, SignatureAlgorithm.HS512)
 			.compact();
 
