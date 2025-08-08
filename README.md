@@ -112,7 +112,7 @@ src/main/java/com/sudo/railo/
 - **보안 강화** : 로그아웃된 토큰 Redis 관리, 쿠키 기반 Refresh Token 관리
 
 ### 👤 Member 도메인
-- **고유 회원번호 시스템** : Redis 기반 일일 증분 카운터를 활용한 회원번호 자동 생성 (yyyyMMddCCCC 형식)
+- **고유 회원번호 시스템** : Redis 기반 일일 증분 카운터를 활용한 회원번호 자동 생성 (`yyyyMMddCCCC` 형식)
 - **Soft-Delete** : 실제 회원 삭제가 아닌 비활성화 처리
 - **만료 회원 일괄 삭제** : 만료된 회원 데이터 정리를 위한 Spring Batch 활용
 
