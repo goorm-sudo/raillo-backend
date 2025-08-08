@@ -105,7 +105,7 @@ src/main/java/com/sudo/railo/
 └── train/      # 열차 도메인
 ```
 
-## 🚀 주요 기능
+## 🚀 주요 특징
 ### 🔑 Auth 도메인
 - **JWT 기반 인증 시스템** : Access Token과 Refresh Token을 활용한 Stateless 인증 및 인가
 - **이메일 인증** : Redis를 활용한 인증 코드 발송 및 검증 시스템
