@@ -53,7 +53,7 @@
 
 ### 📅 진행 기간
 - 1차 (기획 및 개발) : 2025. 05. 28. ~ 2025. 07. 01.
-- 2차 (클라이언트 요구사항 반영) : 2025. 07. 02 ~ 2025. 07. 15.
+- 2차 (클라이언트 요구사항 반영) : 2025. 07. 02. ~ 2025. 07. 15.
 - 3차 (카카오 API 통합) : 2025. 07. 16. ~ 2025. 08. 08.
 - 지속 개선 : 2025. 08. 09. ~ endless
 
@@ -143,22 +143,46 @@ src/main/java/com/sudo/railo/
 - `RDS`, `Route53`, `LB` 등 `AWS 서비스`를 사용하여 데이터 관리와 트래픽 분산 및 도메인 운영 지원
 
 ## 🧪 테스트
-테스트 방법은~
+### 로컬 테스트 환경 구축
+- 로컬에서 운영환경과 비슷한 환경 구축 후 스트레스 테스트 진행
+- Spring Boot, LB, Redis, Prometheus, Grafana, AWS RDS 이용
+
+### K6를 이용한 부하 테스트
+- K6로 API 호출 -> 로드밸런서 -> Spring Boot Application -> DB
+- 부하 테스트 목표 설정 (예: Target TPS 500, Avg Latency 800ms 이하)
+- 부하 테스트 진행 후 병목 지점 파악, 성능 개선
+- 개선한 시스템이 어느 정도 트래픽까지를 견딜 수 있는지 테스트 과정 반복
 
 ## 📌 주요 엔드포인트
 ```http
 # Auth
-<METHOD> <URL>
+POST /auth/signup
+POST /auth/login
+POST /auth/logout
+POST /auth/emails/verify
+POST /auth/reissue
 
 # Booking
-<METHOD> <URL>
+GET /api/v1/booking/reservation
+GET /api/v1/booking/reservation/{reservationId}
+POST /api/v1/booking/reservation
+DELETE /api/v1/booking/reservation
+GET /api/v1/booking/ticket
 
 # Member
-<METHOD> <URL>
+DELETE /api/v1/members
+GET /api/v1/members/me
+PUT /api/v1/members/password
 
 # Payment
-<METHOD> <URL>
+GET /api/v1/payments
+POST /api/v1/payments/{paymentKey}/cancel
+POST /api/v1/payments/bank-account
+POST /api/v1/payments/card
 
 # Train
-<METHOD> <URL>
+GET /api/v1/trains/calendar
+POST /api/v1/trains/cars
+POST /api/v1/trains/search
+POST /api/v1/trains/seats
 ```
