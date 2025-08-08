@@ -41,7 +41,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
     testImplementation 'com.github.codemonstur:embedded-redis:1.4.3'
-    testImplementation "com.navercorp.fixturemonkey:fixture-monkey-starter:1.1.14"
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.batch:spring-batch-test'
@@ -118,6 +117,16 @@ jacocoTestReport {
                     include "**/security/jwt/Token*.class"
                     exclude "**/train/infrastructure/excel/**"
                     exclude "**/application/dto/**"
+
+                    // 데이터 파싱 관련 클래스 테스트 커버리지 측정 제외
+                    exclude "**/application/TrainScheduleCreator.class"
+                    exclude "**/application/TrainScheduleTemplateService.class"
+                    exclude "**/application/StationFareCreator.class"
+                    exclude "**/application/TrainService.class"
+                    exclude "**/application/StationService.class"
+                    exclude "**/application/ScheduleStopService.class"
+                    exclude "**/application/TrainCarService.class"
+                    exclude "**/application/SeatService.class"
                 }
         )
     }
