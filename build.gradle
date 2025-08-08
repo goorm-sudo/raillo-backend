@@ -118,6 +118,16 @@ jacocoTestReport {
                     include "**/security/jwt/Token*.class"
                     exclude "**/train/infrastructure/excel/**"
                     exclude "**/application/dto/**"
+
+                    // 데이터 파싱 관련 클래스 테스트 커버리지 측정 제외
+                    exclude "**/application/TrainScheduleCreator.class"
+                    exclude "**/application/TrainScheduleTemplateService.class"
+                    exclude "**/application/StationFareCreator.class"
+                    exclude "**/application/TrainService.class"
+                    exclude "**/application/StationService.class"
+                    exclude "**/application/ScheduleStopService.class"
+                    exclude "**/application/TrainCarService.class"
+                    exclude "**/application/SeatService.class"
                 }
         )
     }
